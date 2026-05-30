@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Sidebar } from './sidebar';
+import { BottomBar } from './bottom-bar';
 import { ThemeToggle } from './theme-toggle';
 import { Menu, Bell } from 'lucide-react';
 import { usePathname } from 'next/navigation';
@@ -24,6 +25,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         return 'Sekolah & Kelas';
       case '/asrama':
         return 'Manajemen Asrama';
+      case '/pegawai':
+        return 'Data Kepegawaian';
       case '/admin/santri':
         return 'Data Master Santri';
       case '/admin/tahfidz':
@@ -98,11 +101,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </header>
 
         {/* Dynamic Page Router Children */}
-        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-zinc-950 transition-colors duration-200">
+        <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-zinc-950 transition-colors duration-200 pb-20 lg:pb-0">
           {children}
         </main>
 
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <BottomBar />
     </div>
   );
 }
