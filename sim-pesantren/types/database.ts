@@ -299,3 +299,21 @@ export interface Tagihan {
   santri?: Santri | null;
   master_biaya?: MasterBiaya | null;
 }
+
+export interface AppRole {
+  id: string;
+  name: string;
+  description?: string | null;
+  created_at: string;
+}
+
+export interface RolePermission {
+  id: string;
+  id_role: string;
+  feature: 'Santri' | 'Keuangan' | 'Akademik' | string;
+  can_view: boolean;
+  can_create: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+  created_at: string;
+}

@@ -16,7 +16,8 @@ import {
   School,
   Home,
   Briefcase,
-  Coins
+  Coins,
+  ShieldCheck
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -36,6 +37,7 @@ const MENU_ITEMS = [
   { name: 'Akademik', href: '/akademik', icon: BookOpen },
   { name: 'Kasir Pembayaran', href: '/pembayaran', icon: CreditCard },
   { name: 'Atur Keuangan', href: '/keuangan', icon: Coins },
+  { name: 'Hak Akses', href: '/settings/users', icon: ShieldCheck },
   { name: 'Pengaturan', href: '/pengaturan', icon: Settings },
 ];
 

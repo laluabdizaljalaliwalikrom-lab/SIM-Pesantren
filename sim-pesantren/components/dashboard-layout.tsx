@@ -37,6 +37,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         return 'Kasir Pembayaran';
       case '/keuangan':
         return 'Atur Keuangan';
+      case '/settings/users':
+        return 'Hak Akses & Pengguna';
       case '/pengaturan':
         return 'Pengaturan Sistem';
       default:
