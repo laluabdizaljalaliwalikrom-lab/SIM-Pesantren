@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -31,7 +31,7 @@ const STATS = [
   { icon: GraduationCap, label: 'Alumni', value: '2,000+' },
 ];
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectTo = searchParams.get('redirectTo') || '/admin';
@@ -463,5 +463,23 @@ export default function LoginPage() {
         }
       `}</style>
     </div>
+  );
+}
+
+// ── Page wrapper with Suspense boundary (required by Next.js for useSearchParams) ──
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-zinc-950">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500 animate-pulse" />
+            <p className="text-xs text-slate-400 dark:text-zinc-600">Memuat...</p>
+          </div>
+        </div>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
