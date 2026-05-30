@@ -48,23 +48,14 @@ export default function UserRoleSettingsPage() {
     try {
       setLoading(true);
 
-      // 1. Fetch profiles (users)
-      const { data: profilesData, error: profilesErr } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('nama_lengkap', { ascending: true });
-      if (profilesErr) throw profilesErr;
-
-      // Mock user lists for high-fidelity settings presentation (merging profiles with emails)
-      const mergedUsers = (profilesData || []).map((p: any, idx: number) => ({
-        id: p.id,
-        nama_lengkap: p.nama_lengkap,
-        email: p.no_hp ? `${p.nama_lengkap.toLowerCase().replace(/\s+/g, '')}@pesantren.com` : `user${idx}@pesantren.com`,
-        role: p.role === 'admin' ? 'Super Admin' : p.role === 'pengasuh' ? 'Pengasuh' : 'Wali Santri',
-        status: idx % 4 === 3 ? 'Tidak Aktif' : 'Aktif',
-        no_hp: p.no_hp
-      }));
-      setProfiles(mergedUsers);
+      // 1. Fetch users from server-side API (bypasses RLS, merges auth.users emails)
+      const usersRes = await fetch('/api/users');
+      if (!usersRes.ok) {
+        const errBody = await usersRes.json().catch(() => ({}));
+        throw new Error(errBody.error || `HTTP ${usersRes.status}`);
+      }
+      const { users: mergedUsers } = await usersRes.json();
+      setProfiles(mergedUsers || []);
 
       // 2. Fetch app_roles
       const { data: rolesData, error: rolesErr } = await supabase
