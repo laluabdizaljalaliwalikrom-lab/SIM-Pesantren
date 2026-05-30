@@ -1,36 +1,82 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🚀 Panduan Deploy SIM Pesantren ke Vercel
 
-## Getting Started
+## Prasyarat
 
-First, run the development server:
+- Akun [Vercel](https://vercel.com) (gratis)
+- Repository GitHub: `laluabdizaljalaliwalikrom-lab/SIM-Pesantren`
+- Project Supabase sudah aktif
+
+---
+
+## Langkah 1 — Push Kode ke GitHub
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git add .
+git commit -m "chore: prepare for Vercel deployment"
+git push origin main
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Langkah 2 — Import Project di Vercel
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Buka [vercel.com/new](https://vercel.com/new)
+2. Klik **"Import Git Repository"**
+3. Pilih repo `SIM-Pesantren`
+4. **Framework Preset**: Next.js (otomatis terdeteksi ✅)
+5. Jangan ubah **Root Directory** (biarkan `./`)
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Langkah 3 — Tambahkan Environment Variables ⚠️ WAJIB
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Di halaman import Vercel, klik **"Environment Variables"** dan tambahkan:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Key | Value |
+|-----|-------|
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://qaidhzrlxsyjzrczvthp.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *(anon key dari Supabase dashboard)* |
+| `WEBHOOK_SECRET_TOKEN` | *(token pilihan Anda)* |
+| `FONNTE_API_TOKEN` | *(token Fonnte, jika dipakai)* |
 
-## Deploy on Vercel
+> **Dimana menemukan nilai ini?**
+> Supabase Dashboard → Project → **Settings** → **API**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Langkah 4 — Deploy
+
+Klik tombol **"Deploy"**. Vercel akan:
+1. Clone repository
+2. Install dependencies (`npm install`)
+3. Build project (`npm run build`)
+4. Deploy ke URL `*.vercel.app`
+
+Build biasanya selesai dalam **1–3 menit**.
+
+---
+
+## Langkah 5 — Konfigurasi Supabase (Penting!)
+
+Setelah dapat URL Vercel (misal `https://sim-pesantren.vercel.app`), tambahkan ke Supabase:
+
+1. Buka **Supabase Dashboard** → Project → **Authentication** → **URL Configuration**
+2. Set **Site URL**: `https://sim-pesantren.vercel.app`
+3. Tambahkan ke **Redirect URLs**: `https://sim-pesantren.vercel.app/**`
+
+---
+
+## Deploy Otomatis Selanjutnya
+
+Setiap `git push origin main` → Vercel **auto-deploy** secara otomatis. ✨
+
+---
+
+## Troubleshooting
+
+| Error | Solusi |
+|-------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` kosong | Cek Environment Variables di Vercel Settings |
+| Build gagal karena TypeScript | Sudah dikonfigurasi `ignoreBuildErrors: true` di `next.config.ts` |
+| Data tidak muncul | Pastikan RLS policy Supabase mengizinkan akses publik |
+| Foto tidak tampil | Pastikan URL foto menggunakan HTTPS |
