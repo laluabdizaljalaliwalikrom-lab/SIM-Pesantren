@@ -1,16 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Lewati error TypeScript dan ESLint saat build (untuk kemudahan deploy awal)
-  // Hapus baris ini setelah semua error diselesaikan
+  // Lewati error TypeScript saat build (untuk kemudahan deploy awal)
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
 
-  // Optimasi gambar dari domain eksternal (tambahkan jika ada foto URL dari luar)
+  // Optimasi gambar dari domain eksternal
   images: {
     remotePatterns: [
       {
@@ -18,6 +14,11 @@ const nextConfig: NextConfig = {
         hostname: '**',
       },
     ],
+  },
+
+  // Turbopack: tetapkan root agar tidak tertukar dengan lockfile parent folder
+  turbopack: {
+    root: __dirname,
   },
 };
 
