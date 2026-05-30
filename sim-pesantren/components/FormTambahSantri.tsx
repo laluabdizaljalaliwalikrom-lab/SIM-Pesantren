@@ -15,6 +15,8 @@ import {
 import { Kamar, Profile, SantriStatus, Kelas } from '@/types/database';
 import { createSantri, updateSantri } from '@/services/santri-actions';
 import { toast } from 'sonner';
+import ImageUpload from '@/components/ImageUpload';
+import { uploadFotoSantri } from '@/services/storage-actions';
 
 interface FormTambahSantriProps {
   onClose: () => void;
@@ -48,6 +50,8 @@ export default function FormTambahSantri({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [autoFilledBadge, setAutoFilledBadge] = useState(false);
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [uploadingFoto, setUploadingFoto] = useState(false);
 
   // Full state with grouped parent objects and defaults
   const [formData, setFormData] = useState({
@@ -63,6 +67,7 @@ export default function FormTambahSantri({
     agama: selectedSantri?.agama || 'Islam', // Default: Islam
     anak_ke: '', 
     jml_saudara_kandung: '', 
+    foto_url: selectedSantri?.foto_url || '',
 
     // Alamat & Kontak
     alamat: selectedSantri?.alamat || '',
@@ -211,6 +216,26 @@ export default function FormTambahSantri({
 
     setIsSubmitting(true);
 
+    // 1. Upload photo to Supabase Storage if a new file was selected
+    let uploadedFotoUrl = formData.foto_url;
+    if (fotoFile) {
+      setUploadingFoto(true);
+      try {
+        const fileExt = fotoFile.name.split('.').pop() || 'jpg';
+        // Unique file name using NIS (primary) or NISN (secondary)
+        const uniqueFileName = `${formData.nis.trim() || formData.nisn.trim()}.${fileExt}`;
+        uploadedFotoUrl = await uploadFotoSantri(fotoFile, uniqueFileName);
+      } catch (uploadErr: any) {
+        console.error('Gagal mengunggah foto:', uploadErr);
+        toast.error('Gagal mengunggah foto santri: ' + uploadErr.message);
+        setIsSubmitting(false);
+        setUploadingFoto(false);
+        return; // Early return to prevent creating db record without image if it failed
+      } finally {
+        setUploadingFoto(false);
+      }
+    }
+
     // Map the grouped state and flat state to valid database fields
     const payload = {
       nis: formData.nis.trim(),
@@ -229,6 +254,7 @@ export default function FormTambahSantri({
       status: formData.status,
       id_kelas_formal: formData.id_kelas_formal || null,
       id_kelas_non_formal: formData.id_kelas_non_formal || null,
+      foto_url: uploadedFotoUrl || null,
 
       // Grouped parents mapping to schema columns
       nama_ayah: formData.data_ayah.nama.trim() || null,
@@ -283,11 +309,11 @@ export default function FormTambahSantri({
       if (selectedSantri) {
         const { error } = await updateSantri(selectedSantri.id, payload);
         if (error) throw new Error(error);
-        toast.success(`Data santri "${formData.nama_lengkap}" berhasil diperbarui!`);
+        toast.success(`Data santri "${formData.nama_lengkap}" dan foto berhasil diperbarui!`);
       } else {
         const { error } = await createSantri(payload);
         if (error) throw new Error(error);
-        toast.success(`Santri "${formData.nama_lengkap}" berhasil ditambahkan!`);
+        toast.success(`Data santri "${formData.nama_lengkap}" dan foto berhasil disimpan!`);
       }
       onSuccess();
       onClose();
@@ -340,6 +366,17 @@ export default function FormTambahSantri({
               <h3 className="text-sm font-bold text-slate-800 dark:text-zinc-200 mb-4 border-b border-slate-100 dark:border-zinc-800/60 pb-2">
                 Identitas Utama Santri
               </h3>
+              
+              <div className="flex justify-center mb-6">
+                <ImageUpload
+                  value={fotoFile || formData.foto_url}
+                  onChange={(file) => setFotoFile(file)}
+                  loading={uploadingFoto}
+                  shape="circle"
+                  label="Foto Profil Santri"
+                />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">

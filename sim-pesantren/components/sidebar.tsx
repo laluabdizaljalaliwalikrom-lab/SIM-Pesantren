@@ -15,7 +15,8 @@ import {
   ChevronRight,
   School,
   Home,
-  Briefcase
+  Briefcase,
+  Coins
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -30,11 +31,12 @@ const MENU_ITEMS = [
   { name: 'Lembaga', href: '/lembaga', icon: School },
   { name: 'Asrama', href: '/asrama', icon: Home },
   { name: 'Pegawai', href: '/pegawai', icon: Briefcase },
-  { name: 'Santri', href: '/admin/santri', icon: Users },
-  { name: 'Tahfidz Tracker', href: '/admin/tahfidz', icon: GraduationCap },
-  { name: 'Akademik', href: '/admin/akademik', icon: BookOpen },
-  { name: 'Keuangan', href: '/admin/pembayaran', icon: CreditCard },
-  { name: 'Pengaturan', href: '/admin/pengaturan', icon: Settings },
+  { name: 'Santri', href: '/santri', icon: Users },
+  { name: 'Tahfidz Tracker', href: '/tahfidz', icon: GraduationCap },
+  { name: 'Akademik', href: '/akademik', icon: BookOpen },
+  { name: 'Kasir Pembayaran', href: '/pembayaran', icon: CreditCard },
+  { name: 'Atur Keuangan', href: '/keuangan', icon: Coins },
+  { name: 'Pengaturan', href: '/pengaturan', icon: Settings },
 ];
 
 export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: SidebarProps) {

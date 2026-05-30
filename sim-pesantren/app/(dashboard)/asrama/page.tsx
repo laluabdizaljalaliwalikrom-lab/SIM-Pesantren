@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { Kamar, Santri, Gedung } from '@/types/database';
 import { 
@@ -17,7 +18,9 @@ import {
   ChevronRight,
   Edit2,
   Trash2,
-  Building
+  Building,
+  FileText,
+  ShieldAlert
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { moveSantriToKamar } from '@/services/kamar-actions';
@@ -476,7 +479,25 @@ export default function AsramaDashboardPage() {
               Pantau sebaran kamar, kapasitas asrama, dan plot santri secara instan.
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href="/asrama/absensi-sholat"
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20 hover:bg-emerald-100/55 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all duration-200"
+            >
+              <UserCheck className="h-4 w-4" /> Absensi Sholat
+            </Link>
+            <Link
+              href="/asrama/perizinan"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all duration-200"
+            >
+              <FileText className="h-4 w-4" /> Perizinan Santri
+            </Link>
+            <Link
+              href="/asrama/pelanggaran"
+              className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all duration-200"
+            >
+              <ShieldAlert className="h-4 w-4" /> Poin Pelanggaran
+            </Link>
             <button
               onClick={() => setIsGedungModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-900 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800 rounded-xl font-bold text-xs sm:text-sm shadow-sm transition-all duration-200"

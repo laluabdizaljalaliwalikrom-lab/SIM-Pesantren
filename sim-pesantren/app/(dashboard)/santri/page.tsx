@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { Santri, Kamar, Profile, SantriStatus } from '@/types/database';
 import { 
@@ -12,15 +13,12 @@ import {
   X, 
   Loader2, 
   AlertTriangle,
-  FolderOpen,
   ClipboardList,
-  Calendar,
-  Home,
-  User,
   FileSpreadsheet
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportSantriModal } from '@/components/import-santri-modal';
+import FormTambahSantri from '@/components/FormTambahSantri';
 
 const toTitleCase = (str: string) => {
   if (!str) return '';
@@ -47,7 +45,17 @@ export default function SantriDashboardPage() {
   const [formData, setFormData] = useState({
     nis: '',
     nama_lengkap: '',
+    jenis_kelamin: '' as 'L' | 'P' | '',
+    nisn: '',
+    tempat_lahir: '',
     tanggal_lahir: '',
+    nik: '',
+    alamat: '',
+    hp: '',
+    nama_ayah: '',
+    nama_ibu: '',
+    rombel_saat_ini: '',
+    sekolah_asal: '',
     id_kamar: '',
     id_wali: '',
     status: 'aktif' as SantriStatus,
@@ -84,13 +92,15 @@ export default function SantriDashboardPage() {
       if (kelasErr) throw kelasErr;
       setKelasList(kelasData || []);
 
-      // Fetch Santri
+      // Fetch Santri with joins
       const { data: santriData, error: santriErr } = await supabase
         .from('santri')
         .select(`
           *,
           kamar:id_kamar (*),
-          wali:id_wali (*)
+          wali:id_wali (*),
+          kelas_formal:id_kelas_formal (*),
+          kelas_non_formal:id_kelas_non_formal (*)
         `)
         .order('nama_lengkap', { ascending: true });
 
@@ -114,7 +124,17 @@ export default function SantriDashboardPage() {
     setFormData({
       nis: '',
       nama_lengkap: '',
+      jenis_kelamin: '',
+      nisn: '',
+      tempat_lahir: '',
       tanggal_lahir: '',
+      nik: '',
+      alamat: '',
+      hp: '',
+      nama_ayah: '',
+      nama_ibu: '',
+      rombel_saat_ini: '',
+      sekolah_asal: '',
       id_kamar: '',
       id_wali: '',
       status: 'aktif',
@@ -127,7 +147,17 @@ export default function SantriDashboardPage() {
     setFormData({
       nis: santri.nis,
       nama_lengkap: santri.nama_lengkap,
+      jenis_kelamin: (santri.jenis_kelamin || '') as 'L' | 'P' | '',
+      nisn: santri.nisn || '',
+      tempat_lahir: santri.tempat_lahir || '',
       tanggal_lahir: santri.tanggal_lahir,
+      nik: santri.nik || '',
+      alamat: santri.alamat || '',
+      hp: santri.hp || '',
+      nama_ayah: santri.nama_ayah || '',
+      nama_ibu: santri.nama_ibu || '',
+      rombel_saat_ini: santri.rombel_saat_ini || '',
+      sekolah_asal: santri.sekolah_asal || '',
       id_kamar: santri.id_kamar || '',
       id_wali: santri.id_wali || '',
       status: santri.status,
@@ -149,7 +179,17 @@ export default function SantriDashboardPage() {
     const payload = {
       nis: formData.nis,
       nama_lengkap: formData.nama_lengkap,
+      jenis_kelamin: formData.jenis_kelamin || null,
+      nisn: formData.nisn || null,
+      tempat_lahir: formData.tempat_lahir || null,
       tanggal_lahir: formData.tanggal_lahir,
+      nik: formData.nik || null,
+      alamat: formData.alamat || null,
+      hp: formData.hp || null,
+      nama_ayah: formData.nama_ayah || null,
+      nama_ibu: formData.nama_ibu || null,
+      rombel_saat_ini: formData.rombel_saat_ini || null,
+      sekolah_asal: formData.sekolah_asal || null,
       id_kamar: formData.id_kamar || null,
       id_wali: formData.id_wali || null,
       status: formData.status,
@@ -223,7 +263,7 @@ export default function SantriDashboardPage() {
         <div className="flex flex-col sm:flex-row gap-2.5">
           <button
             onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center justify-center gap-2 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-800 text-slate-700 dark:text-zinc-300 font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm"
+            className="flex items-center justify-center gap-2 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-300 font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm"
           >
             <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             Import Excel
@@ -317,9 +357,19 @@ export default function SantriDashboardPage() {
                 filteredList.map((santri) => (
                   <tr key={santri.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-950/20 transition-all duration-200">
                     <td className="py-4 px-6">
-                      <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20 flex items-center justify-center font-bold text-xs uppercase shadow-sm">
-                        {santri.nama_lengkap.charAt(0)}
-                      </div>
+                      {santri.foto_url ? (
+                        <Image
+                          src={santri.foto_url}
+                          alt={santri.nama_lengkap}
+                          width={36}
+                          height={36}
+                          className="h-9 w-9 rounded-full object-cover border border-emerald-200/50 dark:border-emerald-500/20 shadow-sm"
+                        />
+                      ) : (
+                        <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20 flex items-center justify-center font-bold text-xs uppercase shadow-sm">
+                          {santri.nama_lengkap.charAt(0)}
+                        </div>
+                      )}
                     </td>
                     <td className="py-4 px-6 font-mono text-xs text-slate-500 dark:text-zinc-500">{santri.nis}</td>
                     <td className="py-4 px-6 font-bold text-slate-900 dark:text-white">{toTitleCase(santri.nama_lengkap)}</td>
@@ -398,9 +448,19 @@ export default function SantriDashboardPage() {
           ) : (
             filteredList.map((santri) => (
               <div key={santri.id} className="p-4 flex gap-4 items-start hover:bg-slate-50/50 dark:hover:bg-zinc-950/20 transition-all">
-                <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 flex items-center justify-center font-bold text-sm uppercase flex-shrink-0">
-                  {santri.nama_lengkap.charAt(0)}
-                </div>
+                {santri.foto_url ? (
+                  <Image
+                    src={santri.foto_url}
+                    alt={santri.nama_lengkap}
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 rounded-full object-cover border border-emerald-200/50 shadow-sm flex-shrink-0"
+                  />
+                ) : (
+                  <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 flex items-center justify-center font-bold text-sm uppercase flex-shrink-0">
+                    {santri.nama_lengkap.charAt(0)}
+                  </div>
+                )}
                 
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center justify-between gap-2">
@@ -448,8 +508,8 @@ export default function SantriDashboardPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={() => setIsModalOpen(false)} />
 
-          <div className="relative bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all">
-            <div className="border-b border-slate-100 dark:border-zinc-800 px-6 py-4 flex items-center justify-between">
+          <div className="relative bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-4xl rounded-2xl shadow-2xl overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
+            <div className="border-b border-slate-100 dark:border-zinc-800 px-6 py-4 flex items-center justify-between flex-shrink-0">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 {selectedSantri ? 'Edit Data Santri' : 'Tambah Santri Baru'}
               </h3>
@@ -458,122 +518,14 @@ export default function SantriDashboardPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase mb-1.5">
-                  Nomor Induk Santri (NIS)
-                </label>
-                <input
-                  type="text"
-                  name="nis"
-                  required
-                  disabled={!!selectedSantri}
-                  value={formData.nis}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-slate-800 dark:text-zinc-100 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase mb-1.5">
-                  Nama Lengkap
-                </label>
-                <input
-                  type="text"
-                  name="nama_lengkap"
-                  required
-                  value={formData.nama_lengkap}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase mb-1.5">
-                  Tanggal Lahir
-                </label>
-                <input
-                  type="date"
-                  name="tanggal_lahir"
-                  required
-                  value={formData.tanggal_lahir}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase mb-1.5">
-                  Kamar / Asrama
-                </label>
-                <select
-                  name="id_kamar"
-                  value={formData.id_kamar}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
-                >
-                  <option value="">-- Belum Di-plot --</option>
-                  {kamarList.map((kamar) => (
-                    <option key={kamar.id} value={kamar.id}>
-                      {kamar.nama_kamar} ({kamar.gedung})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase mb-1.5">
-                  Wali Santri
-                </label>
-                <select
-                  name="id_wali"
-                  value={formData.id_wali}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
-                >
-                  <option value="">-- Belum Memiliki Wali --</option>
-                  {waliList.map((wali) => (
-                    <option key={wali.id} value={wali.id}>
-                      {wali.nama_lengkap}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold tracking-wider text-slate-400 dark:text-zinc-500 uppercase mb-1.5">
-                  Status Keaktifan
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
-                >
-                  <option value="aktif">Aktif</option>
-                  <option value="alumni">Alumni</option>
-                  <option value="mutasi">Mutasi</option>
-                </select>
-              </div>
-
-              <div className="border-t border-slate-100 dark:border-zinc-800 pt-4 mt-6 flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-850 text-slate-600 dark:text-slate-300 rounded-xl font-semibold text-xs transition-colors"
-                >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold text-xs transition-all flex items-center gap-1.5 shadow-md shadow-emerald-600/10"
-                >
-                  {isSubmitting && <Loader2 className="h-3 w-3 animate-spin" />}
-                  {selectedSantri ? 'Simpan' : 'Tambah'}
-                </button>
-              </div>
-            </form>
+            <FormTambahSantri
+              onClose={() => setIsModalOpen(false)}
+              onSuccess={fetchData}
+              selectedSantri={selectedSantri}
+              kamarList={kamarList}
+              waliList={waliList}
+              kelasList={kelasList}
+            />
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 import { Pegawai, JabatanPegawai, StatusPegawai } from '@/types/database';
 import {
@@ -26,6 +27,8 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ImageUpload from '@/components/ImageUpload';
+import { uploadFotoPegawai } from '@/services/storage-actions';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -134,6 +137,8 @@ export default function PegawaiPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedPegawai, setSelectedPegawai] = useState<Pegawai | null>(null);
   const [formData, setFormData] = useState<Omit<Pegawai, 'id' | 'created_at'>>(emptyForm());
+  const [fotoFile, setFotoFile] = useState<File | null>(null);
+  const [uploadingFoto, setUploadingFoto] = useState(false);
 
   // Detail modal
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -176,10 +181,10 @@ export default function PegawaiPage() {
   const totalGuruFormal = pegawaiList.filter(p => p.jabatan === 'Guru Formal').length;
   const totalAktif = pegawaiList.filter(p => p.status === 'Aktif').length;
 
-  // ── Form Handlers ──────────────────────────────────────────────────────────
   const openAdd = () => {
     setSelectedPegawai(null);
     setFormData(emptyForm());
+    setFotoFile(null);
     setIsFormOpen(true);
   };
 
@@ -203,6 +208,7 @@ export default function PegawaiPage() {
       tanggal_bergabung: p.tanggal_bergabung || '',
       status: p.status,
     });
+    setFotoFile(null);
     setIsFormOpen(true);
   };
 
@@ -213,6 +219,26 @@ export default function PegawaiPage() {
       return;
     }
     setIsSubmitting(true);
+    
+    let uploadedFotoUrl = formData.foto_url;
+    if (fotoFile) {
+      setUploadingFoto(true);
+      try {
+        const fileExt = fotoFile.name.split('.').pop() || 'jpg';
+        const rawIdentifier = formData.nip?.trim() || formData.nama_lengkap.trim().replace(/\s+/g, '_');
+        const uniqueFileName = `${rawIdentifier}.${fileExt}`;
+        uploadedFotoUrl = await uploadFotoPegawai(fotoFile, uniqueFileName);
+      } catch (uploadErr: any) {
+        console.error('Gagal mengunggah foto:', uploadErr);
+        toast.error('Gagal mengunggah foto pegawai: ' + uploadErr.message);
+        setIsSubmitting(false);
+        setUploadingFoto(false);
+        return;
+      } finally {
+        setUploadingFoto(false);
+      }
+    }
+
     try {
       const payload = {
         ...formData,
@@ -224,7 +250,7 @@ export default function PegawaiPage() {
         alamat: formData.alamat || null,
         no_hp: formData.no_hp || null,
         email: formData.email || null,
-        foto_url: formData.foto_url || null,
+        foto_url: uploadedFotoUrl || null,
         pendidikan_terakhir: formData.pendidikan_terakhir || null,
         spesialisasi: formData.spesialisasi || null,
         tanggal_bergabung: formData.tanggal_bergabung || null,
@@ -431,9 +457,11 @@ export default function PegawaiPage() {
                 {/* Avatar + Name */}
                 <div className="flex items-center gap-3.5">
                   {p.foto_url ? (
-                    <img
+                    <Image
                       src={p.foto_url}
                       alt={p.nama_lengkap}
+                      width={56}
+                      height={56}
                       className="h-14 w-14 rounded-full object-cover border-2 border-slate-100 dark:border-zinc-800 flex-shrink-0 shadow-sm"
                     />
                   ) : (
@@ -563,6 +591,16 @@ export default function PegawaiPage() {
             {/* Modal Body */}
             <form onSubmit={handleSubmit} className="overflow-y-auto flex-1">
               <div className="p-6 space-y-6">
+
+                <div className="flex justify-center mb-4">
+                  <ImageUpload
+                    value={fotoFile || formData.foto_url}
+                    onChange={(file) => setFotoFile(file)}
+                    loading={uploadingFoto}
+                    shape="circle"
+                    label="Foto Profil Pegawai"
+                  />
+                </div>
 
                 {/* Section: Identitas */}
                 <fieldset className="space-y-4">
@@ -694,11 +732,7 @@ export default function PegawaiPage() {
                     <textarea rows={2} placeholder="Jl. Contoh No. 1, Kelurahan, Kecamatan, Kota" value={formData.alamat || ''} onChange={e => setField('alamat', e.target.value)}
                       className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none transition-all resize-none" />
                   </div>
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">URL Foto Profil</label>
-                    <input type="url" placeholder="https://..." value={formData.foto_url || ''} onChange={e => setField('foto_url', e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none transition-all" />
-                  </div>
+                  
                 </fieldset>
               </div>
 
@@ -749,7 +783,13 @@ export default function PegawaiPage() {
                 </button>
                 <div className="flex items-end gap-4">
                   {p.foto_url ? (
-                    <img src={p.foto_url} alt={p.nama_lengkap} className="h-20 w-20 rounded-2xl object-cover border-4 border-white/30 shadow-lg flex-shrink-0" />
+                    <Image
+                      src={p.foto_url}
+                      alt={p.nama_lengkap}
+                      width={80}
+                      height={80}
+                      className="h-20 w-20 rounded-2xl object-cover border-4 border-white/30 shadow-lg flex-shrink-0"
+                    />
                   ) : (
                     <div className="h-20 w-20 rounded-2xl bg-white/20 border-4 border-white/30 flex items-center justify-center text-white font-extrabold text-2xl shadow-lg flex-shrink-0 select-none">
                       {getInitials(p.nama_lengkap)}

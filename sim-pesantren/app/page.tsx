@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { ThemeToggle } from '@/components/theme-toggle';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { GraduationCap, ArrowRight, ShieldCheck, HeartHandshake, HelpCircle } from 'lucide-react';
 
 export default function LandingPage() {

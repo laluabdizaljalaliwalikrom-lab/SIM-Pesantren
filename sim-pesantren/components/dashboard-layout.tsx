@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Sidebar } from './sidebar';
 import { BottomBar } from './bottom-bar';
-import { ThemeToggle } from './theme-toggle';
+import { ThemeToggle } from './ui/theme-toggle';
 import { Menu, Bell } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -27,15 +27,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         return 'Manajemen Asrama';
       case '/pegawai':
         return 'Data Kepegawaian';
-      case '/admin/santri':
+      case '/santri':
         return 'Data Master Santri';
-      case '/admin/tahfidz':
+      case '/tahfidz':
         return 'Tahfidz Tracker';
-      case '/admin/akademik':
+      case '/akademik':
         return 'Data Akademik';
-      case '/admin/pembayaran':
-        return 'Manajemen Keuangan';
-      case '/admin/pengaturan':
+      case '/pembayaran':
+        return 'Kasir Pembayaran';
+      case '/keuangan':
+        return 'Atur Keuangan';
+      case '/pengaturan':
         return 'Pengaturan Sistem';
       default:
         return 'SIM Pesantren';

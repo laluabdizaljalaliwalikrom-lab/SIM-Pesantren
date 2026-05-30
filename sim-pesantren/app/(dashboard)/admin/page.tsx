@@ -44,11 +44,11 @@ export default function AdminDashboardHome() {
           .from('santri')
           .select('*', { count: 'exact', head: true });
 
-        // 2. Fetch Santri Izin (Status Aktif di tabel perizinan)
+        // 2. Fetch Santri Izin (Status Aktif atau disetujui di tabel perizinan)
         const { count: izinCount } = await supabase
           .from('perizinan')
           .select('*', { count: 'exact', head: true })
-          .eq('status', 'Aktif');
+          .in('status', ['Aktif', 'disetujui']);
 
         // 3. Fetch Setoran Tahfidz Hari Ini
         const today = new Date().toISOString().split('T')[0];

@@ -61,6 +61,7 @@ export interface Santri {
   id_kelas_non_formal?: string | null;
   status: SantriStatus;
   created_at: string;
+  foto_url?: string | null;
   // Extended Columns
   no_kk?: string | null;
   agama?: string | null;
@@ -139,6 +140,8 @@ export interface Kelas {
   tingkat: number;
   id_sekolah: string;
   created_at: string;
+  // Joins
+  sekolah?: Sekolah | null;
 }
 
 export type JabatanPegawai =
@@ -173,4 +176,126 @@ export interface Pegawai {
   tanggal_bergabung?: string | null;
   status: StatusPegawai;
   created_at: string;
+}
+
+export interface NilaiAkademik {
+  id: string;
+  id_santri: string;
+  id_kelas: string;
+  mata_pelajaran: string;
+  nilai: number;
+  catatan?: string | null;
+  created_at: string;
+  // Joins
+  santri?: Santri | null;
+  kelas?: Kelas | null;
+}
+
+export interface MataPelajaran {
+  id: string;
+  kode_mapel: string;
+  nama_mapel: string;
+  kategori: 'Diniyah/Pesantren' | 'Umum' | 'Kitab Kuning' | 'Bahasa';
+  keterangan?: string | null;
+  created_at: string;
+}
+
+export interface JadwalPelajaran {
+  id: string;
+  id_kelas: string;
+  id_mapel: string;
+  id_guru: string | null;
+  hari: 'Senin' | 'Selasa' | 'Rabu' | 'Kamis' | 'Jumat' | 'Sabtu' | 'Ahad';
+  jam_mulai: string;
+  jam_selesai: string;
+  ruangan?: string | null;
+  created_at: string;
+  // Joins
+  kelas?: Kelas | null;
+  mapel?: MataPelajaran | null;
+  guru?: Pegawai | null;
+}
+
+export interface Absensi {
+  id: string;
+  id_jadwal: string;
+  id_santri: string;
+  tanggal: string;
+  status: 'Hadir' | 'Sakit' | 'Izin' | 'Alpha';
+  keterangan?: string | null;
+  created_at: string;
+  // Joins
+  jadwal?: JadwalPelajaran | null;
+  santri?: Santri | null;
+}
+
+export interface AbsensiSholat {
+  id: string;
+  id_santri: string;
+  tanggal: string;
+  waktu_sholat: 'Subuh' | 'Dzuhur' | 'Ashar' | 'Maghrib' | 'Isya';
+  status: 'Hadir' | 'Terlambat' | 'Izin' | 'Sakit' | 'Alpha';
+  keterangan?: string | null;
+  created_at: string;
+  id_musyrif?: string | null;
+  // Joins
+  santri?: Santri | null;
+  musyrif?: Pegawai | null;
+}
+
+export interface Perizinan {
+  id: string;
+  id_santri: string;
+  keperluan: string;
+  tanggal_keluar: string;
+  tanggal_kembali?: string | null;
+  rencana_kembali?: string | null;
+  penjemput?: string | null;
+  status: 'diajukan' | 'disetujui' | 'ditolak' | 'kembali' | string;
+  created_at: string;
+  // Joins
+  santri?: Santri | null;
+}
+
+export interface MasterPelanggaran {
+  id: string;
+  nama_pelanggaran: string;
+  kategori: 'Ringan' | 'Sedang' | 'Berat';
+  poin: number;
+  created_at: string;
+}
+
+export interface PelanggaranSantri {
+  id: string;
+  id_santri: string;
+  id_pelanggaran: string;
+  catatan?: string | null;
+  id_pelapor?: string | null;
+  tanggal: string;
+  created_at: string;
+  // Joins
+  santri?: Santri | null;
+  pelanggaran?: MasterPelanggaran | null;
+  pelapor?: Pegawai | null;
+}
+
+export interface MasterBiaya {
+  id: string;
+  nama_biaya: string;
+  nominal: number;
+  created_at: string;
+}
+
+export interface Tagihan {
+  id: string;
+  id_santri: string;
+  id_master_biaya: string;
+  bulan: number;
+  tahun: number;
+  nominal: number;
+  status: 'Belum Lunas' | 'Lunas' | string;
+  created_at: string;
+  // Joins
+  santri?: Santri | null;
+  master_biaya?: MasterBiaya | null;
 }
