@@ -19,6 +19,7 @@ CREATE TABLE public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     nama_lengkap TEXT NOT NULL,
     role public.user_role NOT NULL DEFAULT 'wali_santri',
+    no_hp TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -36,7 +37,17 @@ CREATE TABLE public.santri (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     nis TEXT UNIQUE NOT NULL,
     nama_lengkap TEXT NOT NULL,
+    jenis_kelamin TEXT CHECK (jenis_kelamin IN ('L', 'P')),
+    nisn TEXT,
+    tempat_lahir TEXT,
     tanggal_lahir DATE NOT NULL,
+    nik TEXT,
+    alamat TEXT,
+    hp TEXT,
+    nama_ayah TEXT,
+    nama_ibu TEXT,
+    rombel_saat_ini TEXT,
+    sekolah_asal TEXT,
     id_kamar UUID REFERENCES public.kamar(id) ON DELETE SET NULL,
     id_wali UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
     status public.santri_status NOT NULL DEFAULT 'aktif',
@@ -49,11 +60,12 @@ CREATE TABLE public.santri (
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-    INSERT INTO public.profiles (id, nama_lengkap, role)
+    INSERT INTO public.profiles (id, nama_lengkap, role, no_hp)
     VALUES (
         NEW.id,
         COALESCE(NEW.raw_user_meta_data->>'nama_lengkap', 'Pengguna Baru'),
-        COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'wali_santri'::public.user_role)
+        COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'wali_santri'::public.user_role),
+        NEW.raw_user_meta_data->>'no_hp'
     );
     RETURN NEW;
 END;
@@ -216,4 +228,113 @@ CREATE POLICY "Wali santri can view their own child's tahfidz"
               AND santri.id_wali = auth.uid()
         )
     );
+
+
+-- ==========================================
+-- FITUR PEMBAYARAN SPP / KEUANGAN
+-- ==========================================
+
+-- Tabel Pembayaran
+CREATE TABLE public.pembayaran (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    id_santri UUID REFERENCES public.santri(id) ON DELETE CASCADE NOT NULL,
+    jumlah NUMERIC NOT NULL CHECK (jumlah > 0),
+    status TEXT NOT NULL DEFAULT 'Belum Lunas' CHECK (status IN ('Belum Lunas', 'Lunas')),
+    tanggal_bayar TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS Enablement
+ALTER TABLE public.pembayaran ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies untuk Pembayaran
+-- 1. Wali Santri hanya bisa melihat riwayat pembayaran anak mereka sendiri
+CREATE POLICY "Wali santri can view own child's payments"
+    ON public.pembayaran
+    FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.santri
+            WHERE santri.id = pembayaran.id_santri 
+              AND santri.id_wali = auth.uid()
+        )
+    );
+
+-- 2. Admin dan Pengasuh bisa melihat semua riwayat pembayaran
+CREATE POLICY "Admin and Pengasuh can view all payments"
+    ON public.pembayaran
+    FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid() AND role IN ('admin', 'pengasuh')
+        )
+    );
+
+-- 3. Hanya Admin yang bisa mengubah data pembayaran (termasuk status menjadi Lunas)
+CREATE POLICY "Only admin can insert/update/delete payments"
+    ON public.pembayaran
+    FOR ALL
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+
+-- ==========================================
+-- FITUR PERIZINAN KELUAR SANTRI
+-- ==========================================
+
+-- Tabel Perizinan
+CREATE TABLE public.perizinan (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    id_santri UUID REFERENCES public.santri(id) ON DELETE CASCADE NOT NULL,
+    keperluan TEXT NOT NULL,
+    tanggal_keluar TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    tanggal_kembali TIMESTAMP WITH TIME ZONE,
+    status TEXT NOT NULL DEFAULT 'Aktif' CHECK (status IN ('Aktif', 'Kembali')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- RLS Enablement
+ALTER TABLE public.perizinan ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies untuk Perizinan
+-- 1. Admin dan Pengasuh memiliki kontrol penuh (CRUD)
+CREATE POLICY "Admin and Pengasuh can manage perizinan"
+    ON public.perizinan
+    FOR ALL
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.profiles
+            WHERE id = auth.uid() AND role IN ('admin', 'pengasuh')
+        )
+    );
+
+-- 2. Wali Santri hanya bisa membaca data perizinan anaknya sendiri
+CREATE POLICY "Wali santri can view own child's perizinan"
+    ON public.perizinan
+    FOR SELECT
+    TO authenticated
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.santri
+            WHERE santri.id = perizinan.id_santri 
+              AND santri.id_wali = auth.uid()
+        )
+    );
+
+
 
