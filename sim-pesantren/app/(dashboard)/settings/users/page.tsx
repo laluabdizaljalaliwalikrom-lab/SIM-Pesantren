@@ -45,43 +45,56 @@ export default function UserRoleSettingsPage() {
 
   // Fetch initial configuration
   const fetchData = useCallback(async () => {
+    setLoading(true);
+
+    // 1. Fetch users from server-side API (bypasses RLS, merges auth.users emails)
     try {
-      setLoading(true);
-
-      // 1. Fetch users from server-side API (bypasses RLS, merges auth.users emails)
       const usersRes = await fetch('/api/users');
-      if (!usersRes.ok) {
-        const errBody = await usersRes.json().catch(() => ({}));
-        throw new Error(errBody.error || `HTTP ${usersRes.status}`);
+      if (usersRes.ok) {
+        const { users: mergedUsers } = await usersRes.json();
+        setProfiles(mergedUsers || []);
+      } else {
+        console.error('Failed to fetch users:', usersRes.status);
       }
-      const { users: mergedUsers } = await usersRes.json();
-      setProfiles(mergedUsers || []);
+    } catch (err: any) {
+      console.error('Error fetching users:', err);
+    }
 
-      // 2. Fetch app_roles
+    // 2. Fetch app_roles (independent — don't let this block user list)
+    try {
       const { data: rolesData, error: rolesErr } = await supabase
         .from('app_roles')
         .select('*')
         .order('name', { ascending: true });
-      if (rolesErr) throw rolesErr;
-      setRoles(rolesData || []);
 
-      if (rolesData && rolesData.length > 0 && !selectedRoleId) {
-        setSelectedRoleId(rolesData[0].id);
+      if (rolesErr) {
+        console.error('Error fetching roles:', rolesErr.message);
+      } else {
+        setRoles(rolesData || []);
+        if (rolesData && rolesData.length > 0 && !selectedRoleId) {
+          setSelectedRoleId(rolesData[0].id);
+        }
       }
+    } catch (err: any) {
+      console.error('Error fetching roles:', err);
+    }
 
-      // 3. Fetch role_permissions
+    // 3. Fetch role_permissions (independent)
+    try {
       const { data: permData, error: permErr } = await supabase
         .from('role_permissions')
         .select('*');
-      if (permErr) throw permErr;
-      setPermissions(permData || []);
 
+      if (permErr) {
+        console.error('Error fetching permissions:', permErr.message);
+      } else {
+        setPermissions(permData || []);
+      }
     } catch (err: any) {
-      console.error('Error fetching data:', err);
-      toast.error('Gagal memuat pengaturan pengguna & hak akses.');
-    } finally {
-      setLoading(false);
+      console.error('Error fetching permissions:', err);
     }
+
+    setLoading(false);
   }, [selectedRoleId]);
 
   useEffect(() => {
