@@ -80,6 +80,7 @@ export async function updateRolePermissions(
   const VALID_FEATURES = [
     'Lembaga',
     'Santri',
+    'Tahfidz',
     'Kepegawaian',
     'Keuangan',
     'Akademik',
