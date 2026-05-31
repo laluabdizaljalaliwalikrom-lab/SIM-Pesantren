@@ -114,6 +114,20 @@ export interface Santri {
 
 export type KelancaranGrade = 'A' | 'B' | 'C' | 'D';
 
+export interface RefHadits {
+  id: string;
+  nama_kitab: string;
+  jumlah_hadits: number;
+  created_at: string;
+}
+
+export interface RefMatan {
+  id: string;
+  nama_kitab: string;
+  jumlah_bait: number;
+  created_at: string;
+}
+
 export interface PresensiTahfidz {
   id: string;
   id_santri: string;
@@ -124,6 +138,18 @@ export interface PresensiTahfidz {
   nilai_kelancaran: KelancaranGrade;
   id_ustadz: string | null;
   created_at: string;
+  // New Fields
+  tipe_setoran: 'quran' | 'hadits' | 'matan' | 'tahsin' | 'ujian';
+  penyimak?: string | null;
+  jenis_setoran?: 'Ziyadah' | 'Murojaah' | null;
+  ayat_mulai?: number | null;
+  catatan?: string | null;
+  kitab_hadits_matan?: string | null;
+  hadits_ke?: number | null;
+  jilid_tahsin?: number | null;
+  halaman_tahsin?: number | null;
+  materi_ujian?: string | null;
+  nilai_custom?: string | null;
   // Joins
   santri?: Santri | null;
   ustadz?: Profile | null;
