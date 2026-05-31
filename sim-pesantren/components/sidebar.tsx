@@ -27,6 +27,8 @@ interface SidebarProps {
   onToggleCollapse: () => void;
   userRoleRaw?: string;
   permissions?: any[];
+  pesantrenLogo?: string;
+  pesantrenName?: string;
 }
 
 const MENU_ITEMS = [
@@ -43,7 +45,7 @@ const MENU_ITEMS = [
   { name: 'Pengaturan', href: '/pengaturan', icon: Settings },
 ];
 
-export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, userRoleRaw, permissions }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, userRoleRaw, permissions, pesantrenLogo, pesantrenName }: SidebarProps) {
   const pathname = usePathname();
 
   const isSuperAdmin = userRoleRaw === 'admin' || userRoleRaw === 'Super Admin';
@@ -97,13 +99,18 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, userRo
         {/* Brand / Header */}
         <div className={`flex h-16 items-center border-b border-emerald-800/30 px-4 ${isCollapsed ? 'lg:justify-center' : 'justify-between'}`}>
           <Link href="/admin" className="flex items-center gap-2.5 min-w-0">
-            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-white font-extrabold text-lg shadow-md shadow-emerald-500/25">
-              P
-            </div>
+            {pesantrenLogo ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={pesantrenLogo} alt="Logo" className="h-9 w-9 flex-shrink-0 rounded-lg object-cover shadow-md" />
+            ) : (
+              <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-emerald-500 text-white font-extrabold text-lg shadow-md shadow-emerald-500/25">
+                P
+              </div>
+            )}
             {!isCollapsed && (
               <div className="animate-fade-in truncate">
                 <span className="font-extrabold text-base tracking-wide bg-gradient-to-r from-emerald-400 to-teal-200 bg-clip-text text-transparent">
-                  SIM Pesantren
+                  {pesantrenName || "SIM Pesantren"}
                 </span>
                 <p className="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">Portal Admin</p>
               </div>

@@ -53,13 +53,34 @@ function LoginContent() {
 
   // ── Error state ──
   const [errorMessage, setErrorMessage] = useState('');
+  
+  // ── Pesantren branding state ──
+  const [logoUrl, setLogoUrl] = useState<string>('');
+  const [pesantrenName, setPesantrenName] = useState<string>('SIM Pesantren');
 
   const emailRef = useRef<HTMLInputElement>(null);
 
-  // Mount animation
+  // Mount animation & load brand
   useEffect(() => {
     const t = setTimeout(() => setMounted(true), 50);
     emailRef.current?.focus();
+    
+    async function loadBrand() {
+      try {
+        const { data } = await supabase
+          .from('pesantren_profile')
+          .select('logo_url, nama_pesantren')
+          .maybeSingle();
+        if (data) {
+          if (data.logo_url) setLogoUrl(data.logo_url);
+          if (data.nama_pesantren) setPesantrenName(data.nama_pesantren);
+        }
+      } catch (err) {
+        console.error('Error loading brand info:', err);
+      }
+    }
+    loadBrand();
+
     return () => clearTimeout(t);
   }, []);
 
@@ -181,11 +202,16 @@ function LoginContent() {
 
           {/* Top: Brand */}
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm border border-white/10 text-white font-extrabold text-lg">
-              P
-            </div>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="Logo" className="h-11 w-11 rounded-xl object-cover border border-white/10 shadow" />
+            ) : (
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm border border-white/10 text-white font-extrabold text-lg">
+                P
+              </div>
+            )}
             <div>
-              <span className="font-extrabold text-lg tracking-wide">SIM Pesantren</span>
+              <span className="font-extrabold text-lg tracking-wide">{pesantrenName || "SIM Pesantren"}</span>
               <p className="text-[10px] text-emerald-200/60 font-medium tracking-wider uppercase">
                 Sistem Informasi Manajemen
               </p>
@@ -252,11 +278,16 @@ function LoginContent() {
         <header className="flex items-center justify-between px-6 sm:px-8 h-16 lg:h-20">
           {/* Mobile logo */}
           <div className="flex items-center gap-2.5 lg:hidden">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 text-white font-extrabold text-lg shadow-md shadow-emerald-500/25">
-              P
-            </div>
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="Logo" className="h-9 w-9 rounded-lg object-cover shadow-md" />
+            ) : (
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 text-white font-extrabold text-lg shadow-md shadow-emerald-500/25">
+                P
+              </div>
+            )}
             <span className="font-extrabold text-base bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">
-              SIM Pesantren
+              {pesantrenName || "SIM Pesantren"}
             </span>
           </div>
           <div className="lg:hidden" />
@@ -273,9 +304,14 @@ function LoginContent() {
 
             {/* Hero text */}
             <div className="space-y-2">
-              <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 mb-3">
-                <GraduationCap className="h-7 w-7" />
-              </div>
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="Logo" className="h-14 w-14 rounded-2xl object-cover shadow-lg mb-3 animate-fadeIn" />
+              ) : (
+                <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 mb-3">
+                  <GraduationCap className="h-7 w-7" />
+                </div>
+              )}
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Selamat Datang Kembali
               </h1>

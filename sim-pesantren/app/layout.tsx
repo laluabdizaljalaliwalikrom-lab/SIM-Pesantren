@@ -14,22 +14,44 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "SIM Pesantren",
-  description: "Sistem Informasi Manajemen Pesantren",
-};
-
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let logoUrl = "/favicon.ico";
+  let title = "SIM Pesantren";
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    if (supabaseUrl && supabaseAnonKey) {
+      const res = await fetch(`${supabaseUrl}/rest/v1/pesantren_profile?select=logo_url,nama_pesantren`, {
+        headers: {
+          'apikey': supabaseAnonKey,
+          'Authorization': `Bearer ${supabaseAnonKey}`
+        },
+        next: { revalidate: 60 }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.[0]?.logo_url) logoUrl = data[0].logo_url;
+        if (data?.[0]?.nama_pesantren) title = data[0].nama_pesantren;
+      }
+    }
+  } catch (err) {
+    console.error("Error loading layout metadata:", err);
+  }
+
   return (
     <html
       lang="id"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
+      <head>
+        <link rel="icon" href={logoUrl} />
+        <title>{title}</title>
+      </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider
           attribute="class"

@@ -27,6 +27,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [loggingOut, setLoggingOut] = useState(false);
   const [permissions, setPermissions] = useState<any[]>([]);
   const [loadingPermissions, setLoadingPermissions] = useState(true);
+  const [pesantrenLogo, setPesantrenLogo] = useState<string>('');
+  const [pesantrenName, setPesantrenName] = useState<string>('SIM Pesantren');
+
+  // Fetch pesantren profile
+  useEffect(() => {
+    async function loadPesantrenProfile() {
+      try {
+        const { data } = await supabase
+          .from('pesantren_profile')
+          .select('logo_url, nama_pesantren')
+          .maybeSingle();
+        if (data) {
+          if (data.logo_url) setPesantrenLogo(data.logo_url);
+          if (data.nama_pesantren) setPesantrenName(data.nama_pesantren);
+        }
+      } catch (err) {
+        console.error('Error loading pesantren profile:', err);
+      }
+    }
+    loadPesantrenProfile();
+  }, []);
 
   // Fetch current session user
   useEffect(() => {
@@ -179,6 +200,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
         userRoleRaw={userRoleRaw}
         permissions={permissions}
+        pesantrenLogo={pesantrenLogo}
+        pesantrenName={pesantrenName}
       />
 
       {/* Main Content Area */}
