@@ -78,6 +78,7 @@ export async function updateRolePermissions(
 
   // Validate each permission row
   const VALID_FEATURES = [
+    'Lembaga',
     'Santri',
     'Kepegawaian',
     'Keuangan',
