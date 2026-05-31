@@ -38,7 +38,7 @@ export function BottomBar({ userRoleRaw, permissions }: BottomBarProps) {
     const pathModuleMap: Record<string, string> = {
       '/santri': 'Santri',
       '/pegawai': 'Kepegawaian',
-      '/lembaga': 'Akademik',
+      '/lembaga': 'Lembaga',
       '/asrama': 'Asrama',
     };
 

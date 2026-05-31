@@ -272,6 +272,7 @@ export default function UserRoleSettingsPage() {
       // 2. Setup default blank feature permissions in role_permissions table
       if (roleId) {
         const defaultPerms = [
+          { id_role: roleId, feature: 'Lembaga', can_view: false, can_create: false, can_edit: false, can_delete: false },
           { id_role: roleId, feature: 'Santri', can_view: true, can_create: false, can_edit: false, can_delete: false },
           { id_role: roleId, feature: 'Tahfidz', can_view: true, can_create: false, can_edit: false, can_delete: false },
           { id_role: roleId, feature: 'Kepegawaian', can_view: false, can_create: false, can_edit: false, can_delete: false },

@@ -62,7 +62,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, userRo
       '/keuangan': 'Keuangan',
       '/pembayaran': 'Keuangan',
       '/akademik': 'Akademik',
-      '/lembaga': 'Akademik',
+      '/lembaga': 'Lembaga',
       '/asrama': 'Asrama',
       '/tahfidz': 'Tahfidz',
     };

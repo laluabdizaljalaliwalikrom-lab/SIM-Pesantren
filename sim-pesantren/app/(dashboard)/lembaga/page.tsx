@@ -48,10 +48,15 @@ export default function LembagaDashboardPage() {
   const [tahunSubmitting, setTahunSubmitting] = useState(false);
   const [semesterSubmitting, setSemesterSubmitting] = useState(false);
 
-  // Permission states for 'Akademik'
+  // Permission states for 'Akademik' (Tahun Ajaran & Semester)
   const [canCreate, setCanCreate] = useState<boolean>(false);
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [canDelete, setCanDelete] = useState<boolean>(false);
+
+  // Permission states for 'Lembaga' (Sekolah & Kelas)
+  const [canCreateLembaga, setCanCreateLembaga] = useState<boolean>(false);
+  const [canEditLembaga, setCanEditLembaga] = useState<boolean>(false);
+  const [canDeleteLembaga, setCanDeleteLembaga] = useState<boolean>(false);
 
   // Form states
   const [schoolSubmitting, setSchoolSubmitting] = useState(false);
@@ -138,6 +143,9 @@ export default function LembagaDashboardPage() {
           setCanCreate(true);
           setCanEdit(true);
           setCanDelete(true);
+          setCanCreateLembaga(true);
+          setCanEditLembaga(true);
+          setCanDeleteLembaga(true);
         } else {
           let nameMatch = 'Wali Santri';
           if (rawRole === 'pengasuh') nameMatch = 'Pengasuh';
@@ -151,12 +159,13 @@ export default function LembagaDashboardPage() {
             .single();
 
           if (roleData) {
+            // Fetch Akademik permissions
             const { data: perms } = await supabase
               .from('role_permissions')
               .select('*')
               .eq('id_role', roleData.id)
               .eq('feature', 'Akademik')
-              .single();
+              .maybeSingle();
 
             if (perms) {
               setCanCreate(!!perms.can_create);
@@ -167,10 +176,31 @@ export default function LembagaDashboardPage() {
               setCanEdit(false);
               setCanDelete(false);
             }
+
+            // Fetch Lembaga permissions
+            const { data: permsLembaga } = await supabase
+              .from('role_permissions')
+              .select('*')
+              .eq('id_role', roleData.id)
+              .eq('feature', 'Lembaga')
+              .maybeSingle();
+
+            if (permsLembaga) {
+              setCanCreateLembaga(!!permsLembaga.can_create);
+              setCanEditLembaga(!!permsLembaga.can_edit);
+              setCanDeleteLembaga(!!permsLembaga.can_delete);
+            } else {
+              setCanCreateLembaga(false);
+              setCanEditLembaga(false);
+              setCanDeleteLembaga(false);
+            }
           } else {
             setCanCreate(false);
             setCanEdit(false);
             setCanDelete(false);
+            setCanCreateLembaga(false);
+            setCanEditLembaga(false);
+            setCanDeleteLembaga(false);
           }
         }
       }
@@ -678,13 +708,15 @@ export default function LembagaDashboardPage() {
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto">
           {activeTab === 'sekolah_kelas' ? (
-            <button
-              onClick={handleOpenAddSchool}
-              className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/10 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 text-sm w-full sm:w-auto"
-            >
-              <Plus className="h-4 w-4" />
-              Tambah Lembaga
-            </button>
+            canCreateLembaga && (
+              <button
+                onClick={handleOpenAddSchool}
+                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/10 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 text-sm w-full sm:w-auto"
+              >
+                <Plus className="h-4 w-4" />
+                Tambah Lembaga
+              </button>
+            )
           ) : (
             canCreate && (
               <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -812,20 +844,24 @@ export default function LembagaDashboardPage() {
                       {school.kategori}
                     </span>
                     <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={(e) => handleOpenEditSchool(school, e)}
-                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-emerald-600 text-slate-400 rounded-lg transition-colors"
-                        title="Edit Lembaga"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={(e) => handleDeleteSchool(school, e)}
-                        className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-rose-600 text-slate-400 rounded-lg transition-colors"
-                        title="Hapus Lembaga"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {canEditLembaga && (
+                        <button
+                          onClick={(e) => handleOpenEditSchool(school, e)}
+                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-emerald-600 text-slate-400 rounded-lg transition-colors"
+                          title="Edit Lembaga"
+                        >
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {canDeleteLembaga && (
+                        <button
+                          onClick={(e) => handleDeleteSchool(school, e)}
+                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-rose-600 text-slate-400 rounded-lg transition-colors"
+                          title="Hapus Lembaga"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </div>
 
@@ -1131,13 +1167,15 @@ export default function LembagaDashboardPage() {
                   <BookOpen className="h-4 w-4 text-emerald-600" />
                   Daftar Kelas ({activeSchoolClasses.length})
                 </h4>
-                <button
-                  onClick={handleOpenAddClass}
-                  className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-xl text-xs shadow-sm hover:shadow transition-all"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  Tambah Kelas
-                </button>
+                {canCreateLembaga && (
+                  <button
+                    onClick={handleOpenAddClass}
+                    className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-2 rounded-xl text-xs shadow-sm hover:shadow transition-all"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Tambah Kelas
+                  </button>
+                )}
               </div>
 
               {/* Class List Table */}
@@ -1164,27 +1202,33 @@ export default function LembagaDashboardPage() {
                           <td className="py-3 px-4 font-bold text-slate-900 dark:text-white">{kelas.nama_kelas}</td>
                           <td className="py-3 px-4 text-right">
                             <div className="flex justify-end gap-1.5">
-                              <button
-                                onClick={() => handleOpenMembers(kelas)}
-                                className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-emerald-600 text-slate-400 rounded-lg transition-colors"
-                                title="Kelola Anggota Kelas"
-                              >
-                                <Users className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleOpenEditClass(kelas)}
-                                className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-emerald-600 text-slate-400 rounded-lg transition-colors"
-                                title="Edit Kelas"
-                              >
-                                <Edit2 className="h-3.5 w-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteClass(kelas)}
-                                className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-rose-600 text-slate-400 rounded-lg transition-colors"
-                                title="Hapus Kelas"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                              {canEditLembaga && (
+                                <button
+                                  onClick={() => handleOpenMembers(kelas)}
+                                  className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-emerald-600 text-slate-400 rounded-lg transition-colors"
+                                  title="Kelola Anggota Kelas"
+                                >
+                                  <Users className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                              {canEditLembaga && (
+                                <button
+                                  onClick={() => handleOpenEditClass(kelas)}
+                                  className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-emerald-600 text-slate-400 rounded-lg transition-colors"
+                                  title="Edit Kelas"
+                                >
+                                  <Edit2 className="h-3.5 w-3.5" />
+                                </button>
+                              )}
+                              {canDeleteLembaga && (
+                                <button
+                                  onClick={() => handleDeleteClass(kelas)}
+                                  className="p-1 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-rose-600 text-slate-400 rounded-lg transition-colors"
+                                  title="Hapus Kelas"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              )}
                             </div>
                           </td>
                         </tr>

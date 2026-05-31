@@ -15,7 +15,8 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Users
+  Users,
+  School
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateRolePermissions } from '@/services/role-actions';
@@ -27,6 +28,7 @@ import { updateRolePermissions } from '@/services/role-actions';
 type ActionKey = 'can_view' | 'can_create' | 'can_edit' | 'can_delete';
 
 const SYSTEM_MODULES: { key: string; label: string; icon: React.ElementType }[] = [
+  { key: 'Lembaga',      label: 'Lembaga & Kelas',  icon: School        },
   { key: 'Santri',       label: 'Data Santri',      icon: Users         },
   { key: 'Tahfidz',      label: 'Tahfidz Tracker',   icon: GraduationCap },
   { key: 'Kepegawaian',  label: 'Kepegawaian',      icon: Briefcase     },
