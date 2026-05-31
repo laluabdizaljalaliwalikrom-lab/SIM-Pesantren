@@ -69,11 +69,9 @@ function LoginContent() {
     
     async function loadBrand() {
       try {
-        const { data } = await supabase
-          .from('pesantren_profile')
-          .select('logo_url, nama_pesantren')
-          .maybeSingle();
-        if (data) {
+        const res = await fetch('/api/pesantren-profile');
+        if (res.ok) {
+          const data = await res.json();
           if (data.logo_url) setLogoUrl(data.logo_url);
           if (data.nama_pesantren) setPesantrenName(data.nama_pesantren);
         }
