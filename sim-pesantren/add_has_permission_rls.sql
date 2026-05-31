@@ -106,17 +106,32 @@ DROP POLICY IF EXISTS "Allow public update for kelas" ON public.kelas;
 DROP POLICY IF EXISTS "Allow public delete for kelas" ON public.kelas;
 
 -- mata_pelajaran
-DROP POLICY IF EXISTS "Allow public select for mata_pelajaran" ON public.mata_pelajaran;
-DROP POLICY IF EXISTS "Allow public all for mata_pelajaran" ON public.mata_pelajaran;
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'mata_pelajaran') THEN
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public select for mata_pelajaran" ON public.mata_pelajaran';
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public all for mata_pelajaran" ON public.mata_pelajaran';
+  END IF;
+END $$;
 
 -- jadwal_pelajaran
-DROP POLICY IF EXISTS "Allow public select for jadwal_pelajaran" ON public.jadwal_pelajaran;
-DROP POLICY IF EXISTS "Allow public all for jadwal_pelajaran" ON public.jadwal_pelajaran;
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'jadwal_pelajaran') THEN
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public select for jadwal_pelajaran" ON public.jadwal_pelajaran';
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public all for jadwal_pelajaran" ON public.jadwal_pelajaran';
+  END IF;
+END $$;
 
 -- nilai_akademik
-DROP POLICY IF EXISTS "Allow public select for nilai_akademik" ON public.nilai_akademik;
-DROP POLICY IF EXISTS "Allow public update for nilai_akademik" ON public.nilai_akademik;
-DROP POLICY IF EXISTS "Allow public delete for nilai_akademik" ON public.nilai_akademik;
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'nilai_akademik') THEN
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public select for nilai_akademik" ON public.nilai_akademik';
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public update for nilai_akademik" ON public.nilai_akademik';
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public delete for nilai_akademik" ON public.nilai_akademik';
+  END IF;
+END $$;
 
 -- master_biaya
 DROP POLICY IF EXISTS "Allow public select for master_biaya" ON public.master_biaya;
@@ -207,20 +222,35 @@ CREATE POLICY "RLS: Manage Kelas (Create)" ON public.kelas FOR INSERT TO authent
 CREATE POLICY "RLS: Manage Kelas (Edit)" ON public.kelas FOR UPDATE TO authenticated USING (public.has_permission('Akademik', 'edit'));
 CREATE POLICY "RLS: Manage Kelas (Delete)" ON public.kelas FOR DELETE TO authenticated USING (public.has_permission('Akademik', 'delete'));
 
-CREATE POLICY "RLS: View Mapel" ON public.mata_pelajaran FOR SELECT TO authenticated USING (true);
-CREATE POLICY "RLS: Manage Mapel (Create)" ON public.mata_pelajaran FOR INSERT TO authenticated WITH CHECK (public.has_permission('Akademik', 'create'));
-CREATE POLICY "RLS: Manage Mapel (Edit)" ON public.mata_pelajaran FOR UPDATE TO authenticated USING (public.has_permission('Akademik', 'edit'));
-CREATE POLICY "RLS: Manage Mapel (Delete)" ON public.mata_pelajaran FOR DELETE TO authenticated USING (public.has_permission('Akademik', 'delete'));
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'mata_pelajaran') THEN
+    EXECUTE 'CREATE POLICY "RLS: View Mapel" ON public.mata_pelajaran FOR SELECT TO authenticated USING (true)';
+    EXECUTE 'CREATE POLICY "RLS: Manage Mapel (Create)" ON public.mata_pelajaran FOR INSERT TO authenticated WITH CHECK (public.has_permission(''Akademik'', ''create''))';
+    EXECUTE 'CREATE POLICY "RLS: Manage Mapel (Edit)" ON public.mata_pelajaran FOR UPDATE TO authenticated USING (public.has_permission(''Akademik'', ''edit''))';
+    EXECUTE 'CREATE POLICY "RLS: Manage Mapel (Delete)" ON public.mata_pelajaran FOR DELETE TO authenticated USING (public.has_permission(''Akademik'', ''delete''))';
+  END IF;
+END $$;
 
-CREATE POLICY "RLS: View Jadwal" ON public.jadwal_pelajaran FOR SELECT TO authenticated USING (true);
-CREATE POLICY "RLS: Manage Jadwal (Create)" ON public.jadwal_pelajaran FOR INSERT TO authenticated WITH CHECK (public.has_permission('Akademik', 'create'));
-CREATE POLICY "RLS: Manage Jadwal (Edit)" ON public.jadwal_pelajaran FOR UPDATE TO authenticated USING (public.has_permission('Akademik', 'edit'));
-CREATE POLICY "RLS: Manage Jadwal (Delete)" ON public.jadwal_pelajaran FOR DELETE TO authenticated USING (public.has_permission('Akademik', 'delete'));
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'jadwal_pelajaran') THEN
+    EXECUTE 'CREATE POLICY "RLS: View Jadwal" ON public.jadwal_pelajaran FOR SELECT TO authenticated USING (true)';
+    EXECUTE 'CREATE POLICY "RLS: Manage Jadwal (Create)" ON public.jadwal_pelajaran FOR INSERT TO authenticated WITH CHECK (public.has_permission(''Akademik'', ''create''))';
+    EXECUTE 'CREATE POLICY "RLS: Manage Jadwal (Edit)" ON public.jadwal_pelajaran FOR UPDATE TO authenticated USING (public.has_permission(''Akademik'', ''edit''))';
+    EXECUTE 'CREATE POLICY "RLS: Manage Jadwal (Delete)" ON public.jadwal_pelajaran FOR DELETE TO authenticated USING (public.has_permission(''Akademik'', ''delete''))';
+  END IF;
+END $$;
 
-CREATE POLICY "RLS: View Nilai" ON public.nilai_akademik FOR SELECT TO authenticated USING (true);
-CREATE POLICY "RLS: Manage Nilai (Create)" ON public.nilai_akademik FOR INSERT TO authenticated WITH CHECK (public.has_permission('Akademik', 'create'));
-CREATE POLICY "RLS: Manage Nilai (Edit)" ON public.nilai_akademik FOR UPDATE TO authenticated USING (public.has_permission('Akademik', 'edit'));
-CREATE POLICY "RLS: Manage Nilai (Delete)" ON public.nilai_akademik FOR DELETE TO authenticated USING (public.has_permission('Akademik', 'delete'));
+DO $$
+BEGIN
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'nilai_akademik') THEN
+    EXECUTE 'CREATE POLICY "RLS: View Nilai" ON public.nilai_akademik FOR SELECT TO authenticated USING (true)';
+    EXECUTE 'CREATE POLICY "RLS: Manage Nilai (Create)" ON public.nilai_akademik FOR INSERT TO authenticated WITH CHECK (public.has_permission(''Akademik'', ''create''))';
+    EXECUTE 'CREATE POLICY "RLS: Manage Nilai (Edit)" ON public.nilai_akademik FOR UPDATE TO authenticated USING (public.has_permission(''Akademik'', ''edit''))';
+    EXECUTE 'CREATE POLICY "RLS: Manage Nilai (Delete)" ON public.nilai_akademik FOR DELETE TO authenticated USING (public.has_permission(''Akademik'', ''delete''))';
+  END IF;
+END $$;
 
 -- ─── KEUANGAN (MASTER_BIAYA, TAGIHAN, PEMBAYARAN) ───────────────────────────
 CREATE POLICY "RLS: View Master Biaya" ON public.master_biaya FOR SELECT TO authenticated USING (true);
