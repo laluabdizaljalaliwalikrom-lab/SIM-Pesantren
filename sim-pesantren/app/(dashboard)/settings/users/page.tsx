@@ -17,7 +17,9 @@ import {
   User,
   Shield,
   Activity,
-  X
+  X,
+  Pencil,
+  Phone
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -36,6 +38,14 @@ export default function UserRoleSettingsPage() {
   const [invitePhone, setInvitePhone] = useState('');
   const [inviteRole, setInviteRole] = useState('wali_santri');
   const [inviting, setInviting] = useState(false);
+
+  // Edit User States
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editUser, setEditUser] = useState<any>(null);
+  const [editName, setEditName] = useState('');
+  const [editRole, setEditRole] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [saving, setSaving] = useState(false);
 
   // Roles Tab States
   const [roles, setRoles] = useState<AppRole[]>([]);
@@ -119,6 +129,68 @@ export default function UserRoleSettingsPage() {
     setInvitePassword('');
     setInvitePhone('');
     setInviteRole('wali_santri');
+  };
+
+  // Open edit modal
+  const openEditModal = (user: any) => {
+    setEditUser(user);
+    setEditName(user.nama_lengkap || '');
+    setEditRole(user.role_raw || 'wali_santri');
+    setEditPhone(user.no_hp === '—' ? '' : user.no_hp || '');
+    setIsEditModalOpen(true);
+  };
+
+  // Save edited user
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editUser || !editName.trim()) {
+      toast.error('Nama tidak boleh kosong.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/users/${editUser.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nama_lengkap: editName.trim(),
+          role: editRole,
+          no_hp: editPhone.trim() || null,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || 'Gagal menyimpan perubahan.');
+        return;
+      }
+      toast.success(data.message || 'Data pengguna berhasil diperbarui.');
+      setIsEditModalOpen(false);
+      setEditUser(null);
+      await fetchData();
+    } catch (err: any) {
+      console.error('Edit user error:', err);
+      toast.error('Gagal menyimpan perubahan.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Delete user
+  const handleDeleteUser = async (user: any) => {
+    if (!confirm(`Yakin ingin menghapus akun "${user.nama_lengkap}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+    try {
+      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || 'Gagal menghapus akun.');
+        return;
+      }
+      toast.success(data.message || 'Akun berhasil dihapus.');
+      setProfiles(prev => prev.filter(p => p.id !== user.id));
+    } catch (err: any) {
+      console.error('Delete user error:', err);
+      toast.error('Gagal menghapus akun.');
+    }
   };
 
   const handleInviteUser = async (e: React.FormEvent) => {
@@ -341,6 +413,7 @@ export default function UserRoleSettingsPage() {
                       <th className="py-3.5 px-5">Email</th>
                       <th className="py-3.5 px-5">Role Pengguna</th>
                       <th className="py-3.5 px-5 text-center">Status</th>
+                      <th className="py-3.5 px-5 text-center">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-zinc-850 text-xs">
@@ -374,6 +447,24 @@ export default function UserRoleSettingsPage() {
                           <span className={p.status === 'Aktif' ? 'font-bold text-emerald-600' : 'text-slate-400'}>
                             {p.status}
                           </span>
+                        </td>
+                        <td className="py-4 px-5 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => openEditModal(p)}
+                              title="Edit Pengguna"
+                              className="p-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-200 dark:hover:border-emerald-500/20 hover:text-emerald-600 dark:hover:text-emerald-400 text-slate-400 dark:text-zinc-500 transition-colors"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(p)}
+                              title="Hapus Pengguna"
+                              className="p-1.5 rounded-lg border border-slate-200 dark:border-zinc-700 hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:border-rose-200 dark:hover:border-rose-500/20 hover:text-rose-600 dark:hover:text-rose-400 text-slate-400 dark:text-zinc-500 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -456,7 +547,110 @@ export default function UserRoleSettingsPage() {
         </div>
       )}
 
-      {/* Invite User Modal */}
+      {/* ══════════ Edit User Modal ══════════ */}
+      {isEditModalOpen && editUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={() => setIsEditModalOpen(false)} />
+
+          <div className="relative bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+
+            {/* Header */}
+            <div className="border-b border-slate-100 dark:border-zinc-800 px-6 py-4 flex items-center justify-between bg-slate-50/60 dark:bg-zinc-950/40">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <Pencil className="h-4 w-4 text-emerald-600" /> Edit Pengguna
+              </h3>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 transition-colors">✕</button>
+            </div>
+
+            {/* Body */}
+            <form onSubmit={handleSaveEdit}>
+              <div className="p-6 space-y-4">
+
+                {/* Info akun */}
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800">
+                  <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-sm uppercase">
+                    {editUser.nama_lengkap?.charAt(0) || '?'}
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-slate-800 dark:text-zinc-100">{editUser.email}</p>
+                    <p className="text-[10px] text-slate-400 dark:text-zinc-600">ID: {editUser.id?.slice(0, 8)}...</p>
+                  </div>
+                </div>
+
+                {/* Nama Lengkap */}
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">Nama Lengkap</label>
+                  <div className="relative">
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-600" />
+                    <input
+                      type="text"
+                      required
+                      value={editName}
+                      onChange={e => setEditName(e.target.value)}
+                      disabled={saving}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                {/* Role */}
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">Role</label>
+                  <select
+                    value={editRole}
+                    onChange={e => setEditRole(e.target.value)}
+                    disabled={saving}
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    <option value="admin">Super Admin</option>
+                    <option value="pengasuh">Pengasuh</option>
+                    <option value="wali_santri">Wali Santri</option>
+                  </select>
+                </div>
+
+                {/* No HP */}
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">No. WhatsApp</label>
+                  <div className="relative">
+                    <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-600" />
+                    <input
+                      type="tel"
+                      placeholder="628xxxxxxxxxx"
+                      value={editPhone}
+                      onChange={e => setEditPhone(e.target.value)}
+                      disabled={saving}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Footer */}
+              <div className="border-t border-slate-100 dark:border-zinc-800 px-6 py-4 flex justify-end gap-2 bg-slate-50/50 dark:bg-zinc-900/50">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  disabled={saving}
+                  className="px-4 py-2 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-bold rounded-xl text-slate-600 dark:text-zinc-300 transition-colors disabled:opacity-50"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/10 transition-all active:scale-95"
+                >
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════ Invite User Modal ══════════ */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={() => { setIsInviteModalOpen(false); resetInviteForm(); }} />
