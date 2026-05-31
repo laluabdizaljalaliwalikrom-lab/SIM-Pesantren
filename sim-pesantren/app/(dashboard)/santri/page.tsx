@@ -42,6 +42,11 @@ export default function SantriDashboardPage() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [selectedSantri, setSelectedSantri] = useState<Santri | null>(null);
 
+  // Permission states
+  const [canCreate, setCanCreate] = useState<boolean>(true);
+  const [canEdit, setCanEdit] = useState<boolean>(true);
+  const [canDelete, setCanDelete] = useState<boolean>(true);
+
   const [formData, setFormData] = useState({
     nis: '',
     nama_lengkap: '',
@@ -106,6 +111,57 @@ export default function SantriDashboardPage() {
 
       if (santriErr) throw santriErr;
       setSantriList(santriData || []);
+
+      // Fetch user role & permissions for 'Santri'
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .single();
+          
+        const rawRole = profile?.role || 'wali_santri';
+        if (rawRole === 'admin' || rawRole === 'Super Admin') {
+          setCanCreate(true);
+          setCanEdit(true);
+          setCanDelete(true);
+        } else {
+          let nameMatch = 'Wali Santri';
+          if (rawRole === 'pengasuh') nameMatch = 'Pengasuh';
+          else if (rawRole === 'wali_santri') nameMatch = 'Wali Santri';
+          else nameMatch = rawRole;
+
+          const { data: roleData } = await supabase
+            .from('app_roles')
+            .select('id')
+            .eq('name', nameMatch)
+            .single();
+
+          if (roleData) {
+            const { data: perms } = await supabase
+              .from('role_permissions')
+              .select('*')
+              .eq('id_role', roleData.id)
+              .eq('feature', 'Santri')
+              .single();
+
+            if (perms) {
+              setCanCreate(!!perms.can_create);
+              setCanEdit(!!perms.can_edit);
+              setCanDelete(!!perms.can_delete);
+            } else {
+              setCanCreate(false);
+              setCanEdit(false);
+              setCanDelete(false);
+            }
+          } else {
+            setCanCreate(false);
+            setCanEdit(false);
+            setCanDelete(false);
+          }
+        }
+      }
 
     } catch (err: any) {
       console.error('Error fetching data:', err);
@@ -261,20 +317,24 @@ export default function SantriDashboardPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2.5">
-          <button
-            onClick={() => setIsImportModalOpen(true)}
-            className="flex items-center justify-center gap-2 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-300 font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm"
-          >
-            <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            Import Excel
-          </button>
-          <button
-            onClick={handleOpenAddModal}
-            className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/10 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 text-sm"
-          >
-            <Plus className="h-4 w-4" />
-            Tambah Santri
-          </button>
+          {canCreate && (
+            <>
+              <button
+                onClick={() => setIsImportModalOpen(true)}
+                className="flex items-center justify-center gap-2 border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-slate-50 dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-300 font-semibold px-4 py-2.5 rounded-xl transition-all text-sm shadow-sm"
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                Import Excel
+              </button>
+              <button
+                onClick={handleOpenAddModal}
+                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/10 transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 text-sm"
+              >
+                <Plus className="h-4 w-4" />
+                Tambah Santri
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -400,20 +460,24 @@ export default function SantriDashboardPage() {
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleOpenEditModal(santri)}
-                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-emerald-600 rounded-lg transition-colors text-slate-400"
-                          title="Edit"
-                        >
-                          <Edit3 className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(santri.id, santri.nama_lengkap)}
-                          className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-rose-600 rounded-lg transition-colors text-slate-400"
-                          title="Hapus"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {canEdit && (
+                          <button
+                            onClick={() => handleOpenEditModal(santri)}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-emerald-600 rounded-lg transition-colors text-slate-400"
+                            title="Edit"
+                          >
+                            <Edit3 className="h-4 w-4" />
+                          </button>
+                        )}
+                        {canDelete && (
+                          <button
+                            onClick={() => handleDelete(santri.id, santri.nama_lengkap)}
+                            className="p-1.5 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-rose-600 rounded-lg transition-colors text-slate-400"
+                            title="Hapus"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -483,18 +547,22 @@ export default function SantriDashboardPage() {
                   </p>
 
                   <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-50 dark:border-zinc-800/50 mt-2">
-                    <button
-                      onClick={() => handleOpenEditModal(santri)}
-                      className="flex items-center gap-1 text-xs text-slate-500 hover:text-emerald-600 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-zinc-800"
-                    >
-                      <Edit3 className="h-3 w-3" /> Edit
-                    </button>
-                    <button
-                      onClick={() => handleDelete(santri.id, santri.nama_lengkap)}
-                      className="flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-zinc-800"
-                    >
-                      <Trash2 className="h-3 w-3" /> Hapus
-                    </button>
+                    {canEdit && (
+                      <button
+                        onClick={() => handleOpenEditModal(santri)}
+                        className="flex items-center gap-1 text-xs text-slate-500 hover:text-emerald-600 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-zinc-800"
+                      >
+                        <Edit3 className="h-3 w-3" /> Edit
+                      </button>
+                    )}
+                    {canDelete && (
+                      <button
+                        onClick={() => handleDelete(santri.id, santri.nama_lengkap)}
+                        className="flex items-center gap-1 text-xs text-slate-500 hover:text-rose-600 px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-zinc-800"
+                      >
+                        <Trash2 className="h-3 w-3" /> Hapus
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
