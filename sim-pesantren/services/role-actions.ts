@@ -86,6 +86,7 @@ export async function updateRolePermissions(
     'Akademik',
     'Asrama',
     'Perizinan',
+    'Pengaturan',
   ];
   for (const p of permissions) {
     if (!VALID_FEATURES.includes(p.feature)) {
