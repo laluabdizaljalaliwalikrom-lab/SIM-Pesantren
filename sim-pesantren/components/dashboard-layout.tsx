@@ -148,7 +148,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     '/akademik': 'Akademik',
     '/lembaga': 'Akademik',
     '/asrama': 'Asrama',
-    '/tahfidz': 'Santri',
+    '/tahfidz': 'Tahfidz',
   };
   
   const requiredModule = Object.keys(pathModuleMap).find(

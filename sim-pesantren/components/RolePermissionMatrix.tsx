@@ -14,7 +14,8 @@ import {
   Lock,
   Loader2,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Users
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateRolePermissions } from '@/services/role-actions';
@@ -26,12 +27,13 @@ import { updateRolePermissions } from '@/services/role-actions';
 type ActionKey = 'can_view' | 'can_create' | 'can_edit' | 'can_delete';
 
 const SYSTEM_MODULES: { key: string; label: string; icon: React.ElementType }[] = [
-  { key: 'Santri',       label: 'Data Santri',  icon: GraduationCap },
-  { key: 'Kepegawaian',  label: 'Kepegawaian',  icon: Briefcase     },
-  { key: 'Keuangan',     label: 'Keuangan',     icon: Wallet        },
-  { key: 'Akademik',     label: 'Akademik',     icon: BookOpen      },
-  { key: 'Asrama',       label: 'Asrama',       icon: Home          },
-  { key: 'Perizinan',    label: 'Perizinan',    icon: ClipboardCheck },
+  { key: 'Santri',       label: 'Data Santri',      icon: Users         },
+  { key: 'Tahfidz',      label: 'Tahfidz Tracker',   icon: GraduationCap },
+  { key: 'Kepegawaian',  label: 'Kepegawaian',      icon: Briefcase     },
+  { key: 'Keuangan',     label: 'Keuangan',         icon: Wallet        },
+  { key: 'Akademik',     label: 'Akademik',         icon: BookOpen      },
+  { key: 'Asrama',       label: 'Asrama',           icon: Home          },
+  { key: 'Perizinan',    label: 'Perizinan',        icon: ClipboardCheck },
 ];
 
 const ACTION_COLUMNS: { key: ActionKey; label: string }[] = [

@@ -64,7 +64,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, userRo
       '/akademik': 'Akademik',
       '/lembaga': 'Akademik',
       '/asrama': 'Asrama',
-      '/tahfidz': 'Santri',
+      '/tahfidz': 'Tahfidz',
     };
 
     const moduleName = pathModuleMap[item.href];
