@@ -31,7 +31,10 @@ export default function UserRoleSettingsPage() {
   const [profiles, setProfiles] = useState<any[]>([]);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRoleId, setInviteRoleId] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [invitePassword, setInvitePassword] = useState('');
+  const [invitePhone, setInvitePhone] = useState('');
+  const [inviteRole, setInviteRole] = useState('wali_santri');
   const [inviting, setInviting] = useState(false);
 
   // Roles Tab States
@@ -102,33 +105,74 @@ export default function UserRoleSettingsPage() {
   }, [fetchData]);
 
   // Invite User Handler
+  // Generate random password
+  const generatePassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+    let pw = '';
+    for (let i = 0; i < 8; i++) pw += chars[Math.floor(Math.random() * chars.length)];
+    setInvitePassword(pw);
+  };
+
+  const resetInviteForm = () => {
+    setInviteEmail('');
+    setInviteName('');
+    setInvitePassword('');
+    setInvitePhone('');
+    setInviteRole('wali_santri');
+  };
+
   const handleInviteUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteEmail.trim() || !inviteRoleId) {
-      toast.error('Semua kolom undangan wajib diisi.');
+    if (!inviteEmail.trim() || !inviteName.trim() || !invitePassword) {
+      toast.error('Nama, email, dan password wajib diisi.');
       return;
     }
+    if (invitePassword.length < 6) {
+      toast.error('Password minimal 6 karakter.');
+      return;
+    }
+
     setInviting(true);
     try {
-      const selectedRole = roles.find(r => r.id === inviteRoleId);
-      
-      // Simulate invitation creation
-      // In production, this would trigger Supabase Auth invite / insert into custom user profiles table
-      const mockNewUser = {
-        id: Math.random().toString(),
-        nama_lengkap: inviteEmail.split('@')[0].toUpperCase(),
-        email: inviteEmail.trim(),
-        role: selectedRole?.name || 'Wali Santri',
-        status: 'Aktif',
-        no_hp: '—'
-      };
+      const res = await fetch('/api/users/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: inviteEmail.trim(),
+          password: invitePassword,
+          nama: inviteName.trim(),
+          role: inviteRole,
+          no_hp: invitePhone.trim() || undefined,
+        }),
+      });
 
-      setProfiles(prev => [mockNewUser, ...prev]);
-      toast.success(`Undangan email berhasil dikirim ke: ${inviteEmail}`);
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast.error(data.error || 'Gagal membuat akun.');
+        return;
+      }
+
+      // Add new user to list
+      if (data.user) {
+        setProfiles(prev => [data.user, ...prev]);
+      }
+
+      // Show success with WhatsApp status
+      if (data.whatsapp === 'sent') {
+        toast.success(`Akun berhasil dibuat & undangan WhatsApp terkirim ke ${inviteName.trim()}!`);
+      } else if (data.whatsapp === 'failed') {
+        toast.success(`Akun berhasil dibuat, tapi pengiriman WhatsApp gagal. Kirim kredensial secara manual.`);
+      } else {
+        toast.success(`Akun berhasil dibuat untuk ${inviteName.trim()}!`);
+      }
+
       setIsInviteModalOpen(false);
-      setInviteEmail('');
+      resetInviteForm();
+      await fetchData();
     } catch (err: any) {
-      toast.error('Gagal mengirim undangan.');
+      console.error('Invite error:', err);
+      toast.error('Gagal membuat akun pengguna.');
     } finally {
       setInviting(false);
     }
@@ -415,50 +459,116 @@ export default function UserRoleSettingsPage() {
       {/* Invite User Modal */}
       {isInviteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={() => setIsInviteModalOpen(false)} />
+          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={() => { setIsInviteModalOpen(false); resetInviteForm(); }} />
           
-          <div className="relative bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden transform transition-all">
+          <div className="relative bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden transform transition-all">
             
             {/* Modal Header */}
             <div className="border-b border-slate-100 dark:border-zinc-800 px-6 py-4 flex items-center justify-between bg-slate-50/60 dark:bg-zinc-950/40">
-              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1">
-                <UserPlus className="h-4 w-4 text-emerald-600" /> Undang Pengguna Baru
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <UserPlus className="h-4 w-4 text-emerald-600" /> Tambah Pengguna Baru
               </h3>
-              <button onClick={() => setIsInviteModalOpen(false)} className="text-slate-400 hover:text-slate-700 transition-colors">✕</button>
+              <button onClick={() => { setIsInviteModalOpen(false); resetInviteForm(); }} className="text-slate-400 hover:text-slate-700 dark:hover:text-zinc-200 transition-colors">✕</button>
             </div>
 
             {/* Modal Body */}
             <form onSubmit={handleInviteUser}>
-              <div className="p-6 space-y-4">
-                
+              <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
+
+                {/* Nama Lengkap */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">Email Tujuan *</label>
+                  <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">Nama Lengkap *</label>
                   <div className="relative">
-                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-600" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nama lengkap pengguna"
+                      value={inviteName}
+                      onChange={e => setInviteName(e.target.value)}
+                      disabled={inviting}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">Email *</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-600" />
                     <input
                       type="email"
                       required
                       placeholder="nama@domain.com"
                       value={inviteEmail}
                       onChange={e => setInviteEmail(e.target.value)}
-                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 focus:border-emerald-500 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-850 dark:text-zinc-100 focus:outline-none transition-all"
+                      disabled={inviting}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all disabled:opacity-50"
                     />
                   </div>
                 </div>
 
+                {/* Password Sementara */}
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">Pilih Role Pengguna *</label>
-                  <select
-                    required
-                    value={inviteRoleId}
-                    onChange={e => setInviteRoleId(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none transition-all cursor-pointer"
-                  >
-                    <option value="" disabled>-- Pilih Role --</option>
-                    {roles.map(r => (
-                      <option key={r.id} value={r.id}>{r.name}</option>
-                    ))}
-                  </select>
+                  <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">Password Sementara *</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Min. 6 karakter"
+                      value={invitePassword}
+                      onChange={e => setInvitePassword(e.target.value)}
+                      disabled={inviting}
+                      className="flex-1 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-zinc-100 font-mono outline-none transition-all disabled:opacity-50"
+                    />
+                    <button
+                      type="button"
+                      onClick={generatePassword}
+                      disabled={inviting}
+                      className="px-3 py-2.5 border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl text-[11px] font-bold text-slate-600 dark:text-zinc-300 transition-colors disabled:opacity-50 whitespace-nowrap"
+                    >
+                      🎲 Generate
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-slate-400 dark:text-zinc-600">Password akan dikirim ke WhatsApp user. User bisa ubah setelah login.</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Role */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">Role *</label>
+                    <select
+                      required
+                      value={inviteRole}
+                      onChange={e => setInviteRole(e.target.value)}
+                      disabled={inviting}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="admin">Super Admin</option>
+                      <option value="pengasuh">Pengasuh</option>
+                      <option value="wali_santri">Wali Santri</option>
+                    </select>
+                  </div>
+
+                  {/* No. WhatsApp */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">No. WhatsApp</label>
+                    <input
+                      type="tel"
+                      placeholder="628xxxxxxxxxx"
+                      value={invitePhone}
+                      onChange={e => setInvitePhone(e.target.value)}
+                      disabled={inviting}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 rounded-xl px-4 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all disabled:opacity-50"
+                    />
+                  </div>
+                </div>
+
+                {/* Info box */}
+                <div className="flex items-start gap-2 px-3.5 py-3 rounded-xl bg-emerald-50/60 dark:bg-emerald-500/[0.04] border border-emerald-100 dark:border-emerald-500/10 text-[11px] text-emerald-700 dark:text-emerald-400">
+                  <ShieldCheck className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                  <span>Akun akan langsung aktif. Jika No. WhatsApp diisi dan Fonnte terkonfigurasi, kredensial login otomatis dikirim via WhatsApp.</span>
                 </div>
 
               </div>
@@ -467,18 +577,19 @@ export default function UserRoleSettingsPage() {
               <div className="border-t border-slate-100 dark:border-zinc-800 px-6 py-4 flex justify-end gap-2 bg-slate-50/50 dark:bg-zinc-900/50">
                 <button
                   type="button"
-                  onClick={() => setIsInviteModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 text-xs font-bold rounded-lg text-slate-650 dark:text-zinc-300"
+                  onClick={() => { setIsInviteModalOpen(false); resetInviteForm(); }}
+                  disabled={inviting}
+                  className="px-4 py-2 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-xs font-bold rounded-xl text-slate-600 dark:text-zinc-300 transition-colors disabled:opacity-50"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={inviting}
-                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-lg text-xs flex items-center gap-1.5"
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-xl text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/10 transition-all active:scale-95"
                 >
                   {inviting && <Loader2 className="h-4 w-4 animate-spin" />}
-                  Kirim Undangan
+                  {inviting ? 'Membuat Akun...' : 'Buat & Kirim Undangan'}
                 </button>
               </div>
             </form>
