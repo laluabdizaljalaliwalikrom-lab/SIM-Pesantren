@@ -1,13 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-/**
- * PATCH /api/users/[id]
- * Update profil user (nama, role, no_hp) — hanya untuk Super Admin.
- *
- * DELETE /api/users/[id]
- * Hapus user dari auth + profiles — hanya untuk Super Admin.
- */
+import { requireAdmin } from '@/utils/auth-api';
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -23,6 +16,9 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminCheck = await requireAdmin();
+  if (adminCheck.error) return adminCheck.error;
+
   try {
     const { id } = await params;
     const body = await request.json();
@@ -32,7 +28,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'User ID wajib.' }, { status: 400 });
     }
 
-        const VALID_ROLES = ['admin', 'pengasuh', 'wali_santri'];
+    const VALID_ROLES = ['admin', 'pengasuh', 'wali_santri'];
     const supabase = getAdminClient();
 
     if (role && !VALID_ROLES.includes(role)) {
@@ -111,6 +107,9 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const adminCheck = await requireAdmin();
+  if (adminCheck.error) return adminCheck.error;
+
   try {
     const { id } = await params;
 

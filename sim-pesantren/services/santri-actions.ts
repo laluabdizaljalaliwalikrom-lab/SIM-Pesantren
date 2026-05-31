@@ -1,16 +1,17 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { supabase } from '@/lib/supabase';
+import { getServerSupabase, requireServerUser, requireServerAdmin } from '@/utils/server-supabase';
 import { Santri } from '@/types/database';
 
 export type SantriPayload = Omit<Santri, 'id' | 'created_at' | 'kamar' | 'wali'>;
 
-/**
- * Mengambil semua data santri beserta nama kamar (join dengan tabel kamar)
- */
 export async function getSantri() {
+  const auth = await requireServerUser();
+  if (auth.error) return { data: null, error: auth.error };
+
   try {
+    const supabase = await getServerSupabase();
     const { data, error } = await supabase
       .from('santri')
       .select(`
@@ -27,11 +28,12 @@ export async function getSantri() {
   }
 }
 
-/**
- * Menambah santri baru
- */
 export async function createSantri(payload: SantriPayload) {
+  const auth = await requireServerAdmin();
+  if (auth.error) return { data: null, error: auth.error };
+
   try {
+    const supabase = await getServerSupabase();
     const { data, error } = await supabase
       .from('santri')
       .insert([payload])
@@ -39,9 +41,8 @@ export async function createSantri(payload: SantriPayload) {
 
     if (error) throw error;
 
-    // Bersihkan cache agar data di halaman dashboard ter-update
     revalidatePath('/admin/santri');
-    revalidatePath('/admin'); // Revalidate dashboard home juga karena menampilkan stat jumlah santri
+    revalidatePath('/admin');
 
     return { data, error: null };
   } catch (error: any) {
@@ -50,11 +51,12 @@ export async function createSantri(payload: SantriPayload) {
   }
 }
 
-/**
- * Mengubah data santri berdasarkan ID
- */
 export async function updateSantri(id: string, payload: Partial<SantriPayload>) {
+  const auth = await requireServerAdmin();
+  if (auth.error) return { data: null, error: auth.error };
+
   try {
+    const supabase = await getServerSupabase();
     const { data, error } = await supabase
       .from('santri')
       .update(payload)
@@ -63,7 +65,6 @@ export async function updateSantri(id: string, payload: Partial<SantriPayload>) 
 
     if (error) throw error;
 
-    // Bersihkan cache halaman admin santri
     revalidatePath('/admin/santri');
     
     return { data, error: null };
@@ -73,11 +74,12 @@ export async function updateSantri(id: string, payload: Partial<SantriPayload>) 
   }
 }
 
-/**
- * Menghapus data santri berdasarkan ID
- */
 export async function deleteSantri(id: string) {
+  const auth = await requireServerAdmin();
+  if (auth.error) return { data: null, error: auth.error };
+
   try {
+    const supabase = await getServerSupabase();
     const { data, error } = await supabase
       .from('santri')
       .delete()
@@ -85,7 +87,6 @@ export async function deleteSantri(id: string) {
 
     if (error) throw error;
 
-    // Bersihkan cache halaman agar ter-update instan
     revalidatePath('/admin/santri');
     revalidatePath('/admin');
 

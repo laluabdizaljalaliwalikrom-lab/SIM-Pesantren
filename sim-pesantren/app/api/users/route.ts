@@ -1,21 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from '@/utils/auth-api';
 
-/**
- * GET /api/users
- * 
- * Mengambil daftar user dari tabel profiles dengan menggabungkan email
- * dari auth.users. Endpoint ini menggunakan service_role key agar bisa
- * bypass RLS dan mengakses auth.users — HANYA untuk kebutuhan admin panel.
- *
- * Di production, tambahkan pengecekan sesi admin sebelum mengembalikan data.
- */
 export async function GET() {
   try {
+    const auth = await requireAdmin();
+    if (auth.error) return auth.error;
+
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    // Jika tidak ada service role key, fallback ke anon key
     const supabaseKey = serviceRoleKey || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseKey) {

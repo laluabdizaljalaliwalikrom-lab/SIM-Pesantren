@@ -315,14 +315,6 @@ function LoginContent() {
 
             {/* Hero text */}
             <div className="space-y-2">
-              {logoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={logoUrl} alt="Logo" className="h-14 w-14 rounded-2xl object-cover shadow-lg mb-3 animate-fadeIn" />
-              ) : (
-                <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 mb-3">
-                  <GraduationCap className="h-7 w-7" />
-                </div>
-              )}
               <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 Selamat Datang Kembali
               </h1>

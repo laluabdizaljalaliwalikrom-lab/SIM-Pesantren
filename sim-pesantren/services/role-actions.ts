@@ -1,12 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
-import { createServerClient } from '@supabase/ssr';
-
-// --------------------------------------------------------------------------
-// Types
-// --------------------------------------------------------------------------
+import { getServerSupabase, requireServerAdmin } from '@/utils/server-supabase';
 
 export interface PermissionRow {
   feature: string;
@@ -22,53 +17,10 @@ export interface UpdateRolePermissionsResult {
   updatedCount?: number;
 }
 
-// --------------------------------------------------------------------------
-// Helper: create a server-side Supabase client that reads the session cookie
-// --------------------------------------------------------------------------
-
-async function getServerSupabase() {
-  const cookieStore = await cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Ignored when called from read-only Server Components
-          }
-        },
-      },
-    }
-  );
-}
-
-// --------------------------------------------------------------------------
-// Server Action: updateRolePermissions
-//
-// Strategy: DELETE-then-INSERT wrapped in a single PostgreSQL transaction
-// via the `update_role_permissions` RPC function. If the INSERT step fails
-// for any reason, PostgreSQL automatically rolls back the DELETE so no data
-// is ever lost. The RPC also enforces a server-side guard against modifying
-// the Super Admin role.
-//
-// Params:
-//   roleId      — UUID of the app_role to update
-//   permissions — full CRUD permission array for every module
-// --------------------------------------------------------------------------
-
 export async function updateRolePermissions(
   roleId: string,
   permissions: PermissionRow[]
 ): Promise<UpdateRolePermissionsResult> {
-  // ---- Input validation ----
   if (!roleId || roleId.trim() === '') {
     return { success: false, message: 'Role ID tidak boleh kosong.' };
   }
@@ -76,7 +28,6 @@ export async function updateRolePermissions(
     return { success: false, message: 'Data permissions tidak boleh kosong.' };
   }
 
-  // Validate each permission row
   const VALID_FEATURES = [
     'Lembaga',
     'Santri',
@@ -97,41 +48,19 @@ export async function updateRolePermissions(
     }
   }
 
+  const adminCheck = await requireServerAdmin();
+  if (adminCheck.error) {
+    return { success: false, message: adminCheck.error };
+  }
+
   try {
     const supabase = await getServerSupabase();
 
-    // ---- Auth check: hanya admin yang boleh mengubah permissions ----
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return {
-        success: false,
-        message: 'Sesi tidak valid. Silakan login ulang.',
-      };
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || profile?.role !== 'admin') {
-      return {
-        success: false,
-        message: 'Akses ditolak. Hanya admin yang dapat mengubah hak akses.',
-      };
-    }
-
-    // ---- Call the transactional RPC ----
     const { data: rpcResult, error: rpcError } = await supabase.rpc(
       'update_role_permissions',
       {
         p_role_id:     roleId,
-        p_permissions: permissions, // Supabase JS driver serialises to JSONB
+        p_permissions: permissions,
       }
     );
 
@@ -143,7 +72,6 @@ export async function updateRolePermissions(
       };
     }
 
-    // The RPC returns a JSONB object
     const result = rpcResult as {
       success: boolean;
       message: string;
@@ -157,7 +85,6 @@ export async function updateRolePermissions(
       };
     }
 
-    // ---- Revalidate cache so pages reflect the change immediately ----
     revalidatePath('/settings/users');
     revalidatePath('/settings');
 

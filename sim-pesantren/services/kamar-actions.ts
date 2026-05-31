@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { supabase } from '@/lib/supabase';
+import { getServerSupabase, requireServerAdmin } from '@/utils/server-supabase';
 
 export interface MoveSantriResult {
   success: boolean;
@@ -9,19 +9,19 @@ export interface MoveSantriResult {
   remainingCapacity: number;
 }
 
-/**
- * Server Action to move multiple students to a room atomically
- */
 export async function moveSantriToKamar(
   santriIds: string[],
   targetKamarId: string
 ): Promise<MoveSantriResult> {
+  const auth = await requireServerAdmin();
+  if (auth.error) return { success: false, message: auth.error, remainingCapacity: 0 };
+
   try {
     if (!santriIds || santriIds.length === 0) {
       return { success: false, message: 'Tidak ada santri yang dipilih.', remainingCapacity: 0 };
     }
 
-    // Call Supabase PL/pgSQL function via RPC to ensure transaction safety (atomic)
+    const supabase = await getServerSupabase();
     const { data, error } = await supabase.rpc('move_santri_to_kamar', {
       santri_ids: santriIds,
       target_kamar_id: targetKamarId
@@ -29,7 +29,6 @@ export async function moveSantriToKamar(
 
     if (error) throw error;
 
-    // Handle return table output from function
     const result = data && data[0] ? data[0] : null;
 
     if (!result) {
@@ -44,7 +43,6 @@ export async function moveSantriToKamar(
       };
     }
 
-    // Revalidate related layout paths
     revalidatePath('/asrama');
     revalidatePath('/admin/santri');
 

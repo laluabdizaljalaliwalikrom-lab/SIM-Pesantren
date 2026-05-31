@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from '@/lib/supabase';
+import { getServerSupabase, requireServerUser } from '@/utils/server-supabase';
 
 interface AbsensiPayload {
   id_jadwal: string;
@@ -10,16 +10,16 @@ interface AbsensiPayload {
   keterangan?: string | null;
 }
 
-/**
- * Server Action untuk menyimpan absensi KBM secara massal (batch upsert)
- * ke tabel 'absensi' Supabase.
- */
 export async function saveAbsensiKBM(payloads: AbsensiPayload[]) {
+  const auth = await requireServerUser();
+  if (auth.error) return { success: false, error: auth.error };
+
   try {
     if (payloads.length === 0) {
       return { success: true, message: 'Tidak ada data untuk disimpan.' };
     }
 
+    const supabase = await getServerSupabase();
     const { data, error } = await supabase
       .from('absensi')
       .upsert(payloads, { onConflict: 'id_jadwal,id_santri,tanggal' });

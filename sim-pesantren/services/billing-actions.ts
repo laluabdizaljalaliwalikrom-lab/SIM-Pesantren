@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { supabase } from '@/lib/supabase';
+import { getServerSupabase, requireServerAdmin } from '@/utils/server-supabase';
 
 interface GenerateMonthlyBillingParams {
   idMasterBiaya: string;
@@ -10,18 +10,16 @@ interface GenerateMonthlyBillingParams {
   onlyMukim?: boolean;
 }
 
-/**
- * Generate tagihan bulanan untuk semua santri aktif
- * Menggunakan transaksi database PostgreSQL terjamin lewat RPC function
- */
 export async function generateMonthlyBilling({
   idMasterBiaya,
   bulan,
   tahun,
   onlyMukim = false
 }: GenerateMonthlyBillingParams) {
+  const auth = await requireServerAdmin();
+  if (auth.error) return { success: false, message: auth.error, insertedCount: 0 };
+
   try {
-    // 1. Validasi parameter masukan
     if (!idMasterBiaya) {
       return { success: false, message: 'ID Master Biaya tidak boleh kosong.', insertedCount: 0 };
     }
@@ -32,7 +30,7 @@ export async function generateMonthlyBilling({
       return { success: false, message: 'Tahun tidak valid.', insertedCount: 0 };
     }
 
-    // 2. Eksekusi RPC generate_monthly_billing di database (transaksi aman di Postgres)
+    const supabase = await getServerSupabase();
     const { data, error } = await supabase.rpc('generate_monthly_billing', {
       p_id_master_biaya: idMasterBiaya,
       p_bulan: bulan,
@@ -45,8 +43,6 @@ export async function generateMonthlyBilling({
       throw error;
     }
 
-    // RPC mengembalikan array berisi satu objek or record set
-    // Kembalian berupa table success, message, inserted_count
     const result = Array.isArray(data) ? data[0] : data;
 
     if (result && result.success === false) {
@@ -57,7 +53,6 @@ export async function generateMonthlyBilling({
       };
     }
 
-    // 3. Revalidate path keuangan
     revalidatePath('/keuangan');
     revalidatePath('/dashboard');
 

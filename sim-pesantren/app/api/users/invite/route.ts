@@ -1,20 +1,11 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { requireAdmin } from '@/utils/auth-api';
 
-/**
- * POST /api/users/invite
- *
- * Membuat akun user baru via Supabase Auth Admin + insert ke profiles,
- * lalu kirim notifikasi WhatsApp via Fonnte dengan kredensial login.
- *
- * Body JSON:
- *   email       — email user baru (wajib)
- *   password    — password sementara (wajib, min 6 karakter)
- *   nama        — nama lengkap (wajib)
- *   role        — 'admin' | 'pengasuh' | 'wali_santri' (default: wali_santri)
- *   no_hp       — nomor WhatsApp (opsional, format: 628xxx)
- */
 export async function POST(request: NextRequest) {
+  const adminCheck = await requireAdmin();
+  if (adminCheck.error) return adminCheck.error;
+
   try {
     const body = await request.json();
     const { email, password, nama, role = 'wali_santri', no_hp } = body;

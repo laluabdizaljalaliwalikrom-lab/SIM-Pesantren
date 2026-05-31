@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { supabase } from '@/lib/supabase';
+import { getServerSupabase, requireServerAdmin } from '@/utils/server-supabase';
 
 interface ExcelSantriRow {
   nis: string | number;
@@ -18,29 +18,24 @@ interface ImportResult {
   error: string | null;
 }
 
-/**
- * Server Action untuk mengimpor massal data santri ke Supabase.
- * Menggunakan pendekatan Bulk Upsert berbasis kolom unik 'nis' untuk mencegah error duplikasi.
- */
 export async function importSantri(rows: ExcelSantriRow[]): Promise<ImportResult> {
+  const auth = await requireServerAdmin();
+  if (auth.error) return { success: false, count: 0, error: auth.error };
+
   try {
     if (!rows || rows.length === 0) {
       return { success: true, count: 0, error: null };
     }
 
-    // 1. Pembersihan dan Normalisasi Data
     const formattedData = rows.map((row) => {
-      // Pastikan NIS berupa string dan di-trim
       const rawNis = String(row.nis || '').trim();
       const rawNama = String(row.nama_lengkap || '').trim();
 
-      // Normalisasi format Tanggal Lahir (YYYY-MM-DD)
-      let formattedTanggalLahir = '2000-01-01'; // Default fallback jika kosong
+      let formattedTanggalLahir = '2000-01-01';
       if (row.tanggal_lahir) {
         if (row.tanggal_lahir instanceof Date) {
           formattedTanggalLahir = row.tanggal_lahir.toISOString().split('T')[0];
         } else {
-          // Asumsi string dari Excel (misal: "2010-12-31" atau "12/31/2010")
           const dateObj = new Date(row.tanggal_lahir);
           if (!isNaN(dateObj.getTime())) {
             formattedTanggalLahir = dateObj.toISOString().split('T')[0];
@@ -58,15 +53,13 @@ export async function importSantri(rows: ExcelSantriRow[]): Promise<ImportResult
       };
     });
 
-    // Validasi data minimal sebelum insert
     const validData = formattedData.filter((item) => item.nis !== '' && item.nama_lengkap !== '');
 
     if (validData.length === 0) {
       return { success: false, count: 0, error: 'Tidak ada baris data valid untuk diimpor (NIS dan Nama wajib diisi).' };
     }
 
-    // 2. Lakukan Bulk Upsert ke Supabase
-    // Menggunakan opsi { onConflict: 'nis' } agar jika NIS sudah ada, data lama akan ditimpa (di-update) dengan data baru secara aman tanpa melempar error duplikat.
+    const supabase = await getServerSupabase();
     const { data, error } = await supabase
       .from('santri')
       .upsert(validData, { onConflict: 'nis' })
@@ -74,7 +67,6 @@ export async function importSantri(rows: ExcelSantriRow[]): Promise<ImportResult
 
     if (error) throw error;
 
-    // 3. Bersihkan Cache Halaman Terkait
     revalidatePath('/admin/santri');
     revalidatePath('/admin');
 
@@ -106,21 +98,18 @@ interface CheckedSantriRow extends ExcelCompareRow {
   existing_data?: any;
 }
 
-/**
- * Memeriksa data duplikat (NISN/NIK) secara efisien dengan Batch Query (IN)
- * sebelum melakukan impor untuk menghindari error atau menimpa data tanpa sengaja.
- */
 export async function checkExistingSantri(rows: ExcelCompareRow[]): Promise<{ data: CheckedSantriRow[]; error: string | null }> {
+  const auth = await requireServerAdmin();
+  if (auth.error) return { data: [], error: auth.error };
+
   try {
     if (!rows || rows.length === 0) {
       return { data: [], error: null };
     }
 
-    // 1. Ekstrak daftar NISN dan NIK yang tidak kosong dari Excel
     const nisnList = rows.map((r) => String(r.nisn || '').trim()).filter((val) => val !== '');
     const nikList = rows.map((r) => String(r.nik || '').trim()).filter((val) => val !== '');
 
-    // Jika seluruh baris tidak memiliki NISN / NIK untuk dicocokkan, anggap semua data baru
     if (nisnList.length === 0 && nikList.length === 0) {
       const results: CheckedSantriRow[] = rows.map((r) => ({
         ...r,
@@ -129,7 +118,6 @@ export async function checkExistingSantri(rows: ExcelCompareRow[]): Promise<{ da
       return { data: results, error: null };
     }
 
-    // 2. Buat kueri pencarian massal (Batch OR IN) di PostgreSQL
     const orFilters: string[] = [];
     if (nisnList.length > 0) {
       const formattedNisns = nisnList.map((n) => `"${n}"`).join(',');
@@ -140,6 +128,7 @@ export async function checkExistingSantri(rows: ExcelCompareRow[]): Promise<{ da
       orFilters.push(`nik.in.(${formattedNiks})`);
     }
 
+    const supabase = await getServerSupabase();
     let query = supabase.from('santri').select('*');
     if (orFilters.length > 0) {
       query = query.or(orFilters.join(','));
@@ -148,7 +137,6 @@ export async function checkExistingSantri(rows: ExcelCompareRow[]): Promise<{ da
     const { data: dbSantri, error } = await query;
     if (error) throw error;
 
-    // 3. Masukkan hasil kueri ke Map untuk pencarian O(1) yang cepat
     const dbMapByNisn = new Map<string, any>();
     const dbMapByNik = new Map<string, any>();
 
@@ -157,7 +145,6 @@ export async function checkExistingSantri(rows: ExcelCompareRow[]): Promise<{ da
       if (s.nik) dbMapByNik.set(String(s.nik).trim(), s);
     });
 
-    // 4. Bandingkan data Excel dengan peta data dari Database
     const resultRows: CheckedSantriRow[] = rows.map((row) => {
       const rowNisn = String(row.nisn || '').trim();
       const rowNik = String(row.nik || '').trim();
@@ -194,16 +181,15 @@ interface ExecuteImportResult {
   error: string | null;
 }
 
-/**
- * Mengeksekusi impor data secara massal dengan memisahkan Data Baru (.insert)
- * dan Data Update (.upsert) secara paralel (batch) menggunakan Promise.all.
- */
 export async function executeImport(
   newRows: any[],
   updateRows: any[]
 ): Promise<ExecuteImportResult> {
+  const auth = await requireServerAdmin();
+  if (auth.error) return { success: false, insertedCount: 0, updatedCount: 0, error: auth.error };
+
   try {
-    // Jalankan query secara paralel agar proses transfer data ke Supabase berjalan sangat cepat
+    const supabase = await getServerSupabase();
     const [insertResult, updateResult] = await Promise.all([
       newRows.length > 0
         ? supabase.from('santri').insert(newRows).select('id')
@@ -216,7 +202,6 @@ export async function executeImport(
     if (insertResult.error) throw insertResult.error;
     if (updateResult.error) throw updateResult.error;
 
-    // Bersihkan cache Next.js agar tabel santri langsung ter-update
     revalidatePath('/admin/santri');
     revalidatePath('/admin');
 

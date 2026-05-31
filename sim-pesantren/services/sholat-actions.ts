@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from '@/lib/supabase';
+import { getServerSupabase, requireServerUser } from '@/utils/server-supabase';
 
 interface SholatAttendancePayload {
   id_santri: string;
@@ -11,16 +11,16 @@ interface SholatAttendancePayload {
   id_musyrif?: string | null;
 }
 
-/**
- * Server Action untuk menyimpan absensi Sholat secara massal (batch upsert)
- * ke tabel 'absensi_sholat' Supabase.
- */
 export async function saveAbsensiSholat(payloads: SholatAttendancePayload[]) {
+  const auth = await requireServerUser();
+  if (auth.error) return { success: false, error: auth.error };
+
   try {
     if (payloads.length === 0) {
       return { success: true, message: 'Tidak ada data untuk disimpan.' };
     }
 
+    const supabase = await getServerSupabase();
     const { data, error } = await supabase
       .from('absensi_sholat')
       .upsert(payloads, { onConflict: 'id_santri,tanggal,waktu_sholat' });
