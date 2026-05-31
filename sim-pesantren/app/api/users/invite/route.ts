@@ -113,7 +113,10 @@ export async function POST(request: NextRequest) {
     const cleanPhone = no_hp?.trim();
 
     if (cleanPhone && fonntToken && fonntToken !== 'your-fonnte-token-here') {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const protocol = request.headers.get('x-forwarded-proto') || '';
+      const host = request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+      const origin = request.headers.get('origin') || '';
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || origin || (protocol && host ? `${protocol}://${host}` : '') || 'http://localhost:3000';
 
       const message = [
         `🕌 *SIM Pesantren — Undangan Akses Dashboard*`,
