@@ -15,9 +15,11 @@ import {
   ChevronRight,
   Sparkles,
   School,
-  Activity
+  Activity,
+  Download
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface LandingPageClientProps {
   settings: {
@@ -49,6 +51,7 @@ export default function LandingPageClient({
   pesantrenPimpinanFoto = ''
 }: LandingPageClientProps) {
   const brandName = pesantrenName || 'SIM Pesantren';
+  const { isInstallable, install } = usePWAInstall();
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -106,7 +109,16 @@ export default function LandingPageClient({
             <a href="#kontak" className="hover:text-emerald-600 dark:hover:text-emerald-450 transition-colors">Kontak</a>
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            {isInstallable && (
+              <button
+                onClick={install}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:border-emerald-500 bg-emerald-50/20 dark:bg-emerald-500/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all"
+              >
+                <Download className="h-3.5 w-3.5" />
+                Install App
+              </button>
+            )}
             <ThemeToggle />
             <Link
               href="/login"
