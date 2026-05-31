@@ -5,6 +5,8 @@ export interface Profile {
   id: string;
   nama_lengkap: string;
   role: UserRole;
+  no_hp?: string | null;
+  foto_url?: string | null;
   created_at: string;
 }
 

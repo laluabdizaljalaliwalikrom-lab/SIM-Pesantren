@@ -27,6 +27,7 @@ const PROTECTED_PREFIXES = [
   '/lembaga',
   '/tahfidz',
   '/settings',
+  '/profile',
 ];
 
 function isProtectedRoute(pathname: string): boolean {

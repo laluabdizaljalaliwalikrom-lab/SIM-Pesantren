@@ -29,6 +29,10 @@ interface SidebarProps {
   permissions?: any[];
   pesantrenLogo?: string;
   pesantrenName?: string;
+  userDisplayName?: string;
+  userEmail?: string;
+  userFotoUrl?: string;
+  userInitial?: string;
 }
 
 const MENU_ITEMS = [
@@ -45,14 +49,27 @@ const MENU_ITEMS = [
   { name: 'Pengaturan', href: '/pengaturan', icon: Settings },
 ];
 
-export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, userRoleRaw, permissions, pesantrenLogo, pesantrenName }: SidebarProps) {
+export function Sidebar({ 
+  isOpen, 
+  onClose, 
+  isCollapsed, 
+  onToggleCollapse, 
+  userRoleRaw, 
+  permissions, 
+  pesantrenLogo, 
+  pesantrenName,
+  userDisplayName = 'User',
+  userEmail = '',
+  userFotoUrl,
+  userInitial = 'U'
+}: SidebarProps) {
   const pathname = usePathname();
 
   const isSuperAdmin = userRoleRaw === 'admin' || userRoleRaw === 'Super Admin';
 
   const filteredMenuItems = MENU_ITEMS.filter((item) => {
-    // Dashboard and General Settings always visible
-    if (item.href === '/admin' || item.href === '/pengaturan') return true;
+    // Dashboard always visible
+    if (item.href === '/admin') return true;
 
     // Hak Akses is admin only
     if (item.href.startsWith('/settings')) return isSuperAdmin;
@@ -67,6 +84,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, userRo
       '/lembaga': 'Lembaga',
       '/asrama': 'Asrama',
       '/tahfidz': 'Tahfidz',
+      '/pengaturan': 'Pengaturan',
     };
 
     const moduleName = pathModuleMap[item.href];
@@ -181,17 +199,31 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, userRo
 
         {/* Sidebar Footer */}
         <div className="p-4 border-t border-emerald-800/30 bg-emerald-950/50 dark:bg-zinc-950/50">
-          <div className={`flex items-center gap-3 px-1 ${isCollapsed ? 'justify-center' : ''}`}>
-            <div className="h-9 w-9 flex-shrink-0 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold uppercase">
-              AD
-            </div>
-            {!isCollapsed && (
-              <div className="overflow-hidden animate-fade-in">
-                <p className="text-xs font-semibold text-white truncate">Administrator</p>
-                <p className="text-[10px] text-emerald-400 font-medium truncate">admin@pesantren.com</p>
+          <Link
+            href="/profile"
+            onClick={() => onClose()}
+            className={`flex items-center gap-3 px-1 transition-all duration-200 hover:opacity-85 ${isCollapsed ? 'justify-center' : ''}`}
+            title="Profil Saya"
+          >
+            {userFotoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={userFotoUrl}
+                alt="Avatar"
+                className="h-9 w-9 flex-shrink-0 rounded-full object-cover shadow-sm border border-emerald-500/35"
+              />
+            ) : (
+              <div className="h-9 w-9 flex-shrink-0 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold uppercase">
+                {userInitial}
               </div>
             )}
-          </div>
+            {!isCollapsed && (
+              <div className="overflow-hidden animate-fade-in">
+                <p className="text-xs font-semibold text-white truncate">{userDisplayName}</p>
+                <p className="text-[10px] text-emerald-400 font-medium truncate">{userEmail}</p>
+              </div>
+            )}
+          </Link>
         </div>
       </aside>
     </>

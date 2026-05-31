@@ -16,7 +16,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Users,
-  School
+  School,
+  Settings
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateRolePermissions } from '@/services/role-actions';
@@ -36,6 +37,7 @@ const SYSTEM_MODULES: { key: string; label: string; icon: React.ElementType }[] 
   { key: 'Akademik',     label: 'Akademik',         icon: BookOpen      },
   { key: 'Asrama',       label: 'Asrama',           icon: Home          },
   { key: 'Perizinan',    label: 'Perizinan',        icon: ClipboardCheck },
+  { key: 'Pengaturan',   label: 'Pengaturan Sistem', icon: Settings      },
 ];
 
 const ACTION_COLUMNS: { key: ActionKey; label: string }[] = [

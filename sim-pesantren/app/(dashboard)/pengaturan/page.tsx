@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageUpload from '@/components/ImageUpload';
-import { uploadLogoPesantren } from '@/services/storage-actions';
+import { uploadLogoPesantren, uploadFotoPimpinan } from '@/services/storage-actions';
 
 export default function PengaturanPage() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -28,6 +28,8 @@ export default function PengaturanPage() {
   const [profileId, setProfileId] = useState<string>('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [uploadingLogo, setUploadingLogo] = useState<boolean>(false);
+  const [fotoPimpinanFile, setFotoPimpinanFile] = useState<File | null>(null);
+  const [uploadingFotoPimpinan, setUploadingFotoPimpinan] = useState<boolean>(false);
   
   const [form, setForm] = useState({
     nama_pesantren: '',
@@ -40,7 +42,18 @@ export default function PengaturanPage() {
     website: '',
     visi: '',
     misi: '',
-    logo_url: ''
+    logo_url: '',
+    foto_pimpinan_url: ''
+  });
+
+
+  const [landingForm, setLandingForm] = useState({
+    tagline_title: '',
+    tagline_description: '',
+    status_pendaftaran: true,
+    medsos_facebook: '',
+    medsos_instagram: '',
+    medsos_youtube: ''
   });
 
   const fetchData = useCallback(async () => {
@@ -80,7 +93,25 @@ export default function PengaturanPage() {
           website: data.website || '',
           visi: data.visi || '',
           misi: data.misi || '',
-          logo_url: data.logo_url || ''
+          logo_url: data.logo_url || '',
+          foto_pimpinan_url: data.foto_pimpinan_url || ''
+        });
+      }
+
+      // 3. Fetch landing page settings
+      const { data: landingData } = await supabase
+        .from('landing_page_settings')
+        .select('*')
+        .maybeSingle();
+
+      if (landingData) {
+        setLandingForm({
+          tagline_title: landingData.tagline_title || '',
+          tagline_description: landingData.tagline_description || '',
+          status_pendaftaran: landingData.status_pendaftaran !== undefined ? landingData.status_pendaftaran : true,
+          medsos_facebook: landingData.medsos_facebook || '',
+          medsos_instagram: landingData.medsos_instagram || '',
+          medsos_youtube: landingData.medsos_youtube || ''
         });
       }
     } catch (err: any) {
@@ -105,6 +136,7 @@ export default function PengaturanPage() {
     setSaving(true);
     try {
       let uploadedLogoUrl = form.logo_url;
+      let uploadedFotoPimpinanUrl = form.foto_pimpinan_url;
       
       // Upload new logo if selected
       if (logoFile) {
@@ -123,10 +155,28 @@ export default function PengaturanPage() {
         setUploadingLogo(false);
       }
 
+      // Upload new pimpinan photo if selected
+      if (fotoPimpinanFile) {
+        setUploadingFotoPimpinan(true);
+        try {
+          const extension = fotoPimpinanFile.name.split('.').pop() || 'png';
+          const uniqueFileName = `pimpinan_${Date.now()}.${extension}`;
+          uploadedFotoPimpinanUrl = await uploadFotoPimpinan(fotoPimpinanFile, uniqueFileName);
+        } catch (uploadErr: any) {
+          console.error('Gagal mengunggah foto pimpinan:', uploadErr);
+          toast.error('Gagal mengunggah foto pimpinan: ' + uploadErr.message);
+          setUploadingFotoPimpinan(false);
+          setSaving(false);
+          return;
+        }
+        setUploadingFotoPimpinan(false);
+      }
+
       let error;
       const submissionData = {
         ...form,
-        logo_url: uploadedLogoUrl
+        logo_url: uploadedLogoUrl,
+        foto_pimpinan_url: uploadedFotoPimpinanUrl
       };
 
       if (profileId) {
@@ -146,8 +196,20 @@ export default function PengaturanPage() {
       }
 
       if (error) throw error;
-      toast.success('Profil pesantren berhasil disimpan!');
+
+      // Update/Upsert landing page settings
+      const { error: landingErr } = await supabase
+        .from('landing_page_settings')
+        .upsert({
+          id: 1,
+          ...landingForm
+        });
+
+      if (landingErr) throw landingErr;
+
+      toast.success('Profil pesantren & Landing Page berhasil disimpan!');
       setLogoFile(null); // Reset selection
+      setFotoPimpinanFile(null); // Reset selection
       await fetchData();
     } catch (err: any) {
       console.error(err);
@@ -321,6 +383,102 @@ export default function PengaturanPage() {
                 </div>
               </div>
             </div>
+
+            {/* Public Landing Page Settings Card */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
+                <Globe className="h-4.5 w-4.5 text-emerald-500" />
+                Pengaturan Landing Page Publik
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+                    Judul / Tagline Utama
+                  </label>
+                  <input
+                    type="text"
+                    value={landingForm.tagline_title}
+                    onChange={(e) => setLandingForm(prev => ({ ...prev, tagline_title: e.target.value }))}
+                    disabled={!isAdmin}
+                    placeholder="Membentuk Generasi Qurani..."
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-850 dark:text-zinc-100 focus:outline-none transition-all text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+                    Deskripsi Tagline
+                  </label>
+                  <textarea
+                    value={landingForm.tagline_description}
+                    onChange={(e) => setLandingForm(prev => ({ ...prev, tagline_description: e.target.value }))}
+                    disabled={!isAdmin}
+                    rows={3}
+                    placeholder="Tulis penjelasan singkat landing page..."
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-850 dark:text-zinc-100 focus:outline-none transition-all text-sm"
+                  />
+                </div>
+
+                <div className="flex items-center gap-3 bg-slate-50 dark:bg-zinc-950/40 p-4 rounded-xl border border-slate-200/60 dark:border-zinc-850">
+                  <input
+                    type="checkbox"
+                    id="status_pendaftaran"
+                    checked={landingForm.status_pendaftaran}
+                    onChange={(e) => setLandingForm(prev => ({ ...prev, status_pendaftaran: e.target.checked }))}
+                    disabled={!isAdmin}
+                    className="h-4 w-4 rounded border-slate-350 text-emerald-600 focus:ring-emerald-500 focus:outline-none accent-emerald-600"
+                  />
+                  <label htmlFor="status_pendaftaran" className="block text-xs font-bold text-slate-700 dark:text-zinc-350 cursor-pointer select-none">
+                    Status Pendaftaran Online Aktif (Menampilkan tombol 'Daftar Sekarang' di Landing Page & Banner CTA)
+                  </label>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-2">
+                      Facebook URL
+                    </label>
+                    <input
+                      type="url"
+                      value={landingForm.medsos_facebook}
+                      onChange={(e) => setLandingForm(prev => ({ ...prev, medsos_facebook: e.target.value }))}
+                      disabled={!isAdmin}
+                      placeholder="https://facebook.com/..."
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-3 py-2 text-slate-850 dark:text-zinc-100 focus:outline-none transition-all text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-2">
+                      Instagram URL
+                    </label>
+                    <input
+                      type="url"
+                      value={landingForm.medsos_instagram}
+                      onChange={(e) => setLandingForm(prev => ({ ...prev, medsos_instagram: e.target.value }))}
+                      disabled={!isAdmin}
+                      placeholder="https://instagram.com/..."
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-3 py-2 text-slate-850 dark:text-zinc-100 focus:outline-none transition-all text-xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider mb-2">
+                      Youtube URL
+                    </label>
+                    <input
+                      type="url"
+                      value={landingForm.medsos_youtube}
+                      onChange={(e) => setLandingForm(prev => ({ ...prev, medsos_youtube: e.target.value }))}
+                      disabled={!isAdmin}
+                      placeholder="https://youtube.com/..."
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-3 py-2 text-slate-850 dark:text-zinc-100 focus:outline-none transition-all text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
             
           </div>
 
@@ -347,6 +505,29 @@ export default function PengaturanPage() {
               />
               <p className="text-[10px] text-slate-400 text-center italic mt-1">
                 Gunakan format PNG/JPG maksimal 500KB. Gambar otomatis dikompresi.
+              </p>
+            </div>
+
+            {/* Foto Pimpinan Upload Card */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-4 flex flex-col items-center">
+              <h3 className="w-full font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
+                Foto Pimpinan Pesantren
+              </h3>
+              <ImageUpload
+                value={fotoPimpinanFile || form.foto_pimpinan_url}
+                onChange={(file) => {
+                  if (!isAdmin) {
+                    toast.error('Anda tidak memiliki izin untuk mengunggah foto pimpinan.');
+                    return;
+                  }
+                  setFotoPimpinanFile(file);
+                }}
+                loading={uploadingFotoPimpinan}
+                shape="square"
+                label=""
+              />
+              <p className="text-[10px] text-slate-400 text-center italic mt-1">
+                Foto pimpinan untuk sambutan landing page. Format PNG/JPG maks 500KB.
               </p>
             </div>
 

@@ -156,3 +156,107 @@ export async function uploadLogoPesantren(file: File, fileName: string): Promise
     throw new Error(err.message || 'Gagal mengunggah logo pesantren ke storage.');
   }
 }
+
+/**
+ * Upload foto pimpinan pesantren ke bucket 'foto-pesantren'
+ * @param file File foto dari input file browser
+ * @param fileName Nama file tujuan (misal: 'pimpinan_pesantren.png')
+ * @returns Public URL string dari foto yang berhasil di-upload
+ */
+export async function uploadFotoPimpinan(file: File, fileName: string): Promise<string> {
+  try {
+    // Compress image if it is an image type
+    let uploadTarget: File | Blob = file;
+    if (file.type.startsWith('image/')) {
+      try {
+        uploadTarget = await imageCompression(file, compressionOptions);
+      } catch (compErr) {
+        console.warn('Image compression failed, uploading original:', compErr);
+      }
+    }
+
+    // Clean up filename to prevent path issues
+    const cleanedName = fileName.trim().replace(/\s+/g, '_');
+
+    // Upload file with upsert enabled to overwrite previous photo
+    const { data, error } = await supabase.storage
+      .from('foto-pesantren')
+      .upload(cleanedName, uploadTarget, {
+        upsert: true,
+        cacheControl: '3600'
+      });
+
+    if (error) {
+      console.error('Error uploading foto pimpinan:', error);
+      throw error;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('foto-pesantren')
+      .getPublicUrl(cleanedName);
+
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('Gagal mendapatkan public URL untuk foto pimpinan.');
+    }
+
+    return urlData.publicUrl;
+  } catch (err: any) {
+    console.error('Exception in uploadFotoPimpinan:', err);
+    throw new Error(err.message || 'Gagal mengunggah foto pimpinan ke storage.');
+  }
+}
+
+
+/**
+ * Upload foto user ke bucket 'foto-users'
+ * @param file File foto dari input file browser
+ * @param userId ID user dari auth (untuk folder upload)
+ * @param fileName Nama file tujuan (misal: 'profile.jpg')
+ * @returns Public URL string dari foto yang berhasil di-upload
+ */
+export async function uploadFotoUser(file: File, userId: string, fileName: string): Promise<string> {
+  try {
+    // Compress image if it is an image type
+    let uploadTarget: File | Blob = file;
+    if (file.type.startsWith('image/')) {
+      try {
+        uploadTarget = await imageCompression(file, compressionOptions);
+      } catch (compErr) {
+        console.warn('Image compression failed, uploading original:', compErr);
+      }
+    }
+
+    // Clean up filename to prevent path issues
+    const cleanedName = fileName.trim().replace(/\s+/g, '_');
+    // Path format: userId/cleanedName
+    const storagePath = `${userId}/${cleanedName}`;
+
+    // Upload file with upsert enabled to overwrite previous profile photo
+    const { data, error } = await supabase.storage
+      .from('foto-users')
+      .upload(storagePath, uploadTarget, {
+        upsert: true,
+        cacheControl: '3600'
+      });
+
+    if (error) {
+      console.error('Error uploading foto user:', error);
+      throw error;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('foto-users')
+      .getPublicUrl(storagePath);
+
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('Gagal mendapatkan public URL untuk foto user.');
+    }
+
+    return urlData.publicUrl;
+  } catch (err: any) {
+    console.error('Exception in uploadFotoUser:', err);
+    throw new Error(err.message || 'Gagal mengunggah foto profil ke storage.');
+  }
+}

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   Mail,
@@ -17,6 +18,7 @@ import {
   Users,
   GraduationCap,
   X,
+  ArrowLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -276,21 +278,32 @@ function LoginContent() {
 
         {/* Top bar (mobile brand + theme toggle) */}
         <header className="flex items-center justify-between px-6 sm:px-8 h-16 lg:h-20">
-          {/* Mobile logo */}
-          <div className="flex items-center gap-2.5 lg:hidden">
-            {logoUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="Logo" className="h-9 w-9 rounded-lg object-cover shadow-md" />
-            ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 text-white font-extrabold text-lg shadow-md shadow-emerald-500/25">
-                P
-              </div>
-            )}
-            <span className="font-extrabold text-base bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent">
-              {pesantrenName || "SIM Pesantren"}
-            </span>
+          {/* Mobile logo & Back to Home */}
+          <div className="flex items-center gap-4">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-emerald-600 dark:text-zinc-400 dark:hover:text-emerald-450 transition-colors"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              <span className="hidden sm:inline">Kembali ke Beranda</span>
+              <span className="sm:hidden">Beranda</span>
+            </Link>
+            
+            {/* Mobile logo (hidden on desktop) */}
+            <div className="flex items-center gap-2 lg:hidden border-l border-slate-200 dark:border-zinc-800 pl-4">
+              {logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt="Logo" className="h-7 w-7 rounded-lg object-cover shadow-sm" />
+              ) : (
+                <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500 text-white font-extrabold text-xs shadow-sm shadow-emerald-500/25">
+                  P
+                </div>
+              )}
+              <span className="font-extrabold text-xs bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-300 bg-clip-text text-transparent truncate max-w-[120px]">
+                {pesantrenName || "SIM Pesantren"}
+              </span>
+            </div>
           </div>
-          <div className="lg:hidden" />
           <ThemeToggle />
         </header>
 
