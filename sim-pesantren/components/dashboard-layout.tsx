@@ -269,7 +269,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </div>
 
       {/* Mobile Bottom Navigation Bar */}
-      <BottomBar />
+      <BottomBar userRoleRaw={userRoleRaw} permissions={permissions} />
     </div>
   );
 }

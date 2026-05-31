@@ -12,16 +12,46 @@ import {
   MoreHorizontal,
 } from 'lucide-react';
 
+interface BottomBarProps {
+  userRoleRaw?: string;
+  permissions?: any[];
+}
+
 const BOTTOM_NAV_ITEMS = [
   { name: 'Dashboard', href: '/admin',         icon: LayoutDashboard },
   { name: 'Asrama',    href: '/asrama',        icon: Home            },
-  { name: 'Santri',    href: '/admin/santri',  icon: Users           },
+  { name: 'Santri',    href: '/santri',        icon: Users           },
   { name: 'Pegawai',   href: '/pegawai',       icon: Briefcase       },
   { name: 'Lembaga',   href: '/lembaga',       icon: School          },
 ];
 
-export function BottomBar() {
+export function BottomBar({ userRoleRaw, permissions }: BottomBarProps) {
   const pathname = usePathname();
+
+  const isSuperAdmin = userRoleRaw === 'admin' || userRoleRaw === 'Super Admin';
+
+  const filteredItems = BOTTOM_NAV_ITEMS.filter((item) => {
+    // Dashboard always visible
+    if (item.href === '/admin') return true;
+
+    // Check custom permissions mapping
+    const pathModuleMap: Record<string, string> = {
+      '/santri': 'Santri',
+      '/pegawai': 'Kepegawaian',
+      '/lembaga': 'Akademik',
+      '/asrama': 'Asrama',
+    };
+
+    const moduleName = pathModuleMap[item.href];
+    if (moduleName && !isSuperAdmin) {
+      const modPerm = permissions?.find(
+        (p) => p.feature.toLowerCase() === moduleName.toLowerCase()
+      );
+      return !!(modPerm && modPerm.can_view);
+    }
+
+    return true;
+  });
 
   return (
     <nav
@@ -36,7 +66,7 @@ export function BottomBar() {
       `}
       aria-label="Bottom navigation"
     >
-      {BOTTOM_NAV_ITEMS.map((item) => {
+      {filteredItems.map((item) => {
         const Icon = item.icon;
         const isActive =
           item.href === '/admin'
