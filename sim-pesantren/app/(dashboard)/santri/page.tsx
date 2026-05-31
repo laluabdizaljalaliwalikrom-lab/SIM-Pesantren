@@ -14,7 +14,17 @@ import {
   Loader2, 
   AlertTriangle,
   ClipboardList,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Eye,
+  Phone,
+  Mail,
+  MapPin,
+  Calendar,
+  GraduationCap,
+  BookOpen,
+  User,
+  Building2,
+  Heart
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportSantriModal } from '@/components/import-santri-modal';
@@ -41,6 +51,8 @@ export default function SantriDashboardPage() {
   const [isImportModalOpen, setIsImportModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [selectedSantri, setSelectedSantri] = useState<Santri | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState<boolean>(false);
+  const [detailSantri, setDetailSantri] = useState<Santri | null>(null);
 
   // Permission states
   const [canCreate, setCanCreate] = useState<boolean>(true);
@@ -174,6 +186,11 @@ export default function SantriDashboardPage() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const openDetail = (santri: Santri) => {
+    setDetailSantri(santri);
+    setIsDetailOpen(true);
+  };
 
   const handleOpenAddModal = () => {
     setSelectedSantri(null);
@@ -417,22 +434,28 @@ export default function SantriDashboardPage() {
                 filteredList.map((santri) => (
                   <tr key={santri.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-950/20 transition-all duration-200">
                     <td className="py-4 px-6">
-                      {santri.foto_url ? (
-                        <Image
-                          src={santri.foto_url}
-                          alt={santri.nama_lengkap}
-                          width={36}
-                          height={36}
-                          className="h-9 w-9 rounded-full object-cover border border-emerald-200/50 dark:border-emerald-500/20 shadow-sm"
-                        />
-                      ) : (
-                        <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20 flex items-center justify-center font-bold text-xs uppercase shadow-sm">
-                          {santri.nama_lengkap.charAt(0)}
-                        </div>
-                      )}
+                      <button onClick={() => openDetail(santri)} className="focus:outline-none">
+                        {santri.foto_url ? (
+                          <Image
+                            src={santri.foto_url}
+                            alt={santri.nama_lengkap}
+                            width={36}
+                            height={36}
+                            className="h-9 w-9 rounded-full object-cover border border-emerald-200/50 dark:border-emerald-500/20 shadow-sm hover:ring-2 hover:ring-emerald-500/40 transition-all cursor-pointer"
+                          />
+                        ) : (
+                          <div className="h-9 w-9 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20 flex items-center justify-center font-bold text-xs uppercase shadow-sm hover:ring-2 hover:ring-emerald-500/40 transition-all cursor-pointer">
+                            {santri.nama_lengkap.charAt(0)}
+                          </div>
+                        )}
+                      </button>
                     </td>
                     <td className="py-4 px-6 font-mono text-xs text-slate-500 dark:text-zinc-500">{santri.nis}</td>
-                    <td className="py-4 px-6 font-bold text-slate-900 dark:text-white">{toTitleCase(santri.nama_lengkap)}</td>
+                    <td className="py-4 px-6">
+                      <button onClick={() => openDetail(santri)} className="font-bold text-slate-900 dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-left focus:outline-none">
+                        {toTitleCase(santri.nama_lengkap)}
+                      </button>
+                    </td>
                     <td className="py-4 px-6">
                       {santri.kamar ? (
                         <span>
@@ -512,23 +535,27 @@ export default function SantriDashboardPage() {
           ) : (
             filteredList.map((santri) => (
               <div key={santri.id} className="p-4 flex gap-4 items-start hover:bg-slate-50/50 dark:hover:bg-zinc-950/20 transition-all">
-                {santri.foto_url ? (
-                  <Image
-                    src={santri.foto_url}
-                    alt={santri.nama_lengkap}
-                    width={40}
-                    height={40}
-                    className="h-10 w-10 rounded-full object-cover border border-emerald-200/50 shadow-sm flex-shrink-0"
-                  />
-                ) : (
-                  <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 flex items-center justify-center font-bold text-sm uppercase flex-shrink-0">
-                    {santri.nama_lengkap.charAt(0)}
-                  </div>
-                )}
+                <button onClick={() => openDetail(santri)} className="focus:outline-none flex-shrink-0">
+                  {santri.foto_url ? (
+                    <Image
+                      src={santri.foto_url}
+                      alt={santri.nama_lengkap}
+                      width={40}
+                      height={40}
+                      className="h-10 w-10 rounded-full object-cover border border-emerald-200/50 shadow-sm hover:ring-2 hover:ring-emerald-500/40 transition-all cursor-pointer"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50 flex items-center justify-center font-bold text-sm uppercase hover:ring-2 hover:ring-emerald-500/40 transition-all cursor-pointer">
+                      {santri.nama_lengkap.charAt(0)}
+                    </div>
+                  )}
+                </button>
                 
                 <div className="flex-1 min-w-0 space-y-1">
                   <div className="flex items-center justify-between gap-2">
-                    <h4 className="font-bold text-slate-900 dark:text-white text-sm truncate">{toTitleCase(santri.nama_lengkap)}</h4>
+                    <button onClick={() => openDetail(santri)} className="font-bold text-slate-900 dark:text-white text-sm truncate hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors text-left focus:outline-none">
+                      {toTitleCase(santri.nama_lengkap)}
+                    </button>
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                         santri.status === 'aktif'
@@ -605,6 +632,106 @@ export default function SantriDashboardPage() {
         onSuccess={fetchData} 
         kelasList={kelasList}
       />
+
+      {/* ════════════════════════════════════════════════════════════════
+          ── Detail Santri Modal
+         ════════════════════════════════════════════════════════════════ */}
+      {isDetailOpen && detailSantri && (() => {
+        const s = detailSantri;
+        const genderIcon = s.jenis_kelamin === 'L' ? 'Laki-laki' : s.jenis_kelamin === 'P' ? 'Perempuan' : '';
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={() => setIsDetailOpen(false)} />
+            <div className="relative bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+              
+              {/* Detail Header */}
+              <div className="bg-gradient-to-br from-emerald-500 to-teal-600 px-6 pt-8 pb-6 relative">
+                <button onClick={() => setIsDetailOpen(false)} className="absolute top-4 right-4 text-white/70 hover:text-white transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+                <div className="flex items-end gap-4">
+                  {s.foto_url ? (
+                    <Image
+                      src={s.foto_url}
+                      alt={s.nama_lengkap}
+                      width={80}
+                      height={80}
+                      className="h-20 w-20 rounded-2xl object-cover border-4 border-white/30 shadow-lg flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="h-20 w-20 rounded-2xl bg-white/20 border-4 border-white/30 flex items-center justify-center text-white font-extrabold text-2xl shadow-lg flex-shrink-0 select-none">
+                      {s.nama_lengkap.charAt(0)}
+                    </div>
+                  )}
+                  <div>
+                    <h2 className="text-lg font-extrabold text-white leading-tight">{toTitleCase(s.nama_lengkap)}</h2>
+                    <p className="text-white/70 text-xs mt-0.5 font-mono">{s.nis ? `NIS: ${s.nis}` : 'Tanpa NIS'}</p>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className={`inline-flex items-center gap-1 bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/20`}>
+                        {s.jenis_kelamin === 'L' ? 'Laki-laki' : s.jenis_kelamin === 'P' ? 'Perempuan' : '-'}
+                      </span>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        s.status === 'aktif' ? 'bg-emerald-400/30 text-emerald-100' :
+                        s.status === 'alumni' ? 'bg-white/20 text-white/70' :
+                        'bg-amber-400/30 text-amber-100'
+                      }`}>{s.status}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Detail Body */}
+              <div className="p-6 overflow-y-auto flex-1 space-y-5">
+                {[
+                  { icon: <Calendar className="h-4 w-4" />, label: 'Tempat, Tgl. Lahir', value: s.tanggal_lahir ? `${s.tempat_lahir ? s.tempat_lahir + ', ' : ''}${new Date(s.tanggal_lahir).toLocaleDateString('id-ID', { dateStyle: 'long' })}` : s.tempat_lahir },
+                  { icon: <BookOpen className="h-4 w-4" />, label: 'NISN', value: s.nisn },
+                  { icon: <GraduationCap className="h-4 w-4" />, label: 'Sekolah Asal', value: s.sekolah_asal },
+                  { icon: <Building2 className="h-4 w-4" />, label: 'Kamar', value: s.kamar ? `${s.kamar.nama_kamar} (${s.kamar.gedung})` : null },
+                  { icon: <User className="h-4 w-4" />, label: 'Rombel', value: s.rombel_saat_ini },
+                  { icon: <MapPin className="h-4 w-4" />, label: 'Alamat', value: s.alamat },
+                  { icon: <Phone className="h-4 w-4" />, label: 'No. HP', value: s.hp },
+                  { icon: <Heart className="h-4 w-4" />, label: 'Nama Ayah', value: s.nama_ayah },
+                  { icon: <Heart className="h-4 w-4" />, label: 'Nama Ibu', value: s.nama_ibu },
+                  { icon: <User className="h-4 w-4" />, label: 'Wali Santri', value: s.wali?.nama_lengkap },
+                  { icon: <Calendar className="h-4 w-4" />, label: 'NIK', value: s.nik },
+                ].filter(row => row.value).map(row => (
+                  <div key={row.label} className="flex items-start gap-3">
+                    <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-zinc-800 text-slate-400 dark:text-zinc-500 flex items-center justify-center flex-shrink-0 border border-slate-100 dark:border-zinc-700">
+                      {row.icon}
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold uppercase text-slate-400 dark:text-zinc-500 tracking-wider">{row.label}</p>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-zinc-200 mt-0.5">{row.value}</p>
+                    </div>
+                  </div>
+                ))}
+
+                {/* Quick Contacts */}
+                <div className="flex gap-3 pt-2">
+                  {s.hp && (
+                    <a href={`https://wa.me/62${s.hp.replace(/^0/, '')}`} target="_blank" rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                      <Phone className="h-3.5 w-3.5" /> WhatsApp
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              {/* Detail Footer */}
+              <div className="border-t border-slate-100 dark:border-zinc-800 px-6 py-3.5 flex justify-between items-center bg-slate-50/50 dark:bg-zinc-900/50 flex-shrink-0">
+                <button onClick={() => setIsDetailOpen(false)}
+                  className="px-4 py-2 border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors">
+                  Tutup
+                </button>
+                <button onClick={() => { setIsDetailOpen(false); handleOpenEditModal(s); }}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+                  <Edit3 className="h-3.5 w-3.5" /> Edit Data
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
     </div>
   );
