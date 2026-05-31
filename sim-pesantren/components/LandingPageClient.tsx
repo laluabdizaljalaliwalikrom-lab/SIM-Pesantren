@@ -97,7 +97,7 @@ export default function LandingPageClient({
                 P
               </div>
             )}
-            <span className="font-extrabold text-base tracking-wide bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-200 bg-clip-text text-transparent truncate max-w-[150px] sm:max-w-xs">
+            <span className="font-extrabold text-xs sm:text-sm md:text-base tracking-wide bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-200 bg-clip-text text-transparent whitespace-nowrap">
               {brandName}
             </span>
           </div>
