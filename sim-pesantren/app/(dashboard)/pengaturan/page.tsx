@@ -17,6 +17,8 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { toast } from 'sonner';
+import ImageUpload from '@/components/ImageUpload';
+import { uploadLogoPesantren } from '@/services/storage-actions';
 
 export default function PengaturanPage() {
   const [loading, setLoading] = useState<boolean>(true);
@@ -24,6 +26,9 @@ export default function PengaturanPage() {
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
   
   const [profileId, setProfileId] = useState<string>('');
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState<boolean>(false);
+  
   const [form, setForm] = useState({
     nama_pesantren: '',
     npsn: '',
@@ -34,7 +39,8 @@ export default function PengaturanPage() {
     email: '',
     website: '',
     visi: '',
-    misi: ''
+    misi: '',
+    logo_url: ''
   });
 
   const fetchData = useCallback(async () => {
@@ -73,7 +79,8 @@ export default function PengaturanPage() {
           email: data.email || '',
           website: data.website || '',
           visi: data.visi || '',
-          misi: data.misi || ''
+          misi: data.misi || '',
+          logo_url: data.logo_url || ''
         });
       }
     } catch (err: any) {
@@ -97,12 +104,36 @@ export default function PengaturanPage() {
 
     setSaving(true);
     try {
+      let uploadedLogoUrl = form.logo_url;
+      
+      // Upload new logo if selected
+      if (logoFile) {
+        setUploadingLogo(true);
+        try {
+          const extension = logoFile.name.split('.').pop() || 'png';
+          const uniqueFileName = `logo_${Date.now()}.${extension}`;
+          uploadedLogoUrl = await uploadLogoPesantren(logoFile, uniqueFileName);
+        } catch (uploadErr: any) {
+          console.error('Gagal mengunggah logo:', uploadErr);
+          toast.error('Gagal mengunggah logo pesantren: ' + uploadErr.message);
+          setUploadingLogo(false);
+          setSaving(false);
+          return;
+        }
+        setUploadingLogo(false);
+      }
+
       let error;
+      const submissionData = {
+        ...form,
+        logo_url: uploadedLogoUrl
+      };
+
       if (profileId) {
         const { error: updateErr } = await supabase
           .from('pesantren_profile')
           .update({
-            ...form,
+            ...submissionData,
             updated_at: new Date().toISOString()
           })
           .eq('id', profileId);
@@ -110,12 +141,13 @@ export default function PengaturanPage() {
       } else {
         const { error: insertErr } = await supabase
           .from('pesantren_profile')
-          .insert([form]);
+          .insert([submissionData]);
         error = insertErr;
       }
 
       if (error) throw error;
       toast.success('Profil pesantren berhasil disimpan!');
+      setLogoFile(null); // Reset selection
       await fetchData();
     } catch (err: any) {
       console.error(err);
@@ -295,6 +327,29 @@ export default function PengaturanPage() {
           {/* RIGHT COLUMN: CONTACT & SYSTEM */}
           <div className="lg:col-span-4 space-y-8">
             
+            {/* Logo Upload Card */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-4 flex flex-col items-center">
+              <h3 className="w-full font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
+                Logo Pesantren
+              </h3>
+              <ImageUpload
+                value={logoFile || form.logo_url}
+                onChange={(file) => {
+                  if (!isAdmin) {
+                    toast.error('Anda tidak memiliki izin untuk mengunggah logo.');
+                    return;
+                  }
+                  setLogoFile(file);
+                }}
+                loading={uploadingLogo}
+                shape="square"
+                label=""
+              />
+              <p className="text-[10px] text-slate-400 text-center italic mt-1">
+                Gunakan format PNG/JPG maksimal 500KB. Gambar otomatis dikompresi.
+              </p>
+            </div>
+
             {/* Contact Info Card */}
             <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
               <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
