@@ -25,6 +25,8 @@ interface SidebarProps {
   onClose: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  userRoleRaw?: string;
+  permissions?: any[];
 }
 
 const MENU_ITEMS = [
@@ -41,8 +43,40 @@ const MENU_ITEMS = [
   { name: 'Pengaturan', href: '/pengaturan', icon: Settings },
 ];
 
-export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: SidebarProps) {
+export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse, userRoleRaw, permissions }: SidebarProps) {
   const pathname = usePathname();
+
+  const isSuperAdmin = userRoleRaw === 'admin' || userRoleRaw === 'Super Admin';
+
+  const filteredMenuItems = MENU_ITEMS.filter((item) => {
+    // Dashboard and General Settings always visible
+    if (item.href === '/admin' || item.href === '/pengaturan') return true;
+
+    // Hak Akses is admin only
+    if (item.href.startsWith('/settings')) return isSuperAdmin;
+
+    // Check custom permissions mapping
+    const pathModuleMap: Record<string, string> = {
+      '/santri': 'Santri',
+      '/pegawai': 'Kepegawaian',
+      '/keuangan': 'Keuangan',
+      '/pembayaran': 'Keuangan',
+      '/akademik': 'Akademik',
+      '/lembaga': 'Akademik',
+      '/asrama': 'Asrama',
+      '/tahfidz': 'Santri',
+    };
+
+    const moduleName = pathModuleMap[item.href];
+    if (moduleName && !isSuperAdmin) {
+      const modPerm = permissions?.find(
+        (p) => p.feature.toLowerCase() === moduleName.toLowerCase()
+      );
+      return !!(modPerm && modPerm.can_view);
+    }
+
+    return true;
+  });
 
   return (
     <>
@@ -58,7 +92,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
       <aside
         className={`fixed top-0 bottom-0 left-0 z-50 flex flex-col border-r border-emerald-800/20 bg-emerald-950 dark:bg-zinc-950 text-slate-100 transition-all duration-300 ease-in-out lg:static lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
-        } ${isCollapsed ? 'lg:w-20' : 'lg:w-72 w-72'}`}
+         } ${isCollapsed ? 'lg:w-20' : 'lg:w-72 w-72'}`}
       >
         {/* Brand / Header */}
         <div className={`flex h-16 items-center border-b border-emerald-800/30 px-4 ${isCollapsed ? 'lg:justify-center' : 'justify-between'}`}>
@@ -111,7 +145,7 @@ export function Sidebar({ isOpen, onClose, isCollapsed, onToggleCollapse }: Side
 
         {/* Navigation Items */}
         <nav className="flex-1 space-y-1.5 px-3 py-6 overflow-y-auto">
-          {MENU_ITEMS.map((item) => {
+          {filteredMenuItems.map((item) => {
             const isActive = pathname === item.href;
             const Icon = item.icon;
 

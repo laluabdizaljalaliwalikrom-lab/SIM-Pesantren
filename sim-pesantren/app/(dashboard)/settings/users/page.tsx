@@ -602,9 +602,17 @@ export default function UserRoleSettingsPage() {
                     disabled={saving}
                     className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all cursor-pointer disabled:opacity-50"
                   >
-                    <option value="admin">Super Admin</option>
-                    <option value="pengasuh">Pengasuh</option>
-                    <option value="wali_santri">Wali Santri</option>
+                    {roles.map((r) => {
+                      let val = r.name;
+                      if (r.name === 'Super Admin') val = 'admin';
+                      else if (r.name === 'Pengasuh') val = 'pengasuh';
+                      else if (r.name === 'Wali Santri') val = 'wali_santri';
+                      return (
+                        <option key={r.id} value={val}>
+                          {r.name}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -739,9 +747,17 @@ export default function UserRoleSettingsPage() {
                       disabled={inviting}
                       className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all cursor-pointer disabled:opacity-50"
                     >
-                      <option value="admin">Super Admin</option>
-                      <option value="pengasuh">Pengasuh</option>
-                      <option value="wali_santri">Wali Santri</option>
+                      {roles.map((r) => {
+                        let val = r.name;
+                        if (r.name === 'Super Admin') val = 'admin';
+                        else if (r.name === 'Pengasuh') val = 'pengasuh';
+                        else if (r.name === 'Wali Santri') val = 'wali_santri';
+                        return (
+                          <option key={r.id} value={val}>
+                            {r.name}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 

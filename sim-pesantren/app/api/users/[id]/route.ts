@@ -32,15 +32,24 @@ export async function PATCH(
       return NextResponse.json({ error: 'User ID wajib.' }, { status: 400 });
     }
 
-    const VALID_ROLES = ['admin', 'pengasuh', 'wali_santri'];
-    if (role && !VALID_ROLES.includes(role)) {
-      return NextResponse.json(
-        { error: `Role tidak valid. Harus: ${VALID_ROLES.join(', ')}` },
-        { status: 400 }
-      );
-    }
-
+        const VALID_ROLES = ['admin', 'pengasuh', 'wali_santri'];
     const supabase = getAdminClient();
+
+    if (role && !VALID_ROLES.includes(role)) {
+      // Periksa apakah role ada di tabel app_roles (custom role)
+      const { data: dbRole } = await supabase
+        .from('app_roles')
+        .select('name')
+        .eq('name', role)
+        .single();
+
+      if (!dbRole) {
+        return NextResponse.json(
+          { error: `Role '${role}' tidak terdaftar di custom role.` },
+          { status: 400 }
+        );
+      }
+    }
 
     // Build update payload (only include fields that were sent)
     const updatePayload: Record<string, any> = {};

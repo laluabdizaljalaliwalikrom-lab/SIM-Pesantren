@@ -33,15 +33,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Nama lengkap wajib diisi.' }, { status: 400 });
     }
 
-    const VALID_ROLES = ['admin', 'pengasuh', 'wali_santri'];
-    if (!VALID_ROLES.includes(role)) {
-      return NextResponse.json(
-        { error: `Role tidak valid. Harus salah satu dari: ${VALID_ROLES.join(', ')}` },
-        { status: 400 }
-      );
-    }
-
-    // ── Supabase Admin client ──
+        // ── Supabase Admin client ──
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
@@ -55,6 +47,23 @@ export async function POST(request: NextRequest) {
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    const VALID_ROLES = ['admin', 'pengasuh', 'wali_santri'];
+    if (role && !VALID_ROLES.includes(role)) {
+      // Periksa apakah role ada di tabel app_roles (custom role)
+      const { data: dbRole } = await supabaseAdmin
+        .from('app_roles')
+        .select('name')
+        .eq('name', role)
+        .single();
+
+      if (!dbRole) {
+        return NextResponse.json(
+          { error: `Role '${role}' tidak terdaftar di custom role.` },
+          { status: 400 }
+        );
+      }
+    }
 
     // ── 1. Buat user di Supabase Auth ──
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({

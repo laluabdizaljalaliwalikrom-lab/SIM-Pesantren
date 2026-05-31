@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { Sidebar } from './sidebar';
 import { BottomBar } from './bottom-bar';
 import { ThemeToggle } from './ui/theme-toggle';
-import { Menu, Bell, LogOut } from 'lucide-react';
+import { Menu, Bell, LogOut, ShieldAlert, Loader2 } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -22,29 +22,68 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // Logged-in user state
   const [userDisplayName, setUserDisplayName] = useState('User');
   const [userRole, setUserRole] = useState('');
+  const [userRoleRaw, setUserRoleRaw] = useState('');
   const [userInitial, setUserInitial] = useState('U');
   const [loggingOut, setLoggingOut] = useState(false);
+  const [permissions, setPermissions] = useState<any[]>([]);
+  const [loadingPermissions, setLoadingPermissions] = useState(true);
 
   // Fetch current session user
   useEffect(() => {
     async function loadUser() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        // Try to get profile data
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('nama_lengkap, role')
-          .eq('id', user.id)
-          .single();
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Try to get profile data
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('nama_lengkap, role')
+            .eq('id', user.id)
+            .single();
 
-        const name = profile?.nama_lengkap || user.email?.split('@')[0] || 'User';
-        const role = profile?.role === 'admin' ? 'Super Admin'
-                   : profile?.role === 'pengasuh' ? 'Pengasuh'
-                   : 'Wali Santri';
+          const name = profile?.nama_lengkap || user.email?.split('@')[0] || 'User';
+          const rawRole = profile?.role || 'wali_santri';
+          const roleDisplay = rawRole === 'admin' ? 'Super Admin'
+                     : rawRole === 'pengasuh' ? 'Pengasuh'
+                     : rawRole === 'wali_santri' ? 'Wali Santri'
+                     : rawRole;
 
-        setUserDisplayName(name);
-        setUserRole(role);
-        setUserInitial(name.charAt(0).toUpperCase());
+          setUserDisplayName(name);
+          setUserRole(roleDisplay);
+          setUserRoleRaw(rawRole);
+          setUserInitial(name.charAt(0).toUpperCase());
+
+          // Fetch permissions if not super admin
+          if (rawRole === 'admin' || rawRole === 'Super Admin') {
+            setLoadingPermissions(false);
+          } else {
+            // Find role in app_roles
+            let nameMatch = 'Wali Santri';
+            if (rawRole === 'pengasuh') nameMatch = 'Pengasuh';
+            else if (rawRole === 'wali_santri') nameMatch = 'Wali Santri';
+            else nameMatch = rawRole;
+
+            const { data: roleData } = await supabase
+              .from('app_roles')
+              .select('id')
+              .eq('name', nameMatch)
+              .single();
+
+            if (roleData) {
+              const { data: perms } = await supabase
+                .from('role_permissions')
+                .select('*')
+                .eq('id_role', roleData.id);
+              setPermissions(perms || []);
+            }
+            setLoadingPermissions(false);
+          }
+        } else {
+          setLoadingPermissions(false);
+        }
+      } catch (err) {
+        console.error('Error loading user permissions:', err);
+        setLoadingPermissions(false);
       }
     }
     loadUser();
@@ -95,6 +134,40 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   };
 
+  // Check access based on active role and path permissions
+  const isSuperAdmin = userRoleRaw === 'admin' || userRoleRaw === 'Super Admin';
+  
+  let hasAccess = true;
+  const currentPath = pathname;
+  
+  const pathModuleMap: Record<string, string> = {
+    '/santri': 'Santri',
+    '/pegawai': 'Kepegawaian',
+    '/keuangan': 'Keuangan',
+    '/pembayaran': 'Keuangan',
+    '/akademik': 'Akademik',
+    '/lembaga': 'Akademik',
+    '/asrama': 'Asrama',
+    '/tahfidz': 'Santri',
+  };
+  
+  const requiredModule = Object.keys(pathModuleMap).find(
+    (p) => currentPath === p || currentPath.startsWith(p + '/')
+  )
+    ? pathModuleMap[Object.keys(pathModuleMap).find((p) => currentPath === p || currentPath.startsWith(p + '/'))!]
+    : null;
+    
+  if (currentPath.startsWith('/settings/users') || currentPath.startsWith('/settings')) {
+    if (!isSuperAdmin) hasAccess = false;
+  } else if (requiredModule && !isSuperAdmin) {
+    const modPerm = permissions.find(
+      (p) => p.feature.toLowerCase() === requiredModule.toLowerCase()
+    );
+    if (!modPerm || !modPerm.can_view) {
+      hasAccess = false;
+    }
+  }
+
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 dark:bg-zinc-950 transition-colors duration-200">
       
@@ -104,6 +177,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         onClose={() => setSidebarOpen(false)} 
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+        userRoleRaw={userRoleRaw}
+        permissions={permissions}
       />
 
       {/* Main Content Area */}
@@ -165,7 +240,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         {/* Dynamic Page Router Children */}
         <main className="flex-1 overflow-y-auto bg-slate-50 dark:bg-zinc-950 transition-colors duration-200 pb-20 lg:pb-0">
-          {children}
+          {loadingPermissions ? (
+            <div className="h-full w-full flex flex-col items-center justify-center gap-3">
+              <Loader2 className="h-8 w-8 text-emerald-600 animate-spin" />
+              <p className="text-xs text-slate-400 font-medium">Memuat Hak Akses...</p>
+            </div>
+          ) : !hasAccess ? (
+            <div className="h-full w-full flex flex-col items-center justify-center p-6 text-center">
+              <div className="h-16 w-16 rounded-full bg-rose-50 dark:bg-rose-950/20 flex items-center justify-center text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-950/50 mb-4 shadow-lg shadow-rose-600/5 animate-pulse">
+                <ShieldAlert className="h-8 w-8" />
+              </div>
+              <h3 className="text-base font-extrabold text-slate-800 dark:text-zinc-100 mb-2">Akses Halaman Ditolak</h3>
+              <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-sm leading-relaxed mb-6">
+                Maaf, akun Anda ({userRole}) tidak memiliki izin (hak akses) untuk melihat halaman ini. Silakan hubungi Super Admin jika ini adalah sebuah kekeliruan.
+              </p>
+              <button
+                onClick={() => router.push('/admin')}
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md shadow-emerald-600/10 active:scale-95 transition-all"
+              >
+                Kembali ke Dashboard
+              </button>
+            </div>
+          ) : (
+            children
+          )}
         </main>
 
       </div>
