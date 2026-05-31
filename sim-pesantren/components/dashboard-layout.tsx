@@ -146,7 +146,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     '/keuangan': 'Keuangan',
     '/pembayaran': 'Keuangan',
     '/akademik': 'Akademik',
-    '/lembaga': 'Akademik',
+    '/lembaga': 'Lembaga',
     '/asrama': 'Asrama',
     '/tahfidz': 'Tahfidz',
   };
