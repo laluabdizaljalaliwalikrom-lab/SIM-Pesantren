@@ -82,12 +82,15 @@ export async function PATCH(
       });
     }
 
+    const targetRole = updatePayload.role || role;
     const roleName =
-      (updatePayload.role || role) === 'admin'
+      targetRole === 'admin'
         ? 'Super Admin'
-        : (updatePayload.role || role) === 'pengasuh'
+        : targetRole === 'pengasuh'
         ? 'Pengasuh'
-        : 'Wali Santri';
+        : targetRole === 'wali_santri'
+        ? 'Wali Santri'
+        : targetRole;
 
     return NextResponse.json({
       success: true,

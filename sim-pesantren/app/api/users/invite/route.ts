@@ -161,7 +161,10 @@ export async function POST(request: NextRequest) {
 
     // ── 4. Response ──
     const roleName =
-      role === 'admin' ? 'Super Admin' : role === 'pengasuh' ? 'Pengasuh' : 'Wali Santri';
+      role === 'admin' ? 'Super Admin' 
+      : role === 'pengasuh' ? 'Pengasuh' 
+      : role === 'wali_santri' ? 'Wali Santri'
+      : role;
 
     return NextResponse.json({
       success: true,

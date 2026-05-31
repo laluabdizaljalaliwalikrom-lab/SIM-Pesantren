@@ -65,7 +65,8 @@ export async function GET() {
         email: authUser?.email || p.no_hp || '—',
         role: p.role === 'admin' ? 'Super Admin' 
             : p.role === 'pengasuh' ? 'Pengasuh' 
-            : 'Wali Santri',
+            : p.role === 'wali_santri' ? 'Wali Santri'
+            : p.role,
         role_raw: p.role,
         status: authUser?.last_sign_in_at ? 'Aktif' : 'Belum Login',
         no_hp: p.no_hp || '—',
