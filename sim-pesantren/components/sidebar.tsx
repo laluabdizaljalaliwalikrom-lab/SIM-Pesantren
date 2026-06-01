@@ -3,13 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Users, 
-  BookOpen, 
-  CreditCard, 
-  Settings, 
-  X, 
+import {
+  LayoutDashboard,
+  Users,
+  BookOpen,
+  CreditCard,
+  Settings,
+  X,
   GraduationCap,
   ChevronLeft,
   ChevronRight,
@@ -17,7 +17,8 @@ import {
   Home,
   Briefcase,
   Coins,
-  ShieldCheck
+  ShieldCheck,
+  BarChart4
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -45,6 +46,7 @@ const MENU_ITEMS = [
   { name: 'Akademik', href: '/akademik', icon: BookOpen },
   { name: 'Kasir Pembayaran', href: '/pembayaran', icon: CreditCard },
   { name: 'Atur Keuangan', href: '/keuangan', icon: Coins },
+  { name: 'Laporan Keuangan', href: '/laporan', icon: BarChart4 },
   { name: 'Hak Akses', href: '/settings/users', icon: ShieldCheck },
   { name: 'Pengaturan', href: '/pengaturan', icon: Settings },
 ];
@@ -80,6 +82,7 @@ export function Sidebar({
       '/pegawai': 'Kepegawaian',
       '/keuangan': 'Keuangan',
       '/pembayaran': 'Keuangan',
+      '/laporan': 'Keuangan',
       '/akademik': 'Akademik',
       '/lembaga': 'Lembaga',
       '/asrama': 'Asrama',

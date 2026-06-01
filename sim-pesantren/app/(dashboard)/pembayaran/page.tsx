@@ -19,16 +19,22 @@ import {
   Layers,
   PrinterIcon,
   History,
-  MessageCircle
+  MessageCircle,
+  Download
 } from 'lucide-react';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import * as XLSX from 'xlsx';
 
 export default function CashierPaymentPage() {
   // Tab navigation state
   const [activeTab, setActiveTab] = useState<'kasir' | 'riwayat'>('kasir');
   const [paymentHistory, setPaymentHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [historyFilterDateStart, setHistoryFilterDateStart] = useState('');
+  const [historyFilterDateEnd, setHistoryFilterDateEnd] = useState('');
+  const [historyFilterStatus, setHistoryFilterStatus] = useState<string>('semua');
+  const [historyGlobalMode, setHistoryGlobalMode] = useState(false);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,6 +55,8 @@ export default function CashierPaymentPage() {
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
   const [paidBillsReceipt, setPaidBillsReceipt] = useState<Tagihan[]>([]);
   const [receiptCashReceived, setReceiptCashReceived] = useState<number>(0);
+  
+  const [latestPaymentId, setLatestPaymentId] = useState<string | null>(null);
   
   // Dynamic Pesantren and active cashier profile state
   const [pesantrenProfile, setPesantrenProfile] = useState({
@@ -289,6 +297,29 @@ export default function CashierPaymentPage() {
         return { bill, payNow };
       });
 
+      const totalTagihan = planWithAmounts.reduce((s, p) => s + Number(p.bill.nominal), 0);
+      const totalBayar = planWithAmounts.reduce((s, p) => s + p.payNow, 0);
+      const kembalian = Math.max(0, cashReceived - totalBayar);
+
+      // 3. Create pembayaran_group (satu grup untuk satu transaksi kasir)
+      const { data: paymentGroup, error: groupError } = await supabase
+        .from('pembayaran_group')
+        .insert({
+          id_santri: selectedSantri?.id,
+          total_tagihan: totalTagihan,
+          total_bayar: totalBayar,
+          uang_diterima: cashReceived,
+          kembalian: kembalian,
+          id_admin: adminId,
+        })
+        .select('id, nomor_kuitansi')
+        .single();
+
+      if (groupError || !paymentGroup) {
+        throw new Error('Gagal membuat grup pembayaran: ' + (groupError?.message || 'unknown'));
+      }
+
+      // 4. Process each bill and link to the group
       const updatePromises = planWithAmounts.map(async ({ bill, payNow }) => {
         const currentTerbayar = Number(bill.terbayar) || 0;
         const nextTerbayar = currentTerbayar + payNow;
@@ -306,10 +337,11 @@ export default function CashierPaymentPage() {
 
         if (updateError) throw updateError;
 
-        // Insert audit log to pembayaran
+        // Insert individual pembayaran linked to group
         const { error: insertError } = await supabase
           .from('pembayaran')
           .insert({
+            id_group: paymentGroup.id,
             id_santri: selectedSantri?.id,
             id_tagihan: bill.id,
             id_admin: adminId,
@@ -323,7 +355,10 @@ export default function CashierPaymentPage() {
         return payNow;
       });
 
-      const paidAmounts = await Promise.all(updatePromises);
+      await Promise.all(updatePromises);
+      const paidAmounts = planWithAmounts.map(p => p.payNow);
+      const groupId = paymentGroup.id;
+      const nomorKuitansi = paymentGroup.nomor_kuitansi;
 
       toast.success('Pembayaran berhasil diproses!');
 
@@ -391,10 +426,15 @@ Wassalamu'alaikum Wr. Wb.
       // Set state for receipt display
       setPaidBillsReceipt(receiptBills);
       setReceiptCashReceived(cashReceived);
+      setLatestPaymentId(groupId);
       
       // Prompt user to print receipt
       if (confirm('Pembayaran Sukses. Cetak Kuitansi?')) {
-        setIsReceiptModalOpen(true);
+        if (groupId) {
+          window.open(`/pembayaran/kuitansi/${groupId}`, '_blank');
+        } else {
+          toast.error('Gagal mendapatkan ID kuitansi.');
+        }
       }
 
       // Reload bills
@@ -411,93 +451,256 @@ Wassalamu'alaikum Wr. Wb.
     }
   };
 
-  // Fetch payment history
+  // Fetch payment history (from pembayaran_group = 1 row per transaction)
   const fetchPaymentHistory = useCallback(async () => {
     setLoadingHistory(true);
     try {
-      let query = supabase
+      // 1. Fetch from pembayaran_group (new records)
+      let groupQuery = supabase
+        .from('pembayaran_group')
+        .select(`
+          id,
+          nomor_kuitansi,
+          total_tagihan,
+          total_bayar,
+          uang_diterima,
+          kembalian,
+          created_at,
+          santri:id_santri (id, nama_lengkap, nis, kamar:id_kamar (nama_kamar), kelas_formal:id_kelas_formal (nama_kelas), wali:id_wali (id, nama_lengkap, no_hp)),
+          admin:id_admin (id, nama_lengkap),
+          pembayaran_list:pembayaran!pembayaran_id_group_fkey (
+            id,
+            jumlah,
+            status,
+            tagihan:id_tagihan (
+              id,
+              bulan,
+              tahun,
+              master_biaya:id_master_biaya (nama_biaya)
+            )
+          )
+        `);
+
+      // 2. Fetch legacy pembayaran (before group migration)
+      let legacyQuery = supabase
         .from('pembayaran')
         .select(`
           id,
+          id_group,
+          nomor_kuitansi,
           jumlah,
-          tanggal_bayar,
+          status,
           created_at,
           santri:id_santri (id, nama_lengkap, nis, kamar:id_kamar (nama_kamar), kelas_formal:id_kelas_formal (nama_kelas), wali:id_wali (id, nama_lengkap, no_hp)),
+          admin:id_admin (id, nama_lengkap),
           tagihan:id_tagihan (
             id,
             bulan,
             tahun,
             master_biaya:id_master_biaya (nama_biaya)
-          ),
-          admin:id_admin (id, nama_lengkap)
-        `);
+          )
+        `)
+        .is('id_group', null);
 
-      if (selectedSantri) {
-        query = query.eq('id_santri', selectedSantri.id);
+      if (historyGlobalMode) {
+        // Global mode - no santri filter
+      } else if (selectedSantri) {
+        groupQuery = groupQuery.eq('id_santri', selectedSantri.id);
+        legacyQuery = legacyQuery.eq('id_santri', selectedSantri.id);
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase query error detail:', error);
-        throw error;
+      // Apply date filters
+      const filterDateEnd = historyFilterDateEnd ? historyFilterDateEnd + 'T23:59:59.999Z' : undefined;
+      if (historyFilterDateStart) {
+        groupQuery = groupQuery.gte('created_at', historyFilterDateStart);
+        legacyQuery = legacyQuery.gte('created_at', historyFilterDateStart);
       }
-      setPaymentHistory(data || []);
+      if (filterDateEnd) {
+        groupQuery = groupQuery.lte('created_at', filterDateEnd);
+        legacyQuery = legacyQuery.lte('created_at', filterDateEnd);
+      }
+
+      const [groupRes, legacyRes] = await Promise.all([
+        groupQuery.order('created_at', { ascending: false }).limit(500),
+        legacyQuery.order('created_at', { ascending: false }).limit(500),
+      ]);
+
+      if (groupRes.error) {
+        console.error('Supabase group query error detail:', groupRes.error);
+        throw groupRes.error;
+      }
+
+      if (legacyRes.error) {
+        console.error('Supabase legacy query error:', legacyRes.error);
+        throw legacyRes.error;
+      }
+
+      // Transform legacy records to match group structure
+      const legacyGroups = (legacyRes.data || []).map((p: any) => ({
+        id: p.id,
+        nomor_kuitansi: p.nomor_kuitansi || '-',
+        total_tagihan: Number(p.jumlah) || 0,
+        total_bayar: Number(p.jumlah) || 0,
+        uang_diterima: Number(p.jumlah) || 0,
+        kembalian: 0,
+        created_at: p.created_at,
+        santri: p.santri,
+        admin: p.admin,
+        is_legacy: true,
+        pembayaran_list: [{
+          id: p.id,
+          jumlah: p.jumlah,
+          status: p.status,
+          tagihan: p.tagihan,
+        }],
+      }));
+
+      // Merge and sort by created_at descending
+      const merged = [...(groupRes.data || []), ...legacyGroups]
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setPaymentHistory(merged);
     } catch (err: any) {
       console.error('Error fetching payment history:', err);
       toast.error('Gagal mengambil riwayat pembayaran: ' + (err.message || JSON.stringify(err)));
     } finally {
       setLoadingHistory(false);
     }
-  }, [selectedSantri]);
+  }, [selectedSantri, historyFilterDateStart, historyFilterDateEnd, historyFilterStatus, historyGlobalMode]);
 
   // Fetch history on mount, when tab switches, or selected student changes
   useEffect(() => {
     fetchPaymentHistory();
   }, [fetchPaymentHistory]);
 
-  const handleCancelTransaction = async (paymentId: string, billId: string, amountPaid: number) => {
-    if (!confirm('Apakah Anda yakin ingin membatalkan/menghapus transaksi pembayaran ini? Nominal terbayar pada tagihan akan dikembalikan.')) {
+  // Export to Excel
+  const exportHistoryToExcel = () => {
+    if (paymentHistory.length === 0) {
+      toast.error('Tidak ada data untuk diexport.');
+      return;
+    }
+
+    const data = paymentHistory.flatMap((p: any) => {
+      const items = p.pembayaran_list || [{}];
+      return items.map((pi: any) => ({
+        'No. Kuitansi': p.nomor_kuitansi || '-',
+        'Tanggal': new Date(p.created_at).toLocaleString('id-ID'),
+        'Santri': p.santri?.nama_lengkap || '-',
+        'NIS': p.santri?.nis || '-',
+        'Item Biaya': pi.tagihan?.master_biaya?.nama_biaya || '-',
+        'Periode': pi.tagihan ? `${getBulanName(pi.tagihan.bulan)} ${pi.tagihan.tahun}` : '-',
+        'Jumlah Bayar': Number(pi.jumlah) || 0,
+        'Petugas': p.admin?.nama_lengkap || '-',
+      }));
+    });
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Riwayat Pembayaran');
+
+    const colWidths = Object.keys(data[0]).map(key => ({
+      wch: Math.max(key.length, ...data.map(row => String(row[key as keyof typeof row]).length)) + 2
+    }));
+    ws['!cols'] = colWidths;
+
+    XLSX.writeFile(wb, `riwayat-pembayaran-${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Data berhasil diexport ke Excel.');
+  };
+
+  const exportBillsToExcel = () => {
+    if (bills.length === 0) {
+      toast.error('Tidak ada tagihan untuk diexport.');
+      return;
+    }
+
+    const data = bills.map((b: any) => ({
+      'Nama Tagihan': b.master_biaya?.nama_biaya || 'Tagihan',
+      'Periode': `${getBulanName(b.bulan)} ${b.tahun}`,
+      'Nominal': Number(b.nominal) || 0,
+      'Terbayar': Number(b.terbayar) || 0,
+      'Sisa': (Number(b.nominal) || 0) - (Number(b.terbayar) || 0),
+      'Status': b.status || '-',
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Tagihan Santri');
+
+    const colWidths = Object.keys(data[0]).map(key => ({
+      wch: Math.max(key.length, ...data.map(row => String(row[key as keyof typeof row]).length)) + 2
+    }));
+    ws['!cols'] = colWidths;
+
+    XLSX.writeFile(wb, `tagihan-${selectedSantri?.nama_lengkap || 'santri'}-${new Date().toISOString().split('T')[0]}.xlsx`);
+    toast.success('Tagihan berhasil diexport ke Excel.');
+  };
+
+  const handleCancelTransaction = async (id: string, _billId: string | null, _amountPaid: number, isLegacy?: boolean) => {
+    if (!confirm('Apakah Anda yakin ingin membatalkan transaksi ini? Tagihan akan dikembalikan ke status semula.')) {
       return;
     }
 
     try {
-      // 1. Fetch current tagihan status
-      const { data: billData, error: fetchError } = await supabase
-        .from('tagihan')
-        .select('terbayar, nominal')
-        .eq('id', billId)
-        .maybeSingle();
+      let payments: { id: string; id_tagihan: string | null; jumlah: number }[] = [];
 
-      if (fetchError) throw fetchError;
-
-      if (billData) {
-        const nextTerbayar = Math.max(0, (Number(billData.terbayar) || 0) - amountPaid);
-        const nextStatus = nextTerbayar >= Number(billData.nominal) ? 'Lunas' : 'Belum Lunas';
-
-        // 2. Revert tagihan values
-        const { error: updateError } = await supabase
-          .from('tagihan')
-          .update({
-            terbayar: nextTerbayar,
-            status: nextStatus
-          })
-          .eq('id', billId);
-
-        if (updateError) throw updateError;
+      if (isLegacy) {
+        // Legacy: single payment record
+        const { data: pay, error: fetchErr } = await supabase
+          .from('pembayaran')
+          .select('id, id_tagihan, jumlah')
+          .eq('id', id)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (pay) payments = [pay];
+      } else {
+        // Group: fetch all payments in this group
+        const { data, error: fetchErr } = await supabase
+          .from('pembayaran')
+          .select('id, id_tagihan, jumlah')
+          .eq('id_group', id);
+        if (fetchErr) throw fetchErr;
+        payments = data || [];
       }
 
-      // 3. Delete pembayaran record
-      const { error: deleteError } = await supabase
-        .from('pembayaran')
-        .delete()
-        .eq('id', paymentId);
+      // Revert each tagihan
+      for (const p of payments) {
+        if (!p.id_tagihan) continue;
 
-      if (deleteError) throw deleteError;
+        const { data: billData } = await supabase
+          .from('tagihan')
+          .select('terbayar, nominal')
+          .eq('id', p.id_tagihan)
+          .maybeSingle();
+
+        if (billData) {
+          const nextTerbayar = Math.max(0, (Number(billData.terbayar) || 0) - Number(p.jumlah));
+          const nextStatus = nextTerbayar >= Number(billData.nominal) ? 'Lunas' : 'Belum Lunas';
+
+          await supabase
+            .from('tagihan')
+            .update({ terbayar: nextTerbayar, status: nextStatus })
+            .eq('id', p.id_tagihan);
+        }
+      }
+
+      // Delete payment record(s)
+      const paymentIds = payments.map(p => p.id);
+      if (paymentIds.length > 0) {
+        await supabase.from('pembayaran').delete().in('id', paymentIds);
+      }
+
+      // Delete group (if not legacy)
+      if (!isLegacy) {
+        const { error: deleteGroupErr } = await supabase
+          .from('pembayaran_group')
+          .delete()
+          .eq('id', id);
+        if (deleteGroupErr) throw deleteGroupErr;
+      }
 
       toast.success('Transaksi berhasil dibatalkan.');
 
-      // 4. Reload data
+      // Reload data
       fetchPaymentHistory();
       if (selectedSantri) {
         fetchStudentBills(selectedSantri.id);
@@ -564,23 +767,13 @@ Wassalamu'alaikum Wr. Wb.
     }
   };
 
-  const handleReprintReceipt = (payment: any) => {
-    if (!payment.santri || !payment.tagihan) {
-      toast.error('Data kuitansi tidak lengkap.');
+  const handleReprintReceipt = (group: any) => {
+    if (!group.id || group.is_legacy) {
+      if (group.is_legacy) toast.error('Cetak ulang tidak tersedia untuk transaksi lama.');
+      else toast.error('Data kuitansi tidak lengkap.');
       return;
     }
-    // Prepare fake selected bills list for printing
-    const receiptBill = {
-      id: payment.tagihan.id,
-      bulan: payment.tagihan.bulan,
-      tahun: payment.tagihan.tahun,
-      nominal: payment.jumlah, // override with actually paid amount
-      master_biaya: payment.tagihan.master_biaya
-    };
-    setSelectedSantri(payment.santri);
-    setPaidBillsReceipt([receiptBill]);
-    setReceiptCashReceived(payment.jumlah);
-    setIsReceiptModalOpen(true);
+    window.open(`/pembayaran/kuitansi/${group.id}`, '_blank');
   };
 
   const triggerPrint = () => {
@@ -875,9 +1068,18 @@ Wassalamu'alaikum Wr. Wb.
               {/* Bottom Checkout Section */}
               {selectedSantri && bills.length > 0 && (
                 <div className="bg-slate-50/70 dark:bg-zinc-950/40 border-t border-slate-150 dark:border-zinc-850 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-bold tracking-wider">Total Terpilih ({selectedBills.length} Tagihan)</p>
-                    <p className="text-xl font-black text-emerald-600 dark:text-emerald-450 mt-1">{formatRupiah(totalSelectedAmount)}</p>
+                  <div className="flex items-center gap-4">
+                    <div>
+                      <p className="text-[10px] text-slate-400 dark:text-zinc-500 uppercase font-bold tracking-wider">Total Terpilih ({selectedBills.length} Tagihan)</p>
+                      <p className="text-xl font-black text-emerald-600 dark:text-emerald-450 mt-1">{formatRupiah(totalSelectedAmount)}</p>
+                    </div>
+                    <button
+                      onClick={exportBillsToExcel}
+                      className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-zinc-800 text-[10px] font-bold rounded-lg text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors"
+                      title="Export Tagihan ke Excel"
+                    >
+                      <Download className="h-3.5 w-3.5" />
+                    </button>
                   </div>
                   
                   <button
@@ -896,14 +1098,90 @@ Wassalamu'alaikum Wr. Wb.
       ) : (
         /* Tab: Riwayat Pembayaran */
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden flex flex-col min-h-[450px]">
-          <div className="p-5 border-b border-slate-150 dark:border-zinc-850 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Riwayat Transaksi Pembayaran</h3>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                {selectedSantri 
-                  ? `Menampilkan riwayat transaksi untuk santri: ${selectedSantri.nama_lengkap}`
-                  : "Silakan pilih santri terlebih dahulu untuk menampilkan riwayat transaksi mereka."}
-              </p>
+          <div className="p-5 border-b border-slate-150 dark:border-zinc-850 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Riwayat Transaksi Pembayaran</h3>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  {historyGlobalMode 
+                    ? 'Menampilkan seluruh riwayat transaksi global'
+                    : selectedSantri 
+                      ? `Menampilkan riwayat transaksi untuk santri: ${selectedSantri.nama_lengkap}`
+                      : "Silakan pilih santri terlebih dahulu atau aktifkan mode global."}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    setHistoryGlobalMode(!historyGlobalMode);
+                    if (!historyGlobalMode && selectedSantri) {
+                      // Switching to global mode
+                    } else if (historyGlobalMode && selectedSantri) {
+                      // Switching back to per-santri mode
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-colors ${
+                    historyGlobalMode
+                      ? 'bg-emerald-600 text-white border-emerald-600'
+                      : 'border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  {historyGlobalMode ? 'Mode Global' : 'Semua Transaksi'}
+                </button>
+                <button
+                  onClick={exportHistoryToExcel}
+                  disabled={paymentHistory.length === 0}
+                  className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 dark:border-zinc-800 text-[10px] font-bold rounded-lg text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  Export Excel
+                </button>
+              </div>
+            </div>
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Dari</label>
+                <input
+                  type="date"
+                  value={historyFilterDateStart}
+                  onChange={e => setHistoryFilterDateStart(e.target.value)}
+                  className="bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-2 py-1.5 text-[10px] font-mono text-slate-700 dark:text-zinc-300 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Sampai</label>
+                <input
+                  type="date"
+                  value={historyFilterDateEnd}
+                  onChange={e => setHistoryFilterDateEnd(e.target.value)}
+                  className="bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-2 py-1.5 text-[10px] font-mono text-slate-700 dark:text-zinc-300 focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase">Status</label>
+                <select
+                  value={historyFilterStatus}
+                  onChange={e => setHistoryFilterStatus(e.target.value)}
+                  className="bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-lg px-2 py-1.5 text-[10px] font-mono text-slate-700 dark:text-zinc-300 focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="semua">Semua</option>
+                  <option value="Lunas">Lunas</option>
+                  <option value="Belum Lunas">Belum Lunas</option>
+                </select>
+              </div>
+              {(historyFilterDateStart || historyFilterDateEnd || historyFilterStatus !== 'semua') && (
+                <button
+                  onClick={() => {
+                    setHistoryFilterDateStart('');
+                    setHistoryFilterDateEnd('');
+                    setHistoryFilterStatus('semua');
+                  }}
+                  className="text-[10px] font-bold text-rose-600 hover:text-rose-700"
+                >
+                  Reset Filter
+                </button>
+              )}
             </div>
           </div>
 
@@ -922,10 +1200,11 @@ Wassalamu'alaikum Wr. Wb.
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-50/50 dark:bg-zinc-900/50 border-b border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
+                    <th className="py-3 px-5">No. Kuitansi</th>
                     <th className="py-3 px-5">Waktu Transaksi</th>
                     <th className="py-3 px-5">Nama Santri</th>
-                    <th className="py-3 px-5">Master Biaya &amp; Periode</th>
-                    <th className="py-3 px-5 text-right">Jumlah Bayar</th>
+                    <th className="py-3 px-5">Item</th>
+                    <th className="py-3 px-5 text-right">Total Bayar</th>
                     <th className="py-3 px-5">Petugas</th>
                     <th className="py-3 px-5 text-center">Aksi</th>
                   </tr>
@@ -933,16 +1212,15 @@ Wassalamu'alaikum Wr. Wb.
                 <tbody className="divide-y divide-slate-100 dark:divide-zinc-850 text-xs">
                   {paymentHistory.map((payment) => {
                     const studentName = payment.santri?.nama_lengkap || '—';
-                    const billName = payment.tagihan?.master_biaya?.nama_biaya || 'Tagihan';
-                    const period = payment.tagihan ? `${getBulanName(payment.tagihan.bulan)} ${payment.tagihan.tahun}` : '—';
-                    const amountPaid = Number(payment.jumlah) || 0;
+                    const totalBayar = Number(payment.total_bayar) || 0;
                     const cashierName = payment.admin?.nama_lengkap || 'Keuangan Admin';
-                    const transactionTime = payment.tanggal_bayar 
-                      ? new Date(payment.tanggal_bayar).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
-                      : new Date(payment.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+                    const transactionTime = new Date(payment.created_at).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
 
                     return (
                       <tr key={payment.id} className="hover:bg-slate-50/60 dark:hover:bg-zinc-850/20 transition-colors">
+                        <td className="py-3.5 px-5 font-mono text-slate-500 dark:text-zinc-400 text-[9px]">
+                          {payment.nomor_kuitansi || '-'}
+                        </td>
                         <td className="py-3.5 px-5 font-mono text-slate-500 dark:text-zinc-400">{transactionTime}</td>
                         <td className="py-3.5 px-5 font-bold text-slate-900 dark:text-white">
                           <div>
@@ -951,11 +1229,27 @@ Wassalamu'alaikum Wr. Wb.
                           </div>
                         </td>
                         <td className="py-3.5 px-5 text-slate-700 dark:text-zinc-300">
-                          <span className="font-semibold">{billName}</span>
-                          <span className="block text-[10px] text-slate-400 dark:text-zinc-500">{period}</span>
+                          <div className="space-y-0.5 min-w-[180px]">
+                            {payment.pembayaran_list?.map((pi: any, idx: number) => {
+                              const biaya = pi.tagihan?.master_biaya?.nama_biaya || 'Pembayaran';
+                              const period = pi.tagihan ? `${getBulanName(pi.tagihan.bulan)} ${pi.tagihan.tahun}` : '';
+                              return (
+                                <div key={pi.id || idx} className="flex items-start gap-1.5">
+                                  <span className="text-slate-300 dark:text-zinc-700 mt-0.5">•</span>
+                                  <div className="flex-1 min-w-0">
+                                    <span className="text-[10px] font-semibold block truncate">{biaya}</span>
+                                    {period && <span className="text-[9px] text-slate-400 dark:text-zinc-500 font-mono">{period}</span>}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                            {(!payment.pembayaran_list || payment.pembayaran_list.length === 0) && (
+                              <span className="text-[10px] text-slate-400">-</span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-3.5 px-5 text-right font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                          {formatRupiah(amountPaid)}
+                          {formatRupiah(totalBayar)}
                         </td>
                         <td className="py-3.5 px-5 text-slate-650 dark:text-zinc-300 font-medium">
                           <div className="flex items-center gap-1.5">
@@ -974,7 +1268,7 @@ Wassalamu'alaikum Wr. Wb.
                             <Printer className="h-3.5 w-3.5" />
                           </button>
                           <button
-                            onClick={() => handleCancelTransaction(payment.id, payment.tagihan?.id, payment.jumlah)}
+                            onClick={() => handleCancelTransaction(payment.id, null, totalBayar, payment.is_legacy)}
                             title="Batalkan Transaksi"
                             className="inline-flex items-center justify-center p-2 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-900/30 text-rose-500 dark:text-rose-400 rounded-lg transition-colors"
                           >
@@ -1230,6 +1524,16 @@ Wassalamu'alaikum Wr. Wb.
                 >
                   Tutup
                 </button>
+                {latestPaymentId && (
+                  <button
+                    onClick={() => {
+                      window.open(`/pembayaran/kuitansi/${latestPaymentId}`, '_blank');
+                    }}
+                    className="px-4 py-2 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 text-xs font-bold rounded-lg text-slate-650 dark:text-zinc-300"
+                  >
+                    Buka Halaman Kuitansi
+                  </button>
+                )}
                 <button
                   onClick={triggerPrint}
                   className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs flex items-center gap-1.5"

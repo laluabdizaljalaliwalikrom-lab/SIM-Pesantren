@@ -348,8 +348,25 @@ export interface RolePermission {
   created_at: string;
 }
 
+export interface PembayaranGroup {
+  id: string;
+  nomor_kuitansi?: string | null;
+  id_santri: string;
+  total_tagihan: number;
+  total_bayar: number;
+  uang_diterima: number;
+  kembalian: number;
+  id_admin?: string | null;
+  created_at: string;
+  // Joins
+  santri?: Santri | null;
+  admin?: Profile | null;
+  pembayaran_list?: Pembayaran[] | null;
+}
+
 export interface Pembayaran {
   id: string;
+  id_group?: string | null;
   id_santri: string;
   id_tagihan?: string | null;
   id_admin?: string | null;
@@ -361,4 +378,5 @@ export interface Pembayaran {
   santri?: Santri | null;
   tagihan?: Tagihan | null;
   admin?: Profile | null;
+  group?: PembayaranGroup | null;
 }

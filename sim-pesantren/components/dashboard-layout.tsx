@@ -152,6 +152,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         return 'Kasir Pembayaran';
       case '/keuangan':
         return 'Atur Keuangan';
+      case '/laporan':
+        return 'Laporan Keuangan';
       case '/settings/users':
         return 'Hak Akses & Pengguna';
       case '/pengaturan':
@@ -174,6 +176,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     '/pegawai': 'Kepegawaian',
     '/keuangan': 'Keuangan',
     '/pembayaran': 'Keuangan',
+    '/laporan': 'Keuangan',
     '/akademik': 'Akademik',
     '/lembaga': 'Lembaga',
     '/asrama': 'Asrama',

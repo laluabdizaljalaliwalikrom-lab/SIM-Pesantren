@@ -15,6 +15,7 @@ import {
   Briefcase,
   Coins,
   ShieldCheck,
+  BarChart4,
   Menu,
 } from 'lucide-react';
 
@@ -34,6 +35,7 @@ const BOTTOM_NAV_ITEMS = [
   { name: 'Akademik', href: '/akademik', icon: BookOpen },
   { name: 'Pembayaran', href: '/pembayaran', icon: CreditCard },
   { name: 'Keuangan', href: '/keuangan', icon: Coins },
+  { name: 'Laporan', href: '/laporan', icon: BarChart4 },
   { name: 'Hak Akses', href: '/settings/users', icon: ShieldCheck },
   { name: 'Pengaturan', href: '/pengaturan', icon: Settings },
 ];
@@ -56,6 +58,7 @@ export function BottomBar({ userRoleRaw, permissions, onOpenSidebar }: BottomBar
       '/pegawai': 'Kepegawaian',
       '/keuangan': 'Keuangan',
       '/pembayaran': 'Keuangan',
+      '/laporan': 'Keuangan',
       '/akademik': 'Akademik',
       '/lembaga': 'Lembaga',
       '/asrama': 'Asrama',
