@@ -28,16 +28,6 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
-
-  async redirects() {
-    return [
-      {
-        source: '/admin/:path*',
-        destination: '/:path*',
-        permanent: true,
-      },
-    ];
-  },
 };
 
 export default withPWA(nextConfig);
