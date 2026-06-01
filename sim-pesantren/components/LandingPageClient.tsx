@@ -83,21 +83,21 @@ export default function LandingPageClient({
         className="sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-zinc-900/70 border-b border-slate-200/50 dark:border-zinc-800/50 transition-colors duration-200"
       >
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0 mr-2">
             {pesantrenLogo ? (
               <Image 
                 src={pesantrenLogo} 
                 alt="Logo" 
                 width={36}
                 height={36}
-                className="rounded-lg object-cover shadow-md" 
+                className="rounded-lg object-cover shadow-md shrink-0" 
               />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 text-white font-extrabold text-lg shadow-md shadow-emerald-500/25">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 text-white font-extrabold text-lg shadow-md shadow-emerald-500/25 shrink-0">
                 P
               </div>
             )}
-            <span className="font-extrabold text-xs sm:text-sm md:text-base tracking-wide bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-200 bg-clip-text text-transparent whitespace-nowrap">
+            <span className="font-extrabold text-[10px] leading-[1.2] sm:text-xs md:text-sm lg:text-base tracking-wide bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-400 dark:to-teal-200 bg-clip-text text-transparent line-clamp-2 md:line-clamp-none whitespace-normal md:whitespace-nowrap max-w-[120px] sm:max-w-[280px] md:max-w-none">
               {brandName}
             </span>
           </div>
@@ -113,9 +113,9 @@ export default function LandingPageClient({
             <ThemeToggle />
             <Link
               href="/login"
-              className="inline-flex items-center gap-1.5 px-4.5 py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:border-emerald-500 bg-emerald-50/20 dark:bg-emerald-500/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-4.5 sm:py-2 text-xs font-bold text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:border-emerald-500 bg-emerald-50/20 dark:bg-emerald-500/5 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-xl transition-all whitespace-nowrap"
             >
-              Login
+              <span className="hidden sm:inline">Login</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -254,65 +254,61 @@ export default function LandingPageClient({
                 whileInView="visible"
                 viewport={{ once: true, margin: "-100px" }}
                 variants={fadeInUp}
-                className="lg:col-span-7 bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-850 rounded-3xl p-6 md:p-8 shadow-sm space-y-6"
+                className="lg:col-span-7 bg-gradient-to-br from-white to-slate-50/80 dark:from-zinc-900 dark:to-zinc-950/80 border border-slate-200/60 dark:border-zinc-800/60 rounded-3xl p-6 md:p-8 shadow-md relative overflow-hidden space-y-6"
               >
-                <div className="space-y-2">
-                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-widest">
-                    Sambutan Pimpinan
+                {/* Hiasan background lingkaran kecil */}
+                <div className="absolute -top-12 -right-12 w-32 h-32 rounded-full bg-emerald-500/5 blur-2xl pointer-events-none" />
+                
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-widest block">
+                      Kata Sambutan
+                    </span>
+                    <h2 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                      Sambutan Pimpinan Lembaga
+                    </h2>
+                  </div>
+                  {/* Ornamen Tanda Kutip */}
+                  <span className="text-emerald-500/20 dark:text-emerald-400/10 transform translate-y-[-8px] select-none">
+                    <svg className="w-10 h-10 fill-current" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                    </svg>
                   </span>
-                  <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-white">
-                    Kata Sambutan Pimpinan Lembaga
-                  </h2>
                 </div>
                 
-                <div className="h-px bg-slate-100 dark:bg-zinc-800" />
+                <div className="h-px bg-gradient-to-r from-slate-200/80 via-slate-200/20 to-transparent dark:from-zinc-800/80 dark:via-zinc-800/20 dark:to-transparent" />
                 
                 <div className="flex flex-col md:flex-row gap-6 items-start">
                   {pesantrenPimpinanFoto && (
-                    <div className="w-full md:w-1/3 shrink-0">
+                    <div className="w-full md:w-1/3 shrink-0 group">
                       <Image 
                         src={pesantrenPimpinanFoto} 
                         alt={pesantrenPimpinan} 
                         width={300}
                         height={400}
-                        className="w-full h-56 md:h-72 object-cover rounded-2xl border border-slate-200 dark:border-zinc-850 shadow-md"
+                        className="w-full h-56 md:h-72 object-cover rounded-2xl border border-slate-100 dark:border-zinc-850 shadow-md ring-4 ring-emerald-500/5 group-hover:scale-[1.02] transition-all duration-300"
                       />
                     </div>
                   )}
-                  <div className="flex-1 space-y-4 text-xs md:text-sm text-slate-600 dark:text-zinc-400 leading-relaxed italic">
-                    <p>
+                  <div className="flex-1 space-y-4 text-xs md:text-sm text-slate-600 dark:text-zinc-350 leading-relaxed font-medium">
+                    <p className="text-emerald-600 dark:text-emerald-450 font-bold not-italic">
                       Assalamu'alaikum Warahmatullahi Wabarakatuh,
                     </p>
-                    <p>
-                      Alhamdulillah, segala puji bagi Allah SWT yang telah melimpahkan rahmat and hidayah-Nya kepada kita semua. Di era teknologi digital ini, {brandName} terus berkomitmen untuk memberikan pelayanan pendidikan terbaik dengan memadukan nilai-nilai luhur kepesantrenan tradisional (salaf) dengan inovasi sistem manajemen modern.
+                    <p className="italic">
+                      "Alhamdulillah, segala puji bagi Allah SWT yang telah melimpahkan rahmat and hidayah-Nya kepada kita semua. Di era teknologi digital ini, {brandName} terus berkomitmen untuk memberikan pelayanan pendidikan terbaik dengan memadukan nilai-nilai luhur kepesantrenan tradisional (salaf) dengan inovasi sistem manajemen modern."
                     </p>
-                    <p>
-                      Melalui platform SIM Pesantren ini, kami berharap silaturahmi, transparansi administrasi, dan koordinasi perkembangan belajar santri baik secara akademis formal maupun tahfidz Al-Qur'an dengan para wali santri dapat terjalin secara lebih optimal.
+                    <p className="italic">
+                      "Melalui platform SIM Pesantren ini, kami berharap silaturahmi, transparansi administrasi, dan koordinasi perkembangan belajar santri baik secara akademis formal maupun tahfidz Al-Qur'an dengan para wali santri dapat terjalin secara lebih optimal."
                     </p>
-                    <p>
+                    <p className="text-emerald-600 dark:text-emerald-450 font-bold not-italic">
                       Wassalamu'alaikum Warahmatullahi Wabarakatuh.
                     </p>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-3 pt-2">
-                  {pesantrenPimpinanFoto ? (
-                    <Image 
-                      src={pesantrenPimpinanFoto} 
-                      alt={pesantrenPimpinan} 
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover border border-emerald-500/20"
-                    />
-                  ) : (
-                    <div className="h-10 w-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-600 dark:text-emerald-450 font-bold text-sm">
-                      {pesantrenPimpinan.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-xs md:text-sm">{pesantrenPimpinan}</h4>
-                    <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-medium">Pimpinan {brandName}</p>
-                  </div>
+                <div className="pt-2 border-l-2 border-emerald-500 dark:border-emerald-400 pl-4">
+                  <h4 className="font-extrabold text-slate-800 dark:text-slate-100 text-xs md:text-sm tracking-wide">{pesantrenPimpinan}</h4>
+                  <p className="text-[10px] text-slate-400 dark:text-zinc-500 font-bold uppercase tracking-wider">Pimpinan {brandName}</p>
                 </div>
               </motion.div>
             )}

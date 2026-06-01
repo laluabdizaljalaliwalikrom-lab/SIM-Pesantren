@@ -311,6 +311,7 @@ export interface MasterBiaya {
   id: string;
   nama_biaya: string;
   nominal: number;
+  frekuensi: 'bulanan' | 'persemester' | 'insidentil';
   created_at: string;
 }
 
@@ -321,6 +322,7 @@ export interface Tagihan {
   bulan: number;
   tahun: number;
   nominal: number;
+  terbayar: number;
   status: 'Belum Lunas' | 'Lunas' | string;
   created_at: string;
   // Joins
@@ -344,4 +346,19 @@ export interface RolePermission {
   can_edit: boolean;
   can_delete: boolean;
   created_at: string;
+}
+
+export interface Pembayaran {
+  id: string;
+  id_santri: string;
+  id_tagihan?: string | null;
+  id_admin?: string | null;
+  jumlah: number;
+  status: 'Belum Lunas' | 'Lunas' | string;
+  tanggal_bayar?: string | null;
+  created_at: string;
+  // Joins
+  santri?: Santri | null;
+  tagihan?: Tagihan | null;
+  admin?: Profile | null;
 }

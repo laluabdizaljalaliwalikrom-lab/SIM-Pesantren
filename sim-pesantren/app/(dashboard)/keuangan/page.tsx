@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { MasterBiaya, Tagihan } from '@/types/database';
-import { generateMonthlyBilling } from '@/services/billing-actions';
+import { generateBilling } from '@/services/billing-actions';
 import {
   DollarSign,
   Plus,
@@ -34,20 +34,25 @@ export default function KeuanganDashboardPage() {
   const [tagihanList, setTagihanList] = useState<Tagihan[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Lists for dynamic targeting
+  const [sekolahList, setSekolahList] = useState<any[]>([]);
+  const [kelasList, setKelasList] = useState<any[]>([]);
+  const [santriList, setSantriList] = useState<any[]>([]);
+
   // CRUD Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedBiaya, setSelectedBiaya] = useState<MasterBiaya | null>(null);
   const [formData, setFormData] = useState({
     nama_biaya: '',
-    nominal: ''
+    nominal: '',
+    frekuensi: 'bulanan' as 'bulanan' | 'persemester' | 'insidentil'
   });
   const [submittingCRUD, setSubmittingCRUD] = useState(false);
 
   // Generate Tagihan State
   const [genIdMasterBiaya, setGenIdMasterBiaya] = useState('');
-  const [genBulan, setGenBulan] = useState(new Date().getMonth() + 1);
-  const [genTahun, setGenTahun] = useState(new Date().getFullYear());
-  const [genOnlyMukim, setGenOnlyMukim] = useState(false);
+  const [targetType, setTargetType] = useState<'semua' | 'sekolah' | 'kelas' | 'asrama' | 'santri'>('semua');
+  const [targetId, setTargetId] = useState('');
   const [generating, setGenerating] = useState(false);
 
   // Fetch all necessary data
@@ -78,6 +83,28 @@ export default function KeuanganDashboardPage() {
 
       if (tagihanErr) throw tagihanErr;
       setTagihanList(tagihanData || []);
+
+      // 3. Fetch Sekolah
+      const { data: sekolahData } = await supabase
+        .from('sekolah')
+        .select('*')
+        .order('nama_sekolah', { ascending: true });
+      setSekolahList(sekolahData || []);
+
+      // 4. Fetch Kelas
+      const { data: kelasData } = await supabase
+        .from('kelas')
+        .select('*, sekolah:id_sekolah(*)')
+        .order('nama_kelas', { ascending: true });
+      setKelasList(kelasData || []);
+
+      // 5. Fetch Active Santri
+      const { data: santriData } = await supabase
+        .from('santri')
+        .select('id, nama_lengkap, nis')
+        .eq('status', 'aktif')
+        .order('nama_lengkap', { ascending: true });
+      setSantriList(santriData || []);
 
     } catch (err: any) {
       console.error('Error fetching financial data:', err);
@@ -208,7 +235,7 @@ export default function KeuanganDashboardPage() {
   // CRUD Handlers
   const handleOpenAdd = () => {
     setSelectedBiaya(null);
-    setFormData({ nama_biaya: '', nominal: '' });
+    setFormData({ nama_biaya: '', nominal: '', frekuensi: 'bulanan' });
     setIsModalOpen(true);
   };
 
@@ -216,7 +243,8 @@ export default function KeuanganDashboardPage() {
     setSelectedBiaya(biaya);
     setFormData({
       nama_biaya: biaya.nama_biaya,
-      nominal: biaya.nominal.toString()
+      nominal: biaya.nominal.toString(),
+      frekuensi: biaya.frekuensi || 'bulanan'
     });
     setIsModalOpen(true);
   };
@@ -237,7 +265,8 @@ export default function KeuanganDashboardPage() {
     try {
       const payload = {
         nama_biaya: formData.nama_biaya.trim(),
-        nominal: nominalNum
+        nominal: nominalNum,
+        frekuensi: formData.frekuensi
       };
 
       if (selectedBiaya) {
@@ -294,19 +323,22 @@ export default function KeuanganDashboardPage() {
       toast.error('Silakan pilih jenis template biaya terlebih dahulu.');
       return;
     }
+    if (targetType !== 'semua' && targetType !== 'asrama' && !targetId) {
+      toast.error('Silakan tentukan sasaran tagihan secara spesifik.');
+      return;
+    }
 
     setGenerating(true);
     try {
-      const res = await generateMonthlyBilling({
+      const res = await generateBilling({
         idMasterBiaya: genIdMasterBiaya,
-        bulan: genBulan,
-        tahun: genTahun,
-        onlyMukim: genOnlyMukim
+        targetType,
+        targetId: (targetType === 'semua' || targetType === 'asrama') ? undefined : targetId
       });
 
       if (res.success) {
         toast.success(
-          `Sukses! Berhasil men-generate ${res.insertedCount} tagihan baru. ${res.message}`
+          `Sukses! ${res.message}`
         );
         fetchData(); // Reload stats and charts
       } else {
@@ -541,6 +573,7 @@ export default function KeuanganDashboardPage() {
                     <thead>
                       <tr className="bg-slate-50/50 dark:bg-zinc-900/50 border-b border-slate-200 dark:border-zinc-800 text-slate-400 dark:text-zinc-500 text-[10px] font-bold uppercase tracking-wider">
                         <th className="py-3.5 px-5">Nama Biaya</th>
+                        <th className="py-3.5 px-5 text-center">Frekuensi</th>
                         <th className="py-3.5 px-5 text-right">Nominal Template</th>
                         <th className="py-3.5 px-5 text-right w-24">Aksi</th>
                       </tr>
@@ -551,6 +584,17 @@ export default function KeuanganDashboardPage() {
                           <td className="py-4 px-5 font-bold text-slate-900 dark:text-white flex items-center gap-2">
                             <DollarSign className="h-4 w-4 text-emerald-600" />
                             {biaya.nama_biaya}
+                          </td>
+                          <td className="py-4 px-5 text-center">
+                            <span className={`inline-block px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                              biaya.frekuensi === 'bulanan'
+                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
+                                : biaya.frekuensi === 'persemester'
+                                ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400'
+                                : 'bg-purple-100 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400'
+                            }`}>
+                              {biaya.frekuensi === 'bulanan' ? 'Bulanan' : biaya.frekuensi === 'persemester' ? 'Per Semester' : 'Insidentil'}
+                            </span>
                           </td>
                           <td className="py-4 px-5 text-right font-mono font-bold text-slate-800 dark:text-zinc-300">
                             {formatRupiah(Number(biaya.nominal))}
@@ -582,15 +626,15 @@ export default function KeuanganDashboardPage() {
             </div>
           )}
 
-          {/* TAB 3: Generate Monthly Billing */}
+          {/* TAB 3: Generate Dynamic Billing */}
           {activeTab === 'generate' && (
             <div className="max-w-xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm space-y-5">
               <div className="border-b border-slate-100 dark:border-zinc-850 pb-3">
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                   <Sparkles className="h-4.5 w-4.5 text-emerald-600" />
-                  Generate Tagihan Kolektif Bulanan
+                  Generate Tagihan Baru Dinamis
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">Sistem akan melakukan generate tagihan untuk seluruh santri aktif secara massal.</p>
+                <p className="text-xs text-slate-400 mt-1">Buat tagihan santri secara massal dengan filter target dan frekuensi otomatis.</p>
               </div>
 
               <form onSubmit={handleGenerateBilling} className="space-y-5">
@@ -601,69 +645,123 @@ export default function KeuanganDashboardPage() {
                   <select
                     required
                     value={genIdMasterBiaya}
-                    onChange={e => setGenIdMasterBiaya(e.target.value)}
+                    onChange={e => {
+                      setGenIdMasterBiaya(e.target.value);
+                    }}
                     className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none transition-all cursor-pointer"
                   >
                     <option value="" disabled>-- Pilih Template Biaya --</option>
                     {masterBiayaList.map(b => (
                       <option key={b.id} value={b.id}>
-                        {b.nama_biaya} ({formatRupiah(Number(b.nominal))})
+                        {b.nama_biaya} ({formatRupiah(Number(b.nominal))}) - {b.frekuensi === 'bulanan' ? 'Bulanan' : b.frekuensi === 'persemester' ? 'Per Semester' : 'Insidentil'}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Month/Year selectors */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Periode Bulan</label>
+                {/* Target Type Filter */}
+                <div className="space-y-1.5">
+                  <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Target Sasaran Tagihan</label>
+                  <select
+                    required
+                    value={targetType}
+                    onChange={e => {
+                      setTargetType(e.target.value as any);
+                      setTargetId('');
+                    }}
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-850 dark:text-zinc-100 focus:outline-none transition-all cursor-pointer"
+                  >
+                    <option value="semua">Semua Santri Aktif</option>
+                    <option value="asrama">Santri Tinggal di Asrama (Mukim)</option>
+                    <option value="sekolah">Sekolah / Lembaga Tertentu</option>
+                    <option value="kelas">Kelas Tertentu</option>
+                    <option value="santri">Khusus Seorang Santri</option>
+                  </select>
+                </div>
+
+                {/* Sub-Filters based on Target Type */}
+                {targetType === 'sekolah' && (
+                  <div className="space-y-1.5 animate-fadeIn">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Pilih Sekolah *</label>
                     <select
-                      value={genBulan}
-                      onChange={e => setGenBulan(Number(e.target.value))}
+                      required
+                      value={targetId}
+                      onChange={e => setTargetId(e.target.value)}
                       className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-850 dark:text-zinc-100 focus:outline-none transition-all cursor-pointer"
                     >
-                      {Array.from({ length: 12 }).map((_, i) => (
-                        <option key={i + 1} value={i + 1}>
-                          {getBulanName(i + 1)}
+                      <option value="" disabled>-- Pilih Lembaga Sekolah --</option>
+                      {sekolahList.map(s => (
+                        <option key={s.id} value={s.id}>{s.nama_sekolah} ({s.kategori})</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {targetType === 'kelas' && (
+                  <div className="space-y-1.5 animate-fadeIn">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Pilih Kelas *</label>
+                    <select
+                      required
+                      value={targetId}
+                      onChange={e => setTargetId(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-850 dark:text-zinc-100 focus:outline-none transition-all cursor-pointer"
+                    >
+                      <option value="" disabled>-- Pilih Rombel Kelas --</option>
+                      {kelasList.map(k => (
+                        <option key={k.id} value={k.id}>
+                          {k.nama_kelas} - {k.sekolah?.nama_sekolah || 'Tanpa Sekolah'}
                         </option>
                       ))}
                     </select>
                   </div>
+                )}
 
-                  <div className="space-y-1.5">
-                    <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Periode Tahun</label>
-                    <input
-                      type="number"
+                {targetType === 'santri' && (
+                  <div className="space-y-1.5 animate-fadeIn">
+                    <label className="block text-[10px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Pilih Santri *</label>
+                    <select
                       required
-                      min={2020}
-                      max={2100}
-                      value={genTahun}
-                      onChange={e => setGenTahun(Number(e.target.value))}
-                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-850 dark:text-zinc-100 focus:outline-none transition-all font-mono"
-                    />
+                      value={targetId}
+                      onChange={e => setTargetId(e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-850 dark:text-zinc-100 focus:outline-none transition-all cursor-pointer"
+                    >
+                      <option value="" disabled>-- Pilih Santri Aktif --</option>
+                      {santriList.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.nama_lengkap} ({s.nis || 'Tanpa NIS'})
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </div>
+                )}
 
-                {/* Mukim/Asrama filter checkbox */}
-                <div className="bg-slate-50 dark:bg-zinc-950/40 p-4 rounded-xl border border-slate-100 dark:border-zinc-850 flex items-center justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[11px] font-bold text-slate-700 dark:text-zinc-300">Khusus Santri Dormitory (Mukim)</p>
-                    <p className="text-[9.5px] text-slate-400 leading-normal">Centang opsi ini jika tagihan hanya berlaku untuk santri yang menempati kamar asrama.</p>
+                {/* Preview/Info Box on Selected Billing Rule */}
+                {genIdMasterBiaya && (
+                  <div className="bg-emerald-50 dark:bg-emerald-500/[0.03] border border-emerald-500/10 p-4 rounded-xl space-y-2">
+                    <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-450">Preview Penagihan:</p>
+                    <p className="text-[10px] text-slate-500 dark:text-zinc-400 leading-relaxed">
+                      {(() => {
+                        const selectedBiayaObj = masterBiayaList.find(b => b.id === genIdMasterBiaya);
+                        if (!selectedBiayaObj) return '';
+                        
+                        if (selectedBiayaObj.frekuensi === 'bulanan') {
+                          return `Biaya "${selectedBiayaObj.nama_biaya}" bersifat Bulanan. Sistem akan mendeteksi tahun ajaran aktif dan secara otomatis membuat 12 tagihan (satu untuk setiap bulan) bagi target yang dipilih.`;
+                        } else if (selectedBiayaObj.frekuensi === 'persemester') {
+                          return `Biaya "${selectedBiayaObj.nama_biaya}" bersifat Per Semester. Sistem akan secara otomatis membuat 2 tagihan (Semester Ganjil dan Semester Genap) pada tahun ajaran aktif bagi target yang dipilih.`;
+                        } else {
+                          return `Biaya "${selectedBiayaObj.nama_biaya}" bersifat Insidentil. Sistem akan membuat tepat 1 tagihan untuk tahun ajaran aktif bagi target yang dipilih.`;
+                        }
+                      })()}
+                    </p>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={genOnlyMukim}
-                    onChange={e => setGenOnlyMukim(e.target.checked)}
-                    className="h-4.5 w-4.5 rounded border-slate-350 dark:border-zinc-700 text-emerald-600 focus:ring-emerald-500 accent-emerald-600 flex-shrink-0"
-                  />
-                </div>
+                )}
 
                 {/* Warning notice */}
                 <div className="bg-amber-500/[0.05] border border-amber-500/10 p-3.5 rounded-xl flex items-start gap-2.5 text-[10px] text-amber-600">
                   <AlertTriangle className="h-4.5 w-4.5 flex-shrink-0 mt-0.5 text-amber-500" />
                   <div>
                     <p className="font-bold">Keamanan Sistem Billing</p>
-                    <p className="text-slate-450 dark:text-zinc-400 mt-0.5">Fungsi akan dieksekusi secara transaksional di database. Santri yang sudah terdata tagihan di periode dan biaya yang sama tidak akan terpengaruh (mencegah tagihan ganda).</p>
+                    <p className="text-slate-450 dark:text-zinc-400 mt-0.5">Operasi dijalankan secara aman. Santri yang sudah terdata tagihan di biaya dan periode yang sama tidak akan terpengaruh untuk mencegah tagihan ganda.</p>
                   </div>
                 </div>
 
@@ -727,6 +825,20 @@ export default function KeuanganDashboardPage() {
                     onChange={e => setFormData(prev => ({ ...prev, nominal: e.target.value }))}
                     className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-850 dark:text-zinc-100 focus:outline-none transition-all font-mono"
                   />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">Frekuensi Penagihan *</label>
+                  <select
+                    required
+                    value={formData.frekuensi}
+                    onChange={e => setFormData(prev => ({ ...prev, frekuensi: e.target.value as any }))}
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-850 dark:text-zinc-100 focus:outline-none transition-all cursor-pointer"
+                  >
+                    <option value="bulanan">Bulanan</option>
+                    <option value="persemester">Per Semester</option>
+                    <option value="insidentil">Insidentil</option>
+                  </select>
                 </div>
 
               </div>
