@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Sekolah, Kelas, Santri } from '@/types/database';
+import { Sekolah, Kelas, Santri, MataPelajaran } from '@/types/database';
 import { 
   BookOpen, 
   School, 
@@ -18,20 +18,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
-
-// Daftar Mata Pelajaran Umum di Pesantren
-const DAFTAR_MAPEL = [
-  'Fiqih',
-  'Nahwu',
-  'Shorof',
-  'Tauhid',
-  'Hadits',
-  'Tafsir',
-  'Quran Tajwid',
-  'Bahasa Arab',
-  'Tarikh Islam',
-  'Akhlaq',
-];
 
 interface NilaiInputState {
   id_santri: string;
@@ -59,6 +45,10 @@ export default function NilaiAkademikPage() {
   // State Submitting & Saving
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
+  // State Mata Pelajaran (dari DB, difilter berdasarkan kelas)
+  const [mapelList, setMapelList] = useState<MataPelajaran[]>([]);
+  const [kelasMapelList, setKelasMapelList] = useState<string[]>([]);
+
   // Fetch data sekolah dan kelas untuk filter utama
   const fetchMasterData = useCallback(async () => {
     try {
@@ -83,6 +73,15 @@ export default function NilaiAkademikPage() {
       if (kelasErr) throw kelasErr;
       setKelasList(kelasData || []);
 
+      // Fetch Mata Pelajaran
+      const { data: mapelData, error: mapelErr } = await supabase
+        .from('mata_pelajaran')
+        .select('*')
+        .order('nama_mapel', { ascending: true });
+
+      if (mapelErr) throw mapelErr;
+      setMapelList(mapelData || []);
+
     } catch (err: any) {
       console.error('Error fetching master data:', err);
       toast.error('Gagal memuat data filter sekolah/kelas.');
@@ -94,6 +93,40 @@ export default function NilaiAkademikPage() {
   useEffect(() => {
     fetchMasterData();
   }, [fetchMasterData]);
+
+  // Fetch mapel berdasarkan kelas (dari jadwal_pelajaran)
+  const fetchMapelByKelas = useCallback(async (kelasId: string) => {
+    if (!kelasId) {
+      setKelasMapelList([]);
+      return;
+    }
+    try {
+      const { data } = await supabase
+        .from('jadwal_pelajaran')
+        .select('id_mapel')
+        .eq('id_kelas', kelasId);
+
+      if (data && data.length > 0) {
+        const mapelIds = [...new Set(data.map(j => j.id_mapel))];
+        const filtered = mapelList.filter(m => mapelIds.includes(m.id));
+        setKelasMapelList(filtered.map(m => m.nama_mapel));
+      } else {
+        setKelasMapelList(mapelList.map(m => m.nama_mapel));
+      }
+    } catch {
+      setKelasMapelList(mapelList.map(m => m.nama_mapel));
+    }
+  }, [mapelList]);
+
+  // Reset mapel saat kelas berubah
+  useEffect(() => {
+    setSelectedMapel('');
+    if (selectedKelas && mapelList.length > 0) {
+      fetchMapelByKelas(selectedKelas);
+    } else {
+      setKelasMapelList([]);
+    }
+  }, [selectedKelas, mapelList, fetchMapelByKelas]);
 
   // Handler load siswa & nilai jika filter lengkap terisi
   const handleLoadSantriDanNilai = useCallback(async () => {
@@ -346,7 +379,7 @@ export default function NilaiAkademikPage() {
                 className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2.5 text-slate-850 dark:text-zinc-100 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs sm:text-sm"
               >
                 <option value="">-- Pilih Mata Pelajaran --</option>
-                {DAFTAR_MAPEL.map((mapel) => (
+                {(kelasMapelList.length > 0 ? kelasMapelList : mapelList.map(m => m.nama_mapel)).map((mapel) => (
                   <option key={mapel} value={mapel}>
                     {mapel}
                   </option>
