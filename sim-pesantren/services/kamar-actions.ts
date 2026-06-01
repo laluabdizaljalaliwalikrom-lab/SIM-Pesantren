@@ -44,7 +44,7 @@ export async function moveSantriToKamar(
     }
 
     revalidatePath('/asrama');
-    revalidatePath('/admin/santri');
+    revalidatePath('/santri');
 
     return {
       success: true,

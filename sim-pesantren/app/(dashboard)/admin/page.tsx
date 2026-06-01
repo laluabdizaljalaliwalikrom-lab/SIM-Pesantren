@@ -315,7 +315,7 @@ export default function AdminDashboardHome() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         
         <Link 
-          href="/admin/santri" 
+          href="/santri" 
           className="group p-6 bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-40"
         >
           <div className="flex justify-between items-start">
@@ -331,7 +331,7 @@ export default function AdminDashboardHome() {
         </Link>
 
         <Link 
-          href="/admin/tahfidz" 
+          href="/tahfidz" 
           className="group p-6 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-emerald-500/40 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-40"
         >
           <div className="flex justify-between items-start">

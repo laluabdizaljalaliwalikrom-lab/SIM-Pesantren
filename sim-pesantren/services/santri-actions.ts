@@ -41,7 +41,7 @@ export async function createSantri(payload: SantriPayload) {
 
     if (error) throw error;
 
-    revalidatePath('/admin/santri');
+    revalidatePath('/santri');
     revalidatePath('/admin');
 
     return { data, error: null };
@@ -65,7 +65,7 @@ export async function updateSantri(id: string, payload: Partial<SantriPayload>) 
 
     if (error) throw error;
 
-    revalidatePath('/admin/santri');
+    revalidatePath('/santri');
     
     return { data, error: null };
   } catch (error: any) {
@@ -87,7 +87,7 @@ export async function deleteSantri(id: string) {
 
     if (error) throw error;
 
-    revalidatePath('/admin/santri');
+    revalidatePath('/santri');
     revalidatePath('/admin');
 
     return { data, error: null };

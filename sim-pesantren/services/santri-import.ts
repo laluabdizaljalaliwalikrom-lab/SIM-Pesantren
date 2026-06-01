@@ -67,7 +67,7 @@ export async function importSantri(rows: ExcelSantriRow[]): Promise<ImportResult
 
     if (error) throw error;
 
-    revalidatePath('/admin/santri');
+    revalidatePath('/santri');
     revalidatePath('/admin');
 
     return {
@@ -202,7 +202,7 @@ export async function executeImport(
     if (insertResult.error) throw insertResult.error;
     if (updateResult.error) throw updateResult.error;
 
-    revalidatePath('/admin/santri');
+    revalidatePath('/santri');
     revalidatePath('/admin');
 
     return {
