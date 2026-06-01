@@ -5,10 +5,11 @@ import Link from 'next/link';
 import { Sidebar } from './sidebar';
 import { BottomBar } from './bottom-bar';
 import { ThemeToggle } from './ui/theme-toggle';
-import { Menu, Bell, LogOut, ShieldAlert, Loader2, User, ChevronDown } from 'lucide-react';
+import { Menu, Bell, LogOut, ShieldAlert, Loader2, User, ChevronDown, Download, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -33,6 +34,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [pesantrenLogo, setPesantrenLogo] = useState<string>('');
   const [pesantrenName, setPesantrenName] = useState<string>('SIM Pesantren');
+  const [pwaDismissed, setPwaDismissed] = useState(false);
+  const { isInstallable, install } = usePWAInstall();
 
   // Fetch pesantren profile
   useEffect(() => {
@@ -344,6 +347,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </main>
 
       </div>
+
+      {/* PWA Install Banner */}
+      {isInstallable && !pwaDismissed && (
+        <div className="fixed bottom-20 lg:bottom-4 right-4 z-50 flex items-center gap-2 bg-emerald-600 dark:bg-emerald-700 text-white px-4 py-2.5 rounded-2xl shadow-lg shadow-emerald-600/20 text-xs font-semibold animate-in slide-in-from-bottom-4 fade-in duration-300 max-w-[260px]">
+          <Download className="h-4 w-4 shrink-0" />
+          <span className="leading-tight">Install Aplikasi</span>
+          <button
+            onClick={() => install()}
+            className="ml-1 bg-white/20 hover:bg-white/30 rounded-lg px-2.5 py-1 text-[11px] font-bold transition-colors"
+          >
+            Pasang
+          </button>
+          <button
+            onClick={() => setPwaDismissed(true)}
+            className="flex items-center justify-center h-5 w-5 rounded-full hover:bg-white/20 transition-colors shrink-0"
+            aria-label="Tutup"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      )}
 
       {/* Mobile Bottom Navigation Bar */}
       <BottomBar userRoleRaw={userRoleRaw} permissions={permissions} onOpenSidebar={() => setSidebarOpen(true)} />
