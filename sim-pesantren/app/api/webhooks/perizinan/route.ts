@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/utils/supabase/client';
+import { supabase } from '@/lib/supabase';
 
 // Skema Payload dari Webhook Supabase
 interface SupabaseWebhookPayload {
