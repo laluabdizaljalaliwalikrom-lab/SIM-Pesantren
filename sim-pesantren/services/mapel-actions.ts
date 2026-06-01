@@ -1,10 +1,13 @@
-import { getServerSupabase } from '@/utils/server-supabase';
+import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 
 /**
  * Seeding data master mata pelajaran Kurikulum Merdeka (Dapodik 2024)
  * Mendukung deteksi dinamis kolom 'id_sekolah' dengan fallback otomatis.
  */
 export async function seedKurikulumMerdeka() {
+  const auth = await requirePermission('Akademik', 'create');
+  if (auth.error) return { success: false, error: auth.error };
+
   const supabase = await getServerSupabase();
   try {
     // 1. Ambil data sekolah formal untuk mencocokkan ID Sekolah SD, SMP, SMA
@@ -119,6 +122,9 @@ export async function seedKurikulumMerdeka() {
  * Mendukung deteksi dinamis kolom 'id_sekolah' dengan fallback otomatis.
  */
 export async function seedDiniyahKurikulum() {
+  const auth = await requirePermission('Akademik', 'create');
+  if (auth.error) return { success: false, error: auth.error };
+
   const supabase = await getServerSupabase();
   try {
     // 1. Ambil data sekolah/lembaga

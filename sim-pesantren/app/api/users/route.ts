@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { requireAdmin } from '@/utils/auth-api';
+import { requirePermission } from '@/utils/auth-api';
 
 export async function GET() {
   try {
-    const auth = await requireAdmin();
+    const auth = await requirePermission('Pengaturan', 'view');
     if (auth.error) return auth.error;
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

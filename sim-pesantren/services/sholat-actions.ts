@@ -1,6 +1,6 @@
 "use server";
 
-import { getServerSupabase, requireServerUser } from '@/utils/server-supabase';
+import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 
 interface SholatAttendancePayload {
   id_santri: string;
@@ -12,7 +12,7 @@ interface SholatAttendancePayload {
 }
 
 export async function saveAbsensiSholat(payloads: SholatAttendancePayload[]) {
-  const auth = await requireServerUser();
+  const auth = await requirePermission('Asrama', 'create');
   if (auth.error) return { success: false, error: auth.error };
 
   try {

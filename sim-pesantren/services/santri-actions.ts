@@ -1,13 +1,13 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getServerSupabase, requireServerUser, requireServerAdmin } from '@/utils/server-supabase';
+import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 import { Santri } from '@/types/database';
 
 export type SantriPayload = Omit<Santri, 'id' | 'created_at' | 'kamar' | 'wali'>;
 
 export async function getSantri() {
-  const auth = await requireServerUser();
+  const auth = await requirePermission('Santri', 'view');
   if (auth.error) return { data: null, error: auth.error };
 
   try {
@@ -29,7 +29,7 @@ export async function getSantri() {
 }
 
 export async function createSantri(payload: SantriPayload) {
-  const auth = await requireServerAdmin();
+  const auth = await requirePermission('Santri', 'create');
   if (auth.error) return { data: null, error: auth.error };
 
   try {
@@ -52,7 +52,7 @@ export async function createSantri(payload: SantriPayload) {
 }
 
 export async function updateSantri(id: string, payload: Partial<SantriPayload>) {
-  const auth = await requireServerAdmin();
+  const auth = await requirePermission('Santri', 'edit');
   if (auth.error) return { data: null, error: auth.error };
 
   try {
@@ -75,7 +75,7 @@ export async function updateSantri(id: string, payload: Partial<SantriPayload>) 
 }
 
 export async function deleteSantri(id: string) {
-  const auth = await requireServerAdmin();
+  const auth = await requirePermission('Santri', 'delete');
   if (auth.error) return { data: null, error: auth.error };
 
   try {

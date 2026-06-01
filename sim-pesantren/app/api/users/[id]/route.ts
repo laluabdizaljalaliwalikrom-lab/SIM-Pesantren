@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { requireAdmin } from '@/utils/auth-api';
+import { requirePermission } from '@/utils/auth-api';
 
 function getAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -16,8 +16,8 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const adminCheck = await requireAdmin();
-  if (adminCheck.error) return adminCheck.error;
+  const permCheck = await requirePermission('Pengaturan', 'edit');
+  if (permCheck.error) return permCheck.error;
 
   try {
     const { id } = await params;
@@ -107,8 +107,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const adminCheck = await requireAdmin();
-  if (adminCheck.error) return adminCheck.error;
+  const permCheck = await requirePermission('Pengaturan', 'delete');
+  if (permCheck.error) return permCheck.error;
 
   try {
     const { id } = await params;

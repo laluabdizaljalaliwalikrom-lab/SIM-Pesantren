@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getServerSupabase, requireServerAdmin } from '@/utils/server-supabase';
+import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 
 export interface MoveSantriResult {
   success: boolean;
@@ -13,7 +13,7 @@ export async function moveSantriToKamar(
   santriIds: string[],
   targetKamarId: string
 ): Promise<MoveSantriResult> {
-  const auth = await requireServerAdmin();
+  const auth = await requirePermission('Asrama', 'edit');
   if (auth.error) return { success: false, message: auth.error, remainingCapacity: 0 };
 
   try {

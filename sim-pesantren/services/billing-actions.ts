@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getServerSupabase, requireServerAdmin } from '@/utils/server-supabase';
+import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 
 interface GenerateBillingParams {
   idMasterBiaya: string;
@@ -14,7 +14,7 @@ export async function generateBilling({
   targetType,
   targetId
 }: GenerateBillingParams) {
-  const auth = await requireServerAdmin();
+  const auth = await requirePermission('Keuangan', 'create');
   if (auth.error) return { success: false, message: auth.error, insertedCount: 0 };
 
   try {

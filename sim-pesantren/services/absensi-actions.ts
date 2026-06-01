@@ -1,6 +1,6 @@
 "use server";
 
-import { getServerSupabase, requireServerUser } from '@/utils/server-supabase';
+import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 
 interface AbsensiPayload {
   id_jadwal: string;
@@ -11,7 +11,7 @@ interface AbsensiPayload {
 }
 
 export async function saveAbsensiKBM(payloads: AbsensiPayload[]) {
-  const auth = await requireServerUser();
+  const auth = await requirePermission('Akademik', 'create');
   if (auth.error) return { success: false, error: auth.error };
 
   try {

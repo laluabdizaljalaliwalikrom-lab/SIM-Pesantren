@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getServerSupabase, requireServerAdmin } from '@/utils/server-supabase';
+import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 
 interface ExcelSantriRow {
   nis: string | number;
@@ -19,7 +19,7 @@ interface ImportResult {
 }
 
 export async function importSantri(rows: ExcelSantriRow[]): Promise<ImportResult> {
-  const auth = await requireServerAdmin();
+  const auth = await requirePermission('Santri', 'create');
   if (auth.error) return { success: false, count: 0, error: auth.error };
 
   try {
@@ -99,7 +99,7 @@ interface CheckedSantriRow extends ExcelCompareRow {
 }
 
 export async function checkExistingSantri(rows: ExcelCompareRow[]): Promise<{ data: CheckedSantriRow[]; error: string | null }> {
-  const auth = await requireServerAdmin();
+  const auth = await requirePermission('Santri', 'view');
   if (auth.error) return { data: [], error: auth.error };
 
   try {
@@ -185,7 +185,7 @@ export async function executeImport(
   newRows: any[],
   updateRows: any[]
 ): Promise<ExecuteImportResult> {
-  const auth = await requireServerAdmin();
+  const auth = await requirePermission('Santri', 'create');
   if (auth.error) return { success: false, insertedCount: 0, updatedCount: 0, error: auth.error };
 
   try {

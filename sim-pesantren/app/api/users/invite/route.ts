@@ -1,10 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { requireAdmin } from '@/utils/auth-api';
+import { requirePermission } from '@/utils/auth-api';
 
 export async function POST(request: NextRequest) {
-  const adminCheck = await requireAdmin();
-  if (adminCheck.error) return adminCheck.error;
+  const permCheck = await requirePermission('Pengaturan', 'create');
+  if (permCheck.error) return permCheck.error;
 
   try {
     const body = await request.json();

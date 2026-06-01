@@ -1,7 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getServerSupabase, requireServerAdmin } from '@/utils/server-supabase';
+import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 
 export interface PermissionRow {
   feature: string;
@@ -48,9 +48,9 @@ export async function updateRolePermissions(
     }
   }
 
-  const adminCheck = await requireServerAdmin();
-  if (adminCheck.error) {
-    return { success: false, message: adminCheck.error };
+  const permCheck = await requirePermission('Pengaturan', 'edit');
+  if (permCheck.error) {
+    return { success: false, message: permCheck.error };
   }
 
   try {
