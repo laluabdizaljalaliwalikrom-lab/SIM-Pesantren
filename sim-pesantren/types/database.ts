@@ -206,7 +206,7 @@ export interface Pegawai {
   created_at: string;
 }
 
-export interface NilaiAkademik {
+export interface Nilai {
   id: string;
   id_santri: string;
   id_kelas: string;

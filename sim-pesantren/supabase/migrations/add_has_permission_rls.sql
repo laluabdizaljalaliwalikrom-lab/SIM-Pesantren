@@ -123,13 +123,13 @@ BEGIN
   END IF;
 END $$;
 
--- nilai_akademik
+-- nilai
 DO $$
 BEGIN
-  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'nilai_akademik') THEN
-    EXECUTE 'DROP POLICY IF EXISTS "Allow public select for nilai_akademik" ON public.nilai_akademik';
-    EXECUTE 'DROP POLICY IF EXISTS "Allow public update for nilai_akademik" ON public.nilai_akademik';
-    EXECUTE 'DROP POLICY IF EXISTS "Allow public delete for nilai_akademik" ON public.nilai_akademik';
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'nilai') THEN
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public select for nilai_akademik" ON public.nilai';
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public update for nilai_akademik" ON public.nilai';
+    EXECUTE 'DROP POLICY IF EXISTS "Allow public delete for nilai_akademik" ON public.nilai';
   END IF;
 END $$;
 
@@ -244,11 +244,11 @@ END $$;
 
 DO $$
 BEGIN
-  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'nilai_akademik') THEN
-    EXECUTE 'CREATE POLICY "RLS: View Nilai" ON public.nilai_akademik FOR SELECT TO authenticated USING (true)';
-    EXECUTE 'CREATE POLICY "RLS: Manage Nilai (Create)" ON public.nilai_akademik FOR INSERT TO authenticated WITH CHECK (public.has_permission(''Akademik'', ''create''))';
-    EXECUTE 'CREATE POLICY "RLS: Manage Nilai (Edit)" ON public.nilai_akademik FOR UPDATE TO authenticated USING (public.has_permission(''Akademik'', ''edit''))';
-    EXECUTE 'CREATE POLICY "RLS: Manage Nilai (Delete)" ON public.nilai_akademik FOR DELETE TO authenticated USING (public.has_permission(''Akademik'', ''delete''))';
+  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'nilai') THEN
+    EXECUTE 'CREATE POLICY "RLS: View Nilai" ON public.nilai FOR SELECT TO authenticated USING (true)';
+    EXECUTE 'CREATE POLICY "RLS: Manage Nilai (Create)" ON public.nilai FOR INSERT TO authenticated WITH CHECK (public.has_permission(''Akademik'', ''create''))';
+    EXECUTE 'CREATE POLICY "RLS: Manage Nilai (Edit)" ON public.nilai FOR UPDATE TO authenticated USING (public.has_permission(''Akademik'', ''edit''))';
+    EXECUTE 'CREATE POLICY "RLS: Manage Nilai (Delete)" ON public.nilai FOR DELETE TO authenticated USING (public.has_permission(''Akademik'', ''delete''))';
   END IF;
 END $$;
 

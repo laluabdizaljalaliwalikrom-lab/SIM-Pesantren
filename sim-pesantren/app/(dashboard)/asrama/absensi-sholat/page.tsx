@@ -123,7 +123,7 @@ export default function AbsensiSholatPage() {
           .from('pegawai')
           .select('*')
           .eq('email', user.email)
-          .single();
+          .maybeSingle();
         if (pegawaiData) {
           setActiveMusyrif(pegawaiData);
         }

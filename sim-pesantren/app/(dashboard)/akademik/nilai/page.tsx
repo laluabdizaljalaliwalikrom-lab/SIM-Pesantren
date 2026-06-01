@@ -127,7 +127,7 @@ export default function NilaiAkademikPage() {
 
       // 2. Fetch Nilai Akademik yang sudah di-input sebelumnya
       const { data: nilaiData, error: nilaiErr } = await supabase
-        .from('nilai_akademik')
+        .from('nilai')
         .select('id_santri, nilai, catatan')
         .eq('id_kelas', selectedKelas)
         .eq('mata_pelajaran', selectedMapel);
@@ -216,7 +216,7 @@ export default function NilaiAkademikPage() {
       setIsSaving(true);
       
       const { error } = await supabase
-        .from('nilai_akademik')
+        .from('nilai')
         .upsert(payloads, { onConflict: 'id_santri,id_kelas,mata_pelajaran' });
 
       if (error) throw error;
