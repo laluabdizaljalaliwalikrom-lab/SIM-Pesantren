@@ -87,13 +87,12 @@ export async function seedKurikulumMerdeka() {
     }));
 
     const { error: errorWithSchool } = await supabase
-      .from('mata_pelajaran')
+      .from('mapel')
       .upsert(payloadWithSchool, { onConflict: 'kode_mapel' });
 
-    if (errorWithSchool && (errorWithSchool.message.includes('id_sekolah') || errorWithSchool.code === '42703')) {
-      console.warn("Kolom id_sekolah tidak ditemukan di database. Mengulangi tanpa id_sekolah...");
+    if (errorWithSchool) {
+      console.warn("Mencoba tanpa id_sekolah...");
       
-      // Fallback: Masukkan tanpa kolom id_sekolah
       const payloadWithoutSchool = mapelData.map(m => ({
         kode_mapel: m.kode_mapel,
         nama_mapel: m.nama_mapel,
@@ -102,12 +101,10 @@ export async function seedKurikulumMerdeka() {
       }));
 
       const { error: errorWithoutSchool } = await supabase
-        .from('mata_pelajaran')
+        .from('mapel')
         .upsert(payloadWithoutSchool, { onConflict: 'kode_mapel' });
 
       if (errorWithoutSchool) throw errorWithoutSchool;
-    } else if (errorWithSchool) {
-      throw errorWithSchool;
     }
 
     return { success: true, message: 'Data Kurikulum Merdeka berhasil dimasukkan!' };
@@ -188,13 +185,12 @@ export async function seedDiniyahKurikulum() {
     }));
 
     const { error: errorWithSchool } = await supabase
-      .from('mata_pelajaran')
+      .from('mapel')
       .upsert(payloadWithSchool, { onConflict: 'kode_mapel' });
 
-    if (errorWithSchool && (errorWithSchool.message.includes('id_sekolah') || errorWithSchool.code === '42703')) {
-      console.warn("Kolom id_sekolah tidak ditemukan di database. Mengulangi tanpa id_sekolah...");
+    if (errorWithSchool) {
+      console.warn("Mencoba tanpa id_sekolah...");
       
-      // Fallback: Masukkan tanpa kolom id_sekolah
       const payloadWithoutSchool = mapelData.map(m => ({
         kode_mapel: m.kode_mapel,
         nama_mapel: m.nama_mapel,
@@ -203,12 +199,10 @@ export async function seedDiniyahKurikulum() {
       }));
 
       const { error: errorWithoutSchool } = await supabase
-        .from('mata_pelajaran')
+        .from('mapel')
         .upsert(payloadWithoutSchool, { onConflict: 'kode_mapel' });
 
       if (errorWithoutSchool) throw errorWithoutSchool;
-    } else if (errorWithSchool) {
-      throw errorWithSchool;
     }
 
     return { success: true, message: 'Data Kurikulum Diniyah Kemenag berhasil dimasukkan!' };

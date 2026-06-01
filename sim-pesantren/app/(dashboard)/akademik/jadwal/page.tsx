@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Sekolah, Kelas, MataPelajaran, Pegawai, JadwalPelajaran } from '@/types/database';
+import { Sekolah, Kelas, Mapel, Pegawai, JadwalPelajaran } from '@/types/database';
 import { 
   Calendar, 
   Plus, 
@@ -26,7 +26,7 @@ export default function JadwalPelajaranPage() {
   // Master Lists
   const [sekolahList, setSekolahList] = useState<Sekolah[]>([]);
   const [kelasList, setKelasList] = useState<Kelas[]>([]);
-  const [mapelList, setMapelList] = useState<MataPelajaran[]>([]);
+  const [mapelList, setMapelList] = useState<Mapel[]>([]);
   const [guruList, setGuruList] = useState<Pegawai[]>([]);
 
   // Active Filters
@@ -74,7 +74,7 @@ export default function JadwalPelajaranPage() {
 
       // 3. Fetch Mapel
       const { data: mapelData } = await supabase
-        .from('mata_pelajaran')
+        .from('mapel')
         .select('*')
         .order('nama_mapel', { ascending: true });
       setMapelList(mapelData || []);
@@ -109,7 +109,7 @@ export default function JadwalPelajaranPage() {
         .from('jadwal_pelajaran')
         .select(`
           *,
-          mapel:mata_pelajaran (*),
+          mapel:mapel (*),
           guru:pegawai (*)
         `)
         .eq('id_kelas', selectedKelas);
@@ -330,68 +330,67 @@ export default function JadwalPelajaranPage() {
       ) : loadingJadwal ? (
         // Loader State
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl py-20 text-center flex flex-col items-center justify-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-emerald-650" />
+          <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
           <p className="text-slate-400 text-sm">Mengambil jadwal pelajaran mingguan...</p>
         </div>
       ) : (
-        // Weekly Grid Columns (Responsive Cards Layout)
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-7 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-7 gap-4">
           {HARI_LIST.map((hari) => {
             const listJadwal = jadwalByDay.get(hari) || [];
             return (
-              <div key={hari} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col shadow-sm">
+              <div key={hari} className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col shadow-sm min-h-[200px]">
                 
                 {/* Day title header */}
-                <div className="pb-3 border-b border-slate-100 dark:border-zinc-850 flex items-center justify-between mb-4">
+                <div className="pb-2.5 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between mb-3">
                   <h3 className="font-extrabold text-sm text-emerald-700 dark:text-emerald-400 tracking-wide">{hari}</h3>
-                  <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-zinc-950 px-2 py-0.5 rounded-full">
-                    {listJadwal.length} Jadwal
+                  <span className="text-[10px] font-bold text-slate-400 bg-slate-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full">
+                    {listJadwal.length}
                   </span>
                 </div>
 
                 {/* Day Schedules Cards list */}
-                <div className="flex-1 space-y-4">
+                <div className="flex-1 space-y-2.5">
                   {listJadwal.length === 0 ? (
-                    <div className="h-28 border border-dashed border-slate-100 dark:border-zinc-850 rounded-xl flex items-center justify-center text-center p-2">
-                      <p className="text-[10px] text-slate-350 italic">Tidak ada KBM</p>
+                    <div className="flex-1 min-h-[120px] border border-dashed border-slate-200 dark:border-zinc-700 rounded-xl flex items-center justify-center text-center p-3">
+                      <p className="text-[11px] text-slate-400 italic">—</p>
                     </div>
                   ) : (
                     listJadwal.map((jadwal) => (
                       <div 
                         key={jadwal.id} 
-                        className="group relative border border-slate-150 dark:border-zinc-850 hover:border-emerald-500/30 bg-slate-50/50 dark:bg-zinc-950/20 p-3 rounded-xl transition-all hover:-translate-y-0.5 shadow-sm"
+                        className="group relative border border-slate-200 dark:border-zinc-700 hover:border-emerald-400 bg-white dark:bg-zinc-800/40 p-3 rounded-xl transition-all hover:-translate-y-0.5 hover:shadow-md"
                       >
                         {/* Delete trigger */}
                         <button
                           onClick={() => handleDeleteJadwal(jadwal.id, jadwal.mapel?.nama_mapel || '')}
-                          className="absolute top-2 right-2 p-1 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 rounded transition-colors opacity-0 group-hover:opacity-100"
+                          className="absolute top-1.5 right-1.5 p-1 hover:bg-rose-50 dark:hover:bg-rose-500/10 text-slate-400 hover:text-rose-600 rounded transition-colors opacity-0 group-hover:opacity-100"
                           title="Hapus KBM"
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
 
-                        <div className="space-y-2 text-left">
+                        <div className="space-y-1.5 text-left">
                           {/* Subject name */}
-                          <h4 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-1 pr-4">
+                          <h4 className="font-extrabold text-xs text-slate-900 dark:text-white line-clamp-2 pr-5 leading-snug">
                             {jadwal.mapel?.nama_mapel}
                           </h4>
 
                           {/* Time */}
-                          <div className="flex items-center gap-1.5 text-[10px] text-slate-400 font-mono">
-                            <Clock className="h-3 w-3 text-emerald-500" />
-                            <span>{jadwal.jam_mulai.slice(0, 5)} - {jadwal.jam_selesai.slice(0, 5)}</span>
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 font-mono">
+                            <Clock className="h-3 w-3 text-emerald-500 shrink-0" />
+                            <span>{jadwal.jam_mulai.slice(0, 5)}–{jadwal.jam_selesai.slice(0, 5)}</span>
                           </div>
 
                           {/* Teacher */}
-                          <div className="flex items-center gap-1.5 text-[10px] text-slate-500 dark:text-zinc-400">
-                            <User className="h-3 w-3 text-emerald-500" />
-                            <span className="truncate">{jadwal.guru ? jadwal.guru.nama_lengkap : 'Guru / Ustadz'}</span>
+                          <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-zinc-400">
+                            <User className="h-3 w-3 text-emerald-500 shrink-0" />
+                            <span className="truncate">{jadwal.guru ? jadwal.guru.nama_lengkap : '—'}</span>
                           </div>
 
                           {/* Room */}
                           {jadwal.ruangan && (
-                            <div className="flex items-center gap-1.5 text-[9px] text-slate-400">
-                              <MapPin className="h-3 w-3 text-emerald-500" />
+                            <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
+                              <MapPin className="h-3 w-3 text-emerald-500 shrink-0" />
                               <span className="truncate">{jadwal.ruangan}</span>
                             </div>
                           )}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Sekolah, Kelas, MataPelajaran, Pegawai, JadwalPelajaran, Santri } from '@/types/database';
+import { Sekolah, Kelas, Pegawai, JadwalPelajaran, Santri } from '@/types/database';
 import { saveAbsensiKBM } from '@/services/absensi-actions';
 import { 
   CalendarCheck, 
@@ -106,7 +106,7 @@ export default function AbsensiKBMPage() {
         .select(`
           *,
           kelas (*, sekolah:id_sekolah (*)),
-          mapel:mata_pelajaran (*),
+          mapel:mapel (*),
           guru:pegawai (*)
         `)
         .eq('hari', selectedHari);

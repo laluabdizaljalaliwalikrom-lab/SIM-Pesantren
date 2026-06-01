@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Sekolah, Kelas, Santri, MataPelajaran } from '@/types/database';
+import { Sekolah, Kelas, Mapel } from '@/types/database';
 import { 
   BookOpen, 
   School, 
@@ -45,9 +45,13 @@ export default function NilaiAkademikPage() {
   // State Submitting & Saving
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
-  // State Mata Pelajaran (dari DB, difilter berdasarkan kelas)
-  const [mapelList, setMapelList] = useState<MataPelajaran[]>([]);
-  const [kelasMapelList, setKelasMapelList] = useState<string[]>([]);
+  // State Mata Pelajaran dari tabel mapel
+  const [mapelList, setMapelList] = useState<Mapel[]>([]);
+
+  // State tambahan untuk nilai
+  const [semester, setSemester] = useState<number>(1);
+  const [tahunAjaran, setTahunAjaran] = useState<string>('2025/2026');
+  const [jenisUjian, setJenisUjian] = useState<string>('Harian');
 
   // Fetch data sekolah dan kelas untuk filter utama
   const fetchMasterData = useCallback(async () => {
@@ -73,14 +77,41 @@ export default function NilaiAkademikPage() {
       if (kelasErr) throw kelasErr;
       setKelasList(kelasData || []);
 
-      // Fetch Mata Pelajaran
+      // Fetch Mapel
       const { data: mapelData, error: mapelErr } = await supabase
-        .from('mata_pelajaran')
+        .from('mapel')
         .select('*')
         .order('nama_mapel', { ascending: true });
 
       if (mapelErr) throw mapelErr;
       setMapelList(mapelData || []);
+
+      // Fetch Tahun Ajaran aktif
+      const { data: taData, error: taErr } = await supabase
+        .from('tahun_ajaran')
+        .select('*')
+        .eq('status_aktif', true)
+        .single();
+
+      if (taErr && taErr.code !== 'PGRST116') throw taErr; // PGRST116 = not found
+      if (taData) {
+        setTahunAjaran(taData.nama_tahun);
+      }
+
+      // Fetch Semester aktif
+      if (taData) {
+        const { data: semData, error: semErr } = await supabase
+          .from('semester')
+          .select('*')
+          .eq('id_tahun_ajaran', taData.id)
+          .eq('status_aktif', true)
+          .single();
+
+        if (semErr && semErr.code !== 'PGRST116') throw semErr;
+        if (semData) {
+          setSemester(semData.nama_semester === 'Ganjil' ? 1 : 2);
+        }
+      }
 
     } catch (err: any) {
       console.error('Error fetching master data:', err);
@@ -93,40 +124,6 @@ export default function NilaiAkademikPage() {
   useEffect(() => {
     fetchMasterData();
   }, [fetchMasterData]);
-
-  // Fetch mapel berdasarkan kelas (dari jadwal_pelajaran)
-  const fetchMapelByKelas = useCallback(async (kelasId: string) => {
-    if (!kelasId) {
-      setKelasMapelList([]);
-      return;
-    }
-    try {
-      const { data } = await supabase
-        .from('jadwal_pelajaran')
-        .select('id_mapel')
-        .eq('id_kelas', kelasId);
-
-      if (data && data.length > 0) {
-        const mapelIds = [...new Set(data.map(j => j.id_mapel))];
-        const filtered = mapelList.filter(m => mapelIds.includes(m.id));
-        setKelasMapelList(filtered.map(m => m.nama_mapel));
-      } else {
-        setKelasMapelList(mapelList.map(m => m.nama_mapel));
-      }
-    } catch {
-      setKelasMapelList(mapelList.map(m => m.nama_mapel));
-    }
-  }, [mapelList]);
-
-  // Reset mapel saat kelas berubah
-  useEffect(() => {
-    setSelectedMapel('');
-    if (selectedKelas && mapelList.length > 0) {
-      fetchMapelByKelas(selectedKelas);
-    } else {
-      setKelasMapelList([]);
-    }
-  }, [selectedKelas, mapelList, fetchMapelByKelas]);
 
   // Handler load siswa & nilai jika filter lengkap terisi
   const handleLoadSantriDanNilai = useCallback(async () => {
@@ -161,14 +158,16 @@ export default function NilaiAkademikPage() {
       // 2. Fetch Nilai Akademik yang sudah di-input sebelumnya
       const { data: nilaiData, error: nilaiErr } = await supabase
         .from('nilai')
-        .select('id_santri, nilai, catatan')
+        .select('id, id_santri, nilai_angka, catatan')
         .eq('id_kelas', selectedKelas)
-        .eq('mata_pelajaran', selectedMapel);
+        .eq('id_mapel', selectedMapel)
+        .eq('semester', semester)
+        .eq('tahun_ajaran', tahunAjaran);
 
       if (nilaiErr) throw nilaiErr;
-      const mapNilai = new Map<string, { nilai: number; catatan: string }>();
+      const mapNilai = new Map<string, { nilai_angka: number; catatan: string; id: string }>();
       (nilaiData || []).forEach(n => {
-        mapNilai.set(n.id_santri, { nilai: n.nilai, catatan: n.catatan || '' });
+        mapNilai.set(n.id_santri, { nilai_angka: n.nilai_angka, catatan: n.catatan || '', id: n.id });
       });
 
       // 3. Gabungkan santri dengan nilai (jika belum ada nilai, set kosong)
@@ -178,7 +177,7 @@ export default function NilaiAkademikPage() {
           id_santri: s.id,
           nis: s.nis,
           nama_lengkap: s.nama_lengkap,
-          nilai: exist ? exist.nilai.toString() : '',
+          nilai: exist ? exist.nilai_angka.toString() : '',
           catatan: exist ? exist.catatan : ''
         };
       });
@@ -191,15 +190,18 @@ export default function NilaiAkademikPage() {
     } finally {
       setLoadingSantri(false);
     }
-  }, [selectedSekolah, selectedKelas, selectedMapel, sekolahList]);
+  }, [selectedSekolah, selectedKelas, selectedMapel, semester, tahunAjaran, sekolahList]);
 
   // Trigger loading otomatis setiap kali filter berubah
   useEffect(() => {
     handleLoadSantriDanNilai();
-  }, [selectedSekolah, selectedKelas, selectedMapel, handleLoadSantriDanNilai]);
+  }, [selectedSekolah, selectedKelas, selectedMapel, semester, tahunAjaran, handleLoadSantriDanNilai]);
 
   // Dapatkan opsi kelas yang difilter berdasarkan sekolah terpilih
   const kelasFiltered = kelasList.filter(k => k.id_sekolah === selectedSekolah);
+
+  // Dapatkan opsi mapel yang difilter berdasarkan sekolah terpilih
+  const mapelFiltered = mapelList.filter(m => !m.id_sekolah || m.id_sekolah === selectedSekolah);
 
   // Update nilai secara lokal pada state table
   const handleNilaiChange = (index: number, value: string) => {
@@ -225,40 +227,72 @@ export default function NilaiAkademikPage() {
     });
   };
 
-  // Simpan Semua (Batch Upsert)
+  // Simpan Semua (manual upsert karena tidak ada unique constraint)
   const handleSimpanSemua = async () => {
     if (nilaiList.length === 0) return;
 
-    // Filter hanya santri yang memiliki nilai valid untuk disimpan
-    const payloads = nilaiList
-      .filter(item => item.nilai.trim() !== '')
-      .map(item => ({
-        id_santri: item.id_santri,
-        id_kelas: selectedKelas,
-        mata_pelajaran: selectedMapel,
-        nilai: Number(item.nilai),
-        catatan: item.catatan.trim() || null
-      }));
-
-    if (payloads.length === 0) {
+    const daftarDiisi = nilaiList.filter(item => item.nilai.trim() !== '');
+    if (daftarDiisi.length === 0) {
       toast.warning('Silakan isi setidaknya satu nilai sebelum menyimpan.');
       return;
     }
 
     try {
       setIsSaving(true);
-      
-      const { error } = await supabase
-        .from('nilai')
-        .upsert(payloads, { onConflict: 'id_santri,id_kelas,mata_pelajaran' });
 
-      if (error) throw error;
-      
-      toast.success('Semua nilai berhasil disimpan ke database!');
-      // Reload ulang untuk menyelaraskan data terkini
+      // Ambil data user untuk created_by
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User tidak terautentikasi');
+
+      // Ambil existing records untuk kelas + mapel + semester ini
+      const { data: existing } = await supabase
+        .from('nilai')
+        .select('id, id_santri')
+        .eq('id_kelas', selectedKelas)
+        .eq('id_mapel', selectedMapel)
+        .eq('semester', semester)
+        .eq('tahun_ajaran', tahunAjaran);
+
+      const existingMap = new Map<string, string>();
+      (existing || []).forEach(e => existingMap.set(e.id_santri, e.id));
+
+      const errors: string[] = [];
+
+      for (const item of daftarDiisi) {
+        const recordId = existingMap.get(item.id_santri);
+
+        if (recordId) {
+          const { error } = await supabase
+            .from('nilai')
+            .update({ nilai_angka: Number(item.nilai), catatan: item.catatan.trim() || null })
+            .eq('id', recordId);
+          if (error) errors.push(error.message);
+        } else {
+          const { error } = await supabase
+            .from('nilai')
+            .insert({
+              id_santri: item.id_santri,
+              id_kelas: selectedKelas,
+              id_mapel: selectedMapel,
+              nilai_angka: Number(item.nilai),
+              catatan: item.catatan.trim() || null,
+              semester,
+              tahun_ajaran: tahunAjaran,
+              jenis_ujian: jenisUjian,
+              created_by: user.id,
+            });
+          if (error) errors.push(error.message);
+        }
+      }
+
+      if (errors.length > 0) {
+        toast.error('Beberapa nilai gagal disimpan: ' + errors.join(', '));
+      } else {
+        toast.success('Semua nilai berhasil disimpan!');
+      }
       await handleLoadSantriDanNilai();
     } catch (err: any) {
-      console.error('Error upserting grades:', err);
+      console.error('Error saving grades:', err);
       toast.error('Gagal menyimpan nilai: ' + err.message);
     } finally {
       setIsSaving(false);
@@ -379,9 +413,9 @@ export default function NilaiAkademikPage() {
                 className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2.5 text-slate-850 dark:text-zinc-100 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all text-xs sm:text-sm"
               >
                 <option value="">-- Pilih Mata Pelajaran --</option>
-                {(kelasMapelList.length > 0 ? kelasMapelList : mapelList.map(m => m.nama_mapel)).map((mapel) => (
-                  <option key={mapel} value={mapel}>
-                    {mapel}
+                {mapelFiltered.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.nama_mapel}
                   </option>
                 ))}
               </select>
@@ -389,6 +423,51 @@ export default function NilaiAkademikPage() {
 
           </div>
         )}
+
+        {/* Filter tambahan: Semester, Tahun Ajaran, Jenis Ujian */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wide">
+              Semester
+            </label>
+            <select
+              value={semester}
+              disabled
+              className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-slate-850 dark:text-zinc-100 opacity-70 cursor-not-allowed text-xs sm:text-sm"
+            >
+              <option value={1}>Semester 1 (Ganjil)</option>
+              <option value={2}>Semester 2 (Genap)</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wide">
+              Tahun Ajaran
+            </label>
+            <input
+              type="text"
+              value={tahunAjaran}
+              readOnly
+              tabIndex={-1}
+              className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl px-3 py-2.5 text-slate-850 dark:text-zinc-100 opacity-70 cursor-not-allowed text-xs sm:text-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400 uppercase tracking-wide">
+              Jenis Ujian
+            </label>
+            <select
+              value={jenisUjian}
+              onChange={(e) => setJenisUjian(e.target.value)}
+              className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3 py-2.5 text-slate-850 dark:text-zinc-100 focus:outline-none transition-all text-xs sm:text-sm"
+            >
+              <option value="Harian">Harian</option>
+              <option value="UTS">UTS</option>
+              <option value="UAS">UAS</option>
+              <option value="Try Out">Try Out</option>
+              <option value="Lainnya">Lainnya</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Main Content Area */}
@@ -441,7 +520,7 @@ export default function NilaiAkademikPage() {
               <button
                 onClick={handleSimpanSemua}
                 disabled={isSaving}
-                className="flex items-center justify-center gap-2 bg-emerald-650 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-600/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-md shadow-emerald-600/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-xs w-full sm:w-auto"
               >
                 {isSaving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />

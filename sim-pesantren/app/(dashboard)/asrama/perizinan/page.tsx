@@ -24,6 +24,9 @@ import {
 import { toast } from 'sonner';
 
 export default function PerizinanSantriPage() {
+  // Current logged-in user
+  const [currentUser, setCurrentUser] = useState<{ id: string; nama: string } | null>(null);
+
   // Master states
   const [perizinanList, setPerizinanList] = useState<Perizinan[]>([]);
   const [santriList, setSantriList] = useState<Pick<Santri, 'id' | 'nis' | 'nama_lengkap'>[]>([]);
@@ -62,12 +65,14 @@ export default function PerizinanSantriPage() {
     try {
       setLoading(true);
 
-      // Fetch Perizinan list with Santri details
+      // Fetch Perizinan list with Santri and Petugas details
       const { data: perizinanData, error: perizinanErr } = await supabase
         .from('perizinan')
         .select(`
           *,
-          santri:id_santri (id, nis, nama_lengkap)
+          santri:id_santri (id, nis, nama_lengkap),
+          creator:created_by (id, nama_lengkap),
+          approver:approved_by (id, nama_lengkap)
         `)
         .order('created_at', { ascending: false });
 
@@ -92,6 +97,24 @@ export default function PerizinanSantriPage() {
     }
   }, []);
 
+  // Fetch current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        supabase
+          .from('profiles')
+          .select('id, nama_lengkap')
+          .eq('id', data.user.id)
+          .single()
+          .then(({ data: profile }) => {
+            if (profile) {
+              setCurrentUser({ id: profile.id, nama: profile.nama_lengkap });
+            }
+          });
+      }
+    });
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -99,9 +122,11 @@ export default function PerizinanSantriPage() {
   // Action: Setujui Izin
   const handleSetujui = async (id: string) => {
     try {
+      const update: Record<string, any> = { status: 'disetujui' };
+      if (currentUser) update.approved_by = currentUser.id;
       const { error } = await supabase
         .from('perizinan')
-        .update({ status: 'disetujui' }) // We use 'disetujui' or 'Aktif'
+        .update(update)
         .eq('id', id);
 
       if (error) throw error;
@@ -117,9 +142,11 @@ export default function PerizinanSantriPage() {
   const handleTolak = async (id: string) => {
     if (!confirm('Apakah Anda yakin ingin menolak pengajuan izin ini?')) return;
     try {
+      const update: Record<string, any> = { status: 'ditolak' };
+      if (currentUser) update.approved_by = currentUser.id;
       const { error } = await supabase
         .from('perizinan')
-        .update({ status: 'ditolak' })
+        .update(update)
         .eq('id', id);
 
       if (error) throw error;
@@ -135,12 +162,14 @@ export default function PerizinanSantriPage() {
   const handleKonfirmasiKembali = async (id: string) => {
     try {
       const todayStr = new Date().toISOString();
+      const update: Record<string, any> = {
+        status: 'kembali',
+        tanggal_kembali: todayStr
+      };
+      if (currentUser) update.approved_by = currentUser.id;
       const { error } = await supabase
         .from('perizinan')
-        .update({
-          status: 'kembali',
-          tanggal_kembali: todayStr
-        })
+        .update(update)
         .eq('id', id);
 
       if (error) throw error;
@@ -166,14 +195,17 @@ export default function PerizinanSantriPage() {
 
     setSubmitSubmitting(true);
     try {
-      const payload = {
+      const payload: Record<string, any> = {
         id_santri: selectedSantri.id,
         keperluan: formKeperluan.trim(),
         tanggal_keluar: new Date(formTanggalKeluar).toISOString(),
         rencana_kembali: new Date(formRencanaKembali).toISOString(),
         penjemput: formPenjemput.trim() || null,
-        status: 'diajukan' // default status
+        status: 'diajukan',
       };
+      if (currentUser) {
+        payload.created_by = currentUser.id;
+      }
 
       const { error } = await supabase
         .from('perizinan')
@@ -420,6 +452,7 @@ export default function PerizinanSantriPage() {
                     <th className="py-4 px-6">Keperluan</th>
                     <th className="py-4 px-6">Penjemput</th>
                     <th className="py-4 px-6">Durasi & Jadwal</th>
+                    <th className="py-4 px-6">Petugas</th>
                     <th className="py-4 px-6 text-center">Status</th>
                     <th className="py-4 px-6 text-right">Tindakan</th>
                   </tr>
@@ -470,6 +503,27 @@ export default function PerizinanSantriPage() {
                               </p>
                               {izin.tanggal_kembali && <p className="text-emerald-600 dark:text-emerald-400">Kembali: {formatDateTime(izin.tanggal_kembali)}</p>}
                             </div>
+                          </div>
+                        </td>
+
+                        {/* Petugas */}
+                        <td className="py-4 px-6">
+                          <div className="flex flex-col gap-0.5">
+                            {izin.creator && (
+                              <span className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                <span className="text-[9px] text-slate-400">Input: </span>
+                                {izin.creator.nama_lengkap}
+                              </span>
+                            )}
+                            {izin.approver && (
+                              <span className="text-[11px] text-slate-500 dark:text-zinc-400">
+                                <span className="text-[9px] text-slate-400">Approval: </span>
+                                {izin.approver.nama_lengkap}
+                              </span>
+                            )}
+                            {!izin.creator && !izin.approver && (
+                              <span className="text-[11px] text-slate-400 italic">-</span>
+                            )}
                           </div>
                         </td>
 
@@ -593,6 +647,21 @@ export default function PerizinanSantriPage() {
                         Rencana Kembali: {formatDateTime(izin.rencana_kembali)}
                       </p>
                       {izin.tanggal_kembali && <p className="text-emerald-600 dark:text-emerald-400">Kembali: {formatDateTime(izin.tanggal_kembali)}</p>}
+                      {/* Petugas Info */}
+                      <div className="pt-1.5 border-t border-slate-100 dark:border-zinc-800 mt-1.5 space-y-0.5">
+                        {izin.creator && (
+                          <p className="text-slate-400">
+                            <span className="text-[9px] font-semibold uppercase tracking-wider">Input: </span>
+                            {izin.creator.nama_lengkap}
+                          </p>
+                        )}
+                        {izin.approver && (
+                          <p className="text-slate-400">
+                            <span className="text-[9px] font-semibold uppercase tracking-wider">Approval: </span>
+                            {izin.approver.nama_lengkap}
+                          </p>
+                        )}
+                      </div>
                     </div>
 
                     {/* Action buttons footer */}

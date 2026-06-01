@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { MataPelajaran } from '@/types/database';
+import { Mapel } from '@/types/database';
 import { 
   BookOpen, 
   Plus, 
@@ -21,7 +21,7 @@ import { toast } from 'sonner';
 type KategoriMapel = 'Diniyah/Pesantren' | 'Umum' | 'Kitab Kuning' | 'Bahasa';
 
 export default function MasterMapelPage() {
-  const [mapelList, setMapelList] = useState<MataPelajaran[]>([]);
+  const [mapelList, setMapelList] = useState<Mapel[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedKategori, setSelectedKategori] = useState<string>('Semua');
@@ -29,7 +29,7 @@ export default function MasterMapelPage() {
   // Modals state
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [selectedMapel, setSelectedMapel] = useState<MataPelajaran | null>(null);
+  const [selectedMapel, setSelectedMapel] = useState<Mapel | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -44,7 +44,7 @@ export default function MasterMapelPage() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('mata_pelajaran')
+        .from('mapel')
         .select('*')
         .order('nama_mapel', { ascending: true });
 
@@ -78,7 +78,7 @@ export default function MasterMapelPage() {
 
     try {
       setIsSubmitting(true);
-      const { error } = await supabase.from('mata_pelajaran').insert(initialMapels);
+      const { error } = await supabase.from('mapel').insert(initialMapels);
       if (error) throw error;
       toast.success('Pelajaran percontohan berhasil ditambahkan!');
       await fetchData();
@@ -101,7 +101,7 @@ export default function MasterMapelPage() {
     setIsModalOpen(true);
   };
 
-  const handleOpenEditModal = (mapel: MataPelajaran) => {
+  const handleOpenEditModal = (mapel: Mapel) => {
     setSelectedMapel(mapel);
     setFormData({
       kode_mapel: mapel.kode_mapel,
@@ -138,7 +138,7 @@ export default function MasterMapelPage() {
       if (selectedMapel) {
         // Update
         const { error } = await supabase
-          .from('mata_pelajaran')
+          .from('mapel')
           .update(payload)
           .eq('id', selectedMapel.id);
 
@@ -147,7 +147,7 @@ export default function MasterMapelPage() {
       } else {
         // Insert
         const { error } = await supabase
-          .from('mata_pelajaran')
+          .from('mapel')
           .insert([payload]);
 
         if (error) throw error;
@@ -168,7 +168,7 @@ export default function MasterMapelPage() {
 
     try {
       const { error } = await supabase
-        .from('mata_pelajaran')
+        .from('mapel')
         .delete()
         .eq('id', id);
 

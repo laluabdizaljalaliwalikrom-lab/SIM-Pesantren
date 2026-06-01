@@ -209,10 +209,14 @@ export interface Pegawai {
 export interface Nilai {
   id: string;
   id_santri: string;
+  id_mapel: string;
   id_kelas: string;
-  mata_pelajaran: string;
-  nilai: number;
+  nilai_angka: number;
   catatan?: string | null;
+  semester: number;
+  tahun_ajaran: string;
+  jenis_ujian: string;
+  created_by: string;
   created_at: string;
   // Joins
   santri?: Santri | null;
@@ -228,6 +232,18 @@ export interface MataPelajaran {
   created_at: string;
 }
 
+export interface Mapel {
+  id: string;
+  kode_mapel: string;
+  nama_mapel: string;
+  kategori: 'Diniyah/Pesantren' | 'Umum' | 'Kitab Kuning' | 'Bahasa';
+  id_sekolah: string | null;
+  keterangan?: string | null;
+  created_at: string;
+  // Joins
+  sekolah?: Sekolah | null;
+}
+
 export interface JadwalPelajaran {
   id: string;
   id_kelas: string;
@@ -240,7 +256,7 @@ export interface JadwalPelajaran {
   created_at: string;
   // Joins
   kelas?: Kelas | null;
-  mapel?: MataPelajaran | null;
+  mapel?: Mapel | null;
   guru?: Pegawai | null;
 }
 
@@ -280,9 +296,13 @@ export interface Perizinan {
   rencana_kembali?: string | null;
   penjemput?: string | null;
   status: 'diajukan' | 'disetujui' | 'ditolak' | 'kembali' | string;
+  created_by?: string | null;
+  approved_by?: string | null;
   created_at: string;
   // Joins
   santri?: Santri | null;
+  creator?: Profile | null;
+  approver?: Profile | null;
 }
 
 export interface MasterPelanggaran {
