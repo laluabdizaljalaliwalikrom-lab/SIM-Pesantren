@@ -192,7 +192,6 @@ export default function LembagaDashboardPage() {
             setCanDeleteLembaga(false);
           }
         }
-      }
 
     } catch (err: any) {
       console.error(err);
