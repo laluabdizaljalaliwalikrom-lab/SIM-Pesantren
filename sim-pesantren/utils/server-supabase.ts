@@ -87,18 +87,5 @@ export async function requirePermission(
   return { error: null };
 }
 
-export async function requireServerAdmin() {
-  const supabase = await getServerSupabase();
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) return { error: 'Sesi tidak valid. Silakan login ulang.' };
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile || profile.role !== 'admin') return { error: 'Akses ditolak. Hanya admin.' };
-
-  return { error: null };
-}
+// DEPRECATED — use requirePermission() instead
+// export async function requireServerAdmin() { ... }

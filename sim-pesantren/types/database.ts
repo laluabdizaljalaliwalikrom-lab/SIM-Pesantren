@@ -223,14 +223,6 @@ export interface Nilai {
   kelas?: Kelas | null;
 }
 
-export interface MataPelajaran {
-  id: string;
-  kode_mapel: string;
-  nama_mapel: string;
-  kategori: 'Diniyah/Pesantren' | 'Umum' | 'Kitab Kuning' | 'Bahasa';
-  keterangan?: string | null;
-  created_at: string;
-}
 
 export interface Mapel {
   id: string;
@@ -399,4 +391,67 @@ export interface Pembayaran {
   tagihan?: Tagihan | null;
   admin?: Profile | null;
   group?: PembayaranGroup | null;
+}
+
+export interface PesantrenProfile {
+  id: string;
+  nama_pesantren: string;
+  alamat?: string | null;
+  telp?: string | null;
+  email?: string | null;
+  website?: string | null;
+  logo_url?: string | null;
+  foto_pimpinan_url?: string | null;
+  nama_pimpinan?: string | null;
+  created_at: string;
+}
+
+export interface LandingPageSettings {
+  id: string;
+  hero_title?: string | null;
+  hero_subtitle?: string | null;
+  about_text?: string | null;
+  visi?: string | null;
+  misi?: string | null;
+  alamat?: string | null;
+  telp?: string | null;
+  email?: string | null;
+  youtube_url?: string | null;
+  facebook_url?: string | null;
+  instagram_url?: string | null;
+  created_at: string;
+}
+
+export interface RefSurah {
+  id: string;
+  nama_surah: string;
+  jumlah_ayat: number;
+}
+
+export interface TahunAjaran {
+  id: string;
+  nama_tahun: string;
+  tanggal_mulai: string;
+  tanggal_akhir: string;
+  status_aktif: boolean;
+  created_at: string;
+}
+
+export interface Semester {
+  id: string;
+  id_tahun_ajaran: string;
+  nama_semester: 'Ganjil' | 'Genap';
+  status_aktif: boolean;
+  created_at: string;
+  tahun_ajaran?: TahunAjaran | null;
+}
+
+export interface AppRolePermission {
+  id_role: string;
+  role_name: string;
+  feature: string;
+  can_view: boolean;
+  can_create: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
 }

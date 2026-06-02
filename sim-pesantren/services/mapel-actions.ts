@@ -1,3 +1,5 @@
+'use server';
+
 import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 
 /**
