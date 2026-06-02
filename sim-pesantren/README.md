@@ -34,7 +34,7 @@ Di halaman import Vercel, klik **"Environment Variables"** dan tambahkan:
 
 | Key | Value |
 |-----|-------|
-| `NEXT_PUBLIC_SUPABASE_URL` | `https://qaidhzrlxsyjzrczvthp.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_URL` | *( key dari Supabase dashboard)* |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | *(anon key dari Supabase dashboard)* |
 | `WEBHOOK_SECRET_TOKEN` | *(token pilihan Anda)* |
 | `FONNTE_API_TOKEN` | *(token Fonnte, jika dipakai)* |
@@ -80,3 +80,6 @@ Setiap `git push origin main` → Vercel **auto-deploy** secara otomatis. ✨
 | Build gagal karena TypeScript | Sudah dikonfigurasi `ignoreBuildErrors: true` di `next.config.ts` |
 | Data tidak muncul | Pastikan RLS policy Supabase mengizinkan akses publik |
 | Foto tidak tampil | Pastikan URL foto menggunakan HTTPS |
+
+
+thanks
