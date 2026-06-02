@@ -83,8 +83,15 @@ The `mata_pelajaran` table has been DROPPED and replaced by `mapel`. All code, j
 ## Permission System
 - `requirePermission(feature, action)` in `utils/server-supabase.ts` (for server actions)
 - `requirePermission(feature, action)` in `utils/auth-api.ts` (for API routes)
-- Super Admin (`role === 'admin'`) **bypasses all checks**
+- Super Admin (`role === 'Super Admin'`) **bypasses all checks**
+- Role lookup uses `profiles.id_role` (UUID FK → `app_roles.id`) — no more hardcoded enum map
+- `profiles.role` is auto-synced via trigger `sync_profile_role()` from `app_roles.name`
 - Feature names are: `Lembaga`, `Santri`, `Tahfidz`, `Kepegawaian`, `Keuangan`, `Akademik`, `Asrama`, `Perizinan`, `Pengaturan`
+
+### Setting user role
+- Invite: POST `/api/users/invite` with `id_role` (UUID)
+- Edit: PATCH `/api/users/[id]` with `id_role` (UUID)
+- Trigger auto-syncs `profiles.role` from `app_roles.name`
 
 ## Code Style
 - NO comments in production code (exception: `AGENTS.md` and migration SQL)

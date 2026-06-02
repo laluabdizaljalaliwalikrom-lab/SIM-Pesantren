@@ -3,6 +3,54 @@
 import { revalidatePath } from 'next/cache';
 import { getServerSupabase, requirePermission } from '@/utils/server-supabase';
 
+export async function updateRole(
+  roleId: string,
+  payload: { name?: string; description?: string }
+) {
+  if (!roleId) return { success: false, message: 'Role ID tidak boleh kosong.' };
+
+  const permCheck = await requirePermission('Pengaturan', 'edit');
+  if (permCheck.error) return { success: false, message: permCheck.error };
+
+  try {
+    const supabase = await getServerSupabase();
+
+    const { data: existing } = await supabase
+      .from('app_roles')
+      .select('id, name')
+      .eq('id', roleId)
+      .single();
+
+    if (!existing) return { success: false, message: 'Role tidak ditemukan.' };
+
+    if (payload.name && payload.name !== existing.name) {
+      const { data: duplicate } = await supabase
+        .from('app_roles')
+        .select('id')
+        .eq('name', payload.name)
+        .neq('id', roleId)
+        .maybeSingle();
+
+      if (duplicate) return { success: false, message: `Nama role "${payload.name}" sudah digunakan.` };
+    }
+
+    const updateData: Record<string, string> = {};
+    if (payload.name !== undefined) updateData.name = payload.name;
+    if (payload.description !== undefined) updateData.description = payload.description;
+
+    if (Object.keys(updateData).length === 0) return { success: false, message: 'Tidak ada perubahan.' };
+
+    const { error } = await supabase.from('app_roles').update(updateData).eq('id', roleId);
+    if (error) throw error;
+
+    revalidatePath('/settings/users');
+    revalidatePath('/settings');
+    return { success: true, message: 'Role berhasil diperbarui.' };
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'Gagal memperbarui role.' };
+  }
+}
+
 export interface PermissionRow {
   feature: string;
   can_view: boolean;

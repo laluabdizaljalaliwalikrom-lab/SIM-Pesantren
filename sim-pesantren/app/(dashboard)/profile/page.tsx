@@ -66,11 +66,7 @@ export default function ProfilePage() {
         foto_url: profile?.foto_url || ''
       });
 
-      const roleDisplay = profile?.role === 'admin' ? 'Super Admin'
-                        : profile?.role === 'pengasuh' ? 'Pengasuh'
-                        : profile?.role === 'wali_santri' ? 'Wali Santri'
-                        : profile?.role || 'Pengguna';
-      setUserRole(roleDisplay);
+      setUserRole(profile?.role || 'Pengguna');
     } catch (err: any) {
       console.error('Error loading profile:', err);
       toast.error('Gagal mengambil data profil Anda.');

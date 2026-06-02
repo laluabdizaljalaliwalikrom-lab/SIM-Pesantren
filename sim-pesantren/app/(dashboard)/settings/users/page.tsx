@@ -36,14 +36,14 @@ export default function UserRoleSettingsPage() {
   const [inviteName, setInviteName] = useState('');
   const [invitePassword, setInvitePassword] = useState('');
   const [invitePhone, setInvitePhone] = useState('');
-  const [inviteRole, setInviteRole] = useState('wali_santri');
+  const [inviteIdRole, setInviteIdRole] = useState('');
   const [inviting, setInviting] = useState(false);
 
   // Edit User States
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editUser, setEditUser] = useState<any>(null);
   const [editName, setEditName] = useState('');
-  const [editRole, setEditRole] = useState('');
+  const [editIdRole, setEditIdRole] = useState<string>('');
   const [editPhone, setEditPhone] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -55,6 +55,13 @@ export default function UserRoleSettingsPage() {
   const [newRoleName, setNewRoleName] = useState('');
   const [newRoleDesc, setNewRoleDesc] = useState('');
   const [addingRole, setAddingRole] = useState(false);
+
+  // Edit Role States
+  const [isEditRoleModalOpen, setIsEditRoleModalOpen] = useState(false);
+  const [editingRole, setEditingRole] = useState<AppRole | null>(null);
+  const [editRoleName, setEditRoleName] = useState('');
+  const [editRoleDesc, setEditRoleDesc] = useState('');
+  const [savingRole, setSavingRole] = useState(false);
 
   // Fetch initial configuration
   const fetchData = useCallback(async () => {
@@ -86,6 +93,10 @@ export default function UserRoleSettingsPage() {
         setRoles(rolesData || []);
         if (rolesData && rolesData.length > 0 && !selectedRoleId) {
           setSelectedRoleId(rolesData[0].id);
+        }
+        if (rolesData && rolesData.length > 0 && !inviteIdRole) {
+          const nonAdmin = rolesData.find(r => r.name !== 'Super Admin') || rolesData[0];
+          setInviteIdRole(nonAdmin.id);
         }
       }
     } catch (err: any) {
@@ -128,14 +139,14 @@ export default function UserRoleSettingsPage() {
     setInviteName('');
     setInvitePassword('');
     setInvitePhone('');
-    setInviteRole('wali_santri');
+    setInviteIdRole('');
   };
 
   // Open edit modal
   const openEditModal = (user: any) => {
     setEditUser(user);
     setEditName(user.nama_lengkap || '');
-    setEditRole(user.role_raw || 'wali_santri');
+    setEditIdRole(user.id_role || '');
     setEditPhone(user.no_hp === '—' ? '' : user.no_hp || '');
     setIsEditModalOpen(true);
   };
@@ -154,7 +165,7 @@ export default function UserRoleSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           nama_lengkap: editName.trim(),
-          role: editRole,
+          id_role: editIdRole || null,
           no_hp: editPhone.trim() || null,
         }),
       });
@@ -213,7 +224,7 @@ export default function UserRoleSettingsPage() {
           email: inviteEmail.trim(),
           password: invitePassword,
           nama: inviteName.trim(),
-          role: inviteRole,
+          id_role: inviteIdRole || undefined,
           no_hp: invitePhone.trim() || undefined,
         }),
       });
@@ -328,6 +339,45 @@ export default function UserRoleSettingsPage() {
     } catch (err: any) {
       console.error('Error deleting role:', err);
       toast.error('Gagal menghapus role custom.');
+    }
+  };
+
+  // Open Edit Role Modal
+  const openEditRoleModal = (role: AppRole) => {
+    setEditingRole(role);
+    setEditRoleName(role.name);
+    setEditRoleDesc(role.description || '');
+    setIsEditRoleModalOpen(true);
+  };
+
+  const SYSTEM_ROLES = ['Super Admin', 'Pengasuh', 'Wali Santri'];
+
+  // Save Edit Role
+  const handleSaveEditRole = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingRole || !editRoleName.trim()) {
+      toast.error('Nama role wajib diisi.');
+      return;
+    }
+    setSavingRole(true);
+    try {
+      const { updateRole } = await import('@/services/role-actions');
+      const result = await updateRole(editingRole.id, {
+        name: editRoleName.trim(),
+        description: editRoleDesc.trim() || null,
+      });
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+      toast.success(result.message);
+      setIsEditRoleModalOpen(false);
+      setEditingRole(null);
+      await fetchData();
+    } catch (err: any) {
+      toast.error('Gagal menyimpan perubahan role.');
+    } finally {
+      setSavingRole(false);
     }
   };
 
@@ -514,15 +564,24 @@ export default function UserRoleSettingsPage() {
                           </p>
                           <p className="text-[10px] text-slate-400 dark:text-zinc-500 leading-normal">{r.description || 'Tanpa deskripsi'}</p>
                         </div>
-                        {r.name !== 'Super Admin' && (
+                        <div className="flex items-center gap-1 flex-shrink-0">
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleDeleteRole(r.id, r.name); }}
-                            className="text-slate-350 hover:text-rose-600 p-1 transition-colors flex-shrink-0"
-                            title="Hapus Role Custom"
+                            onClick={(e) => { e.stopPropagation(); openEditRoleModal(r); }}
+                            className="text-slate-400 hover:text-emerald-600 p-1 transition-colors"
+                            title="Edit Role"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Pencil className="h-4 w-4" />
                           </button>
-                        )}
+                          {r.name !== 'Super Admin' && (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteRole(r.id, r.name); }}
+                              className="text-slate-400 hover:text-rose-600 p-1 transition-colors"
+                              title="Hapus Role Custom"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -602,22 +661,16 @@ export default function UserRoleSettingsPage() {
                 <div className="space-y-1.5">
                   <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">Role</label>
                   <select
-                    value={editRole}
-                    onChange={e => setEditRole(e.target.value)}
+                    value={editIdRole}
+                    onChange={e => setEditIdRole(e.target.value)}
                     disabled={saving}
                     className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all cursor-pointer disabled:opacity-50"
                   >
-                    {roles.map((r) => {
-                      let val = r.name;
-                      if (r.name === 'Super Admin') val = 'admin';
-                      else if (r.name === 'Pengasuh') val = 'pengasuh';
-                      else if (r.name === 'Wali Santri') val = 'wali_santri';
-                      return (
-                        <option key={r.id} value={val}>
-                          {r.name}
-                        </option>
-                      );
-                    })}
+                    {roles.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        {r.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -747,22 +800,16 @@ export default function UserRoleSettingsPage() {
                     <label className="block text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-widest">Role *</label>
                     <select
                       required
-                      value={inviteRole}
-                      onChange={e => setInviteRole(e.target.value)}
+                      value={inviteIdRole}
+                      onChange={e => setInviteIdRole(e.target.value)}
                       disabled={inviting}
                       className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 outline-none transition-all cursor-pointer disabled:opacity-50"
                     >
-                      {roles.map((r) => {
-                        let val = r.name;
-                        if (r.name === 'Super Admin') val = 'admin';
-                        else if (r.name === 'Pengasuh') val = 'pengasuh';
-                        else if (r.name === 'Wali Santri') val = 'wali_santri';
-                        return (
-                          <option key={r.id} value={val}>
-                            {r.name}
-                          </option>
-                        );
-                      })}
+                      {roles.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
 
@@ -805,6 +852,79 @@ export default function UserRoleSettingsPage() {
                 >
                   {inviting && <Loader2 className="h-4 w-4 animate-spin" />}
                   {inviting ? 'Membuat Akun...' : 'Buat & Kirim Undangan'}
+                </button>
+              </div>
+            </form>
+
+          </div>
+        </div>
+      )}
+
+      {/* Edit Custom Role Modal */}
+      {isEditRoleModalOpen && editingRole && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={() => setIsEditRoleModalOpen(false)} />
+          
+          <div className="relative bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+            
+            {/* Modal Header */}
+            <div className="border-b border-slate-100 dark:border-zinc-800 px-6 py-4 flex items-center justify-between bg-slate-50/60 dark:bg-zinc-950/40">
+              <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">Edit Custom Role</h3>
+              <button onClick={() => setIsEditRoleModalOpen(false)} className="text-slate-400 hover:text-slate-700 transition-colors">✕</button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleSaveEditRole}>
+              <div className="p-6 space-y-4">
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">Nama Role *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Cth: Bendahara Diniyah"
+                    value={editRoleName}
+                    onChange={e => setEditRoleName(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-850 dark:text-zinc-100 focus:outline-none transition-all"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">Deskripsi Singkat</label>
+                  <textarea
+                    rows={2}
+                    placeholder="Tuliskan keterangan detail mengenai wewenang role..."
+                    value={editRoleDesc}
+                    onChange={e => setEditRoleDesc(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-250 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-850 dark:text-zinc-100 focus:outline-none transition-all resize-none"
+                  />
+                </div>
+
+                {SYSTEM_ROLES.includes(editingRole.name) && (
+                  <div className="flex items-start gap-2 px-3.5 py-3 rounded-xl bg-amber-50/60 dark:bg-amber-500/[0.04] border border-amber-200 dark:border-amber-500/10 text-[11px] text-amber-700 dark:text-amber-400">
+                    <span className="font-bold">⚠️</span>
+                    <span>Mengubah nama role <strong>{editingRole.name}</strong> akan <strong>memutus akses</strong> pengguna yang saat ini memiliki role ini, karena sistem menggunakan nama role untuk mencocokkan hak akses.</span>
+                  </div>
+                )}
+
+              </div>
+
+              {/* Modal Footer */}
+              <div className="border-t border-slate-100 dark:border-zinc-800 px-6 py-4 flex justify-end gap-2 bg-slate-50/50 dark:bg-zinc-900/50">
+                <button
+                  type="button"
+                  onClick={() => setIsEditRoleModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 text-xs font-bold rounded-lg text-slate-650 dark:text-zinc-300"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingRole}
+                  className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold rounded-lg text-xs flex items-center gap-1.5"
+                >
+                  {savingRole && <Loader2 className="h-4.5 w-4.5 animate-spin" />}
+                  Simpan Perubahan
                 </button>
               </div>
             </form>

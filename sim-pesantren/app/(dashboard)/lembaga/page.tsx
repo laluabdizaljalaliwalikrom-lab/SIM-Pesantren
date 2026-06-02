@@ -134,56 +134,45 @@ export default function LembagaDashboardPage() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('id_role, role')
           .eq('id', user.id)
           .single();
-          
-        const rawRole = profile?.role || 'wali_santri';
-        if (rawRole === 'admin' || rawRole === 'Super Admin') {
+
+        const userRole = profile?.role || 'Wali Santri';
+        const userIdRole = profile?.id_role;
+        if (userRole === 'Super Admin') {
           setCanCreate(true);
           setCanEdit(true);
           setCanDelete(true);
           setCanCreateLembaga(true);
           setCanEditLembaga(true);
           setCanDeleteLembaga(true);
-        } else {
-          let nameMatch = 'Wali Santri';
-          if (rawRole === 'pengasuh') nameMatch = 'Pengasuh';
-          else if (rawRole === 'wali_santri') nameMatch = 'Wali Santri';
-          else nameMatch = rawRole;
+        } else if (userIdRole) {
+          // Fetch Akademik permissions
+          const { data: perms } = await supabase
+            .from('role_permissions')
+            .select('*')
+            .eq('id_role', userIdRole)
+            .eq('feature', 'Akademik')
+            .maybeSingle();
 
-          const { data: roleData } = await supabase
-            .from('app_roles')
-            .select('id')
-            .eq('name', nameMatch)
-            .single();
+          if (perms) {
+            setCanCreate(!!perms.can_create);
+            setCanEdit(!!perms.can_edit);
+            setCanDelete(!!perms.can_delete);
+          } else {
+            setCanCreate(false);
+            setCanEdit(false);
+            setCanDelete(false);
+          }
 
-          if (roleData) {
-            // Fetch Akademik permissions
-            const { data: perms } = await supabase
-              .from('role_permissions')
-              .select('*')
-              .eq('id_role', roleData.id)
-              .eq('feature', 'Akademik')
-              .maybeSingle();
-
-            if (perms) {
-              setCanCreate(!!perms.can_create);
-              setCanEdit(!!perms.can_edit);
-              setCanDelete(!!perms.can_delete);
-            } else {
-              setCanCreate(false);
-              setCanEdit(false);
-              setCanDelete(false);
-            }
-
-            // Fetch Lembaga permissions
-            const { data: permsLembaga } = await supabase
-              .from('role_permissions')
-              .select('*')
-              .eq('id_role', roleData.id)
-              .eq('feature', 'Lembaga')
-              .maybeSingle();
+          // Fetch Lembaga permissions
+          const { data: permsLembaga } = await supabase
+            .from('role_permissions')
+            .select('*')
+            .eq('id_role', userIdRole)
+            .eq('feature', 'Lembaga')
+            .maybeSingle();
 
             if (permsLembaga) {
               setCanCreateLembaga(!!permsLembaga.can_create);

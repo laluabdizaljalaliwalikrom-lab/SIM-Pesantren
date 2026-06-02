@@ -43,7 +43,7 @@ const BOTTOM_NAV_ITEMS = [
 export function BottomBar({ userRoleRaw, permissions, onOpenSidebar }: BottomBarProps) {
   const pathname = usePathname();
 
-  const isSuperAdmin = userRoleRaw === 'admin' || userRoleRaw === 'Super Admin';
+  const isSuperAdmin = userRoleRaw === 'Super Admin';
 
   const filteredItems = BOTTOM_NAV_ITEMS.filter((item) => {
     // Dashboard always visible

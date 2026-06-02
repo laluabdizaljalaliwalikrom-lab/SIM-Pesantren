@@ -50,7 +50,7 @@ export async function requirePermission(
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('id_role, role')
     .eq('id', user.id)
     .single();
 
@@ -59,31 +59,18 @@ export async function requirePermission(
   }
 
   // Super Admin bypass
-  if (profile.role === 'admin') {
+  if (profile.role === 'Super Admin') {
     return { error: null, user: { id: user.id, email: user.email } };
   }
 
-  // Map profiles.role to app_roles.name
-  const roleNameMap: Record<string, string> = {
-    pengasuh: 'Pengasuh',
-    wali_santri: 'Wali Santri',
-  };
-  const roleName = roleNameMap[profile.role] || profile.role;
-
-  const { data: roleData } = await supabase
-    .from('app_roles')
-    .select('id')
-    .eq('name', roleName)
-    .single();
-
-  if (!roleData) {
-    return { error: NextResponse.json({ error: `Role ${roleName} tidak ditemukan.` }, { status: 403 }), user: null };
+  if (!profile.id_role) {
+    return { error: NextResponse.json({ error: 'Role pengguna belum ditetapkan.' }, { status: 403 }), user: null };
   }
 
   const { data: permData } = await supabase
     .from('role_permissions')
     .select('can_view, can_create, can_edit, can_delete')
-    .eq('id_role', roleData.id)
+    .eq('id_role', profile.id_role)
     .eq('feature', feature)
     .maybeSingle();
 
@@ -130,7 +117,7 @@ export async function requireAdmin(): Promise<AuthResult> {
     .eq('id', user.id)
     .single();
 
-  if (!profile || profile.role !== 'admin') {
+  if (!profile || profile.role !== 'Super Admin') {
     return { error: NextResponse.json({ error: 'Akses ditolak. Hanya admin.' }, { status: 403 }), user: null };
   }
 

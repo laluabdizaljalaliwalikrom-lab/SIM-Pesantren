@@ -24,8 +24,8 @@ export async function requireServerUser() {
 
 /**
  * Check permission based on the custom role-permission matrix.
- * Super Admin (profile.role === 'admin') always bypasses.
- * Non-admin roles are checked against the role_permissions table.
+ * Super Admin (profile.id_role maps to 'Super Admin') always bypasses.
+ * Non-admin roles are checked against the role_permissions table via id_role.
  */
 export async function requirePermission(
   feature: string,
@@ -37,36 +37,22 @@ export async function requirePermission(
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('id_role, role')
     .eq('id', user.id)
     .single();
 
   if (!profile) return { error: 'Profil tidak ditemukan.' };
 
   // Super Admin bypass — has full access to everything
-  if (profile.role === 'admin') return { error: null };
+  if (profile.role === 'Super Admin') return { error: null };
 
-  // Map profiles.role enum to app_roles.name
-  const roleNameMap: Record<string, string> = {
-    pengasuh: 'Pengasuh',
-    wali_santri: 'Wali Santri',
-  };
-  const roleName = roleNameMap[profile.role] || profile.role;
+  if (!profile.id_role) return { error: 'Role pengguna belum ditetapkan.' };
 
-  // Look up the role in app_roles
-  const { data: roleData } = await supabase
-    .from('app_roles')
-    .select('id')
-    .eq('name', roleName)
-    .single();
-
-  if (!roleData) return { error: `Role ${roleName} tidak ditemukan dalam sistem.` };
-
-  // Check permission for the specific feature and action
+  // Check permission for the specific feature and action via id_role
   const { data: permData } = await supabase
     .from('role_permissions')
     .select('can_view, can_create, can_edit, can_delete')
-    .eq('id_role', roleData.id)
+    .eq('id_role', profile.id_role)
     .eq('feature', feature)
     .maybeSingle();
 

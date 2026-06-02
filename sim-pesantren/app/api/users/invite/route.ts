@@ -8,9 +8,8 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { email, password, nama, role = 'wali_santri', no_hp } = body;
+    const { email, password, nama, role: rawRole, no_hp, id_role } = body;
 
-    // ── Validasi input ──
     if (!email?.trim()) {
       return NextResponse.json({ error: 'Email wajib diisi.' }, { status: 400 });
     }
@@ -24,7 +23,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Nama lengkap wajib diisi.' }, { status: 400 });
     }
 
-        // ── Supabase Admin client ──
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
@@ -39,34 +37,53 @@ export async function POST(request: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const VALID_ROLES = ['admin', 'pengasuh', 'wali_santri'];
-    if (role && !VALID_ROLES.includes(role)) {
-      // Periksa apakah role ada di tabel app_roles (custom role)
-      const { data: dbRole } = await supabaseAdmin
+    // Resolve role: accept id_role (UUID), role name, or legacy enum
+    let resolvedIdRole: string | null = null;
+    let resolvedRoleName = 'Wali Santri';
+
+    if (id_role) {
+      resolvedIdRole = id_role;
+      const { data: roleRow } = await supabaseAdmin
         .from('app_roles')
         .select('name')
-        .eq('name', role)
+        .eq('id', id_role)
+        .single();
+      if (!roleRow) {
+        return NextResponse.json({ error: 'ID Role tidak ditemukan.' }, { status: 400 });
+      }
+      resolvedRoleName = roleRow.name;
+    } else if (rawRole) {
+      const legacyMap: Record<string, string> = {
+        admin: 'Super Admin',
+        pengasuh: 'Pengasuh',
+        wali_santri: 'Wali Santri',
+      };
+      const mappedName = legacyMap[rawRole] || rawRole;
+
+      const { data: roleRow } = await supabaseAdmin
+        .from('app_roles')
+        .select('id')
+        .eq('name', mappedName)
         .single();
 
-      if (!dbRole) {
+      if (!roleRow) {
         return NextResponse.json(
-          { error: `Role '${role}' tidak terdaftar di custom role.` },
+          { error: `Role '${rawRole}' tidak terdaftar.` },
           { status: 400 }
         );
       }
+      resolvedIdRole = roleRow.id;
+      resolvedRoleName = mappedName;
     }
 
-    // ── 1. Buat user di Supabase Auth ──
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: email.trim(),
       password,
-      email_confirm: true, // Langsung konfirmasi, tidak perlu verifikasi email
-      user_metadata: { nama_lengkap: nama.trim() },
+      email_confirm: true,
+      user_metadata: { nama_lengkap: nama.trim(), role: resolvedRoleName },
     });
 
     if (authError) {
-      console.error('[invite] Auth createUser error:', authError);
-
       if (authError.message.includes('already been registered')) {
         return NextResponse.json(
           { error: 'Email ini sudah terdaftar di sistem.' },
@@ -81,24 +98,22 @@ export async function POST(request: NextRequest) {
 
     const userId = authData.user?.id;
 
-    // ── 2. Insert/update profile ──
     if (userId) {
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .upsert({
           id: userId,
           nama_lengkap: nama.trim(),
-          role,
+          role: resolvedRoleName,
+          id_role: resolvedIdRole,
           no_hp: no_hp?.trim() || null,
         });
 
       if (profileError) {
         console.error('[invite] Profile upsert error:', profileError);
-        // Non-fatal — user sudah dibuat, profile mungkin terisi via trigger
       }
     }
 
-    // ── 3. Kirim WhatsApp via Fonnte (opsional) ──
     let waStatus: 'sent' | 'skipped' | 'failed' = 'skipped';
     const fonntToken = process.env.FONNTE_API_TOKEN;
     const cleanPhone = no_hp?.trim();
@@ -132,11 +147,7 @@ export async function POST(request: NextRequest) {
             Authorization: fonntToken,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            target: cleanPhone,
-            message,
-            countryCode: '62',
-          }),
+          body: JSON.stringify({ target: cleanPhone, message, countryCode: '62' }),
         });
 
         const fonntBody = await fonntRes.json().catch(() => ({}));
@@ -153,22 +164,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // ── 4. Response ──
-    const roleName =
-      role === 'admin' ? 'Super Admin' 
-      : role === 'pengasuh' ? 'Pengasuh' 
-      : role === 'wali_santri' ? 'Wali Santri'
-      : role;
-
     return NextResponse.json({
       success: true,
-      message: `Akun ${roleName} berhasil dibuat untuk ${nama.trim()}.`,
+      message: `Akun ${resolvedRoleName} berhasil dibuat untuk ${nama.trim()}.`,
       user: {
         id: userId,
         email: email.trim(),
         nama_lengkap: nama.trim(),
-        role: roleName,
-        role_raw: role,
+        role: resolvedRoleName,
+        id_role: resolvedIdRole,
         no_hp: cleanPhone || '—',
         status: 'Aktif',
       },

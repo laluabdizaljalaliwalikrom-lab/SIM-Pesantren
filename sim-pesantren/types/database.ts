@@ -1,13 +1,12 @@
-export type UserRole = 'admin' | 'pengasuh' | 'wali_santri';
-export type SantriStatus = 'aktif' | 'alumni' | 'mutasi';
-
 export interface Profile {
   id: string;
   nama_lengkap: string;
-  role: UserRole;
+  id_role: string | null;
+  role: string;
   no_hp?: string | null;
   foto_url?: string | null;
   created_at: string;
+  role_relation?: AppRole | null;
 }
 
 export interface Gedung {

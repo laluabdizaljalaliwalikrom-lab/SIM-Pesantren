@@ -68,8 +68,8 @@ export default function PengaturanPage() {
           .select('role')
           .eq('id', user.id)
           .single();
-        const role = profile?.role || 'wali_santri';
-        setIsAdmin(role === 'admin' || role === 'Super Admin');
+        const role = profile?.role || 'Wali Santri';
+        setIsAdmin(role === 'Super Admin');
       }
 
       // 2. Fetch pesantren profile

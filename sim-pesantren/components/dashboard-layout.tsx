@@ -24,7 +24,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // Logged-in user state
   const [userDisplayName, setUserDisplayName] = useState('User');
   const [userRole, setUserRole] = useState('');
-  const [userRoleRaw, setUserRoleRaw] = useState('');
+  const [userRoleId, setUserRoleId] = useState<string | null>(null);
   const [userInitial, setUserInitial] = useState('U');
   const [userEmail, setUserEmail] = useState('');
   const [userFotoUrl, setUserFotoUrl] = useState<string | null>(null);
@@ -65,39 +65,29 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           // Try to get profile data
           const { data: profile } = await supabase
             .from('profiles')
-            .select('nama_lengkap, role, foto_url')
+            .select('nama_lengkap, role, id_role, foto_url')
             .eq('id', user.id)
             .single();
 
           const name = profile?.nama_lengkap || user.email?.split('@')[0] || 'User';
-          const rawRole = profile?.role || 'wali_santri';
-          const roleDisplay = rawRole === 'admin' ? 'Super Admin'
-                     : rawRole === 'pengasuh' ? 'Pengasuh'
-                     : rawRole === 'wali_santri' ? 'Wali Santri'
-                     : rawRole;
+          const roleDisplay = profile?.role || 'Wali Santri';
 
           setUserDisplayName(name);
           setUserRole(roleDisplay);
-          setUserRoleRaw(rawRole);
+          setUserRoleId(profile?.id_role || null);
           setUserInitial(name.charAt(0).toUpperCase());
           setUserEmail(user.email || '');
           setUserFotoUrl(profile?.foto_url || null);
 
           // Fetch permissions if not super admin
-          if (rawRole === 'admin' || rawRole === 'Super Admin') {
+          const isSuperAdmin = roleDisplay === 'Super Admin';
+          if (isSuperAdmin) {
             setLoadingPermissions(false);
-          } else {
-            // Find role in app_roles
-            let nameMatch = 'Wali Santri';
-            if (rawRole === 'pengasuh') nameMatch = 'Pengasuh';
-            else if (rawRole === 'wali_santri') nameMatch = 'Wali Santri';
-            else nameMatch = rawRole;
-
-            const { data: roleData } = await supabase
-              .from('app_roles')
-              .select('id')
-              .eq('name', nameMatch)
-              .single();
+          } else if (profile?.id_role) {
+            const { data: permData } = await supabase
+              .from('role_permissions')
+              .select('*')
+              .eq('id_role', profile.id_role);
 
             if (roleData) {
               const { data: perms } = await supabase
@@ -169,7 +159,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   // Check access based on active role and path permissions
-  const isSuperAdmin = userRoleRaw === 'admin' || userRoleRaw === 'Super Admin';
+  const isSuperAdmin = userRole === 'Super Admin';
   
   let hasAccess = true;
   const currentPath = pathname;
@@ -213,7 +203,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         onClose={() => setSidebarOpen(false)} 
         isCollapsed={isCollapsed}
         onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
-        userRoleRaw={userRoleRaw}
+        userRoleRaw={userRole}
         permissions={permissions}
         pesantrenLogo={pesantrenLogo}
         pesantrenName={pesantrenName}
@@ -365,7 +355,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       )}
 
       {/* Mobile Bottom Navigation Bar */}
-      <BottomBar userRoleRaw={userRoleRaw} permissions={permissions} onOpenSidebar={() => setSidebarOpen(true)} />
+          <BottomBar userRoleRaw={userRole} permissions={permissions} onOpenSidebar={() => setSidebarOpen(true)} />
     </div>
   );
 }

@@ -57,11 +57,8 @@ export async function GET() {
         id: p.id,
         nama_lengkap: p.nama_lengkap || 'Pengguna Baru',
         email: authUser?.email || p.no_hp || '—',
-        role: p.role === 'admin' ? 'Super Admin' 
-            : p.role === 'pengasuh' ? 'Pengasuh' 
-            : p.role === 'wali_santri' ? 'Wali Santri'
-            : p.role,
-        role_raw: p.role,
+        role: p.role || 'Wali Santri',
+        id_role: p.id_role,
         status: authUser?.last_sign_in_at ? 'Aktif' : 'Belum Login',
         no_hp: p.no_hp || '—',
         created_at: p.created_at,
@@ -78,7 +75,7 @@ export async function GET() {
             nama_lengkap: authUser.email?.split('@')[0] || 'User',
             email: authUser.email,
             role: 'Wali Santri',
-            role_raw: 'wali_santri',
+            id_role: null,
             status: authUser.last_sign_in_at ? 'Aktif' : 'Belum Login',
             no_hp: '—',
             created_at: authUser.created_at,

@@ -129,49 +129,37 @@ export default function SantriDashboardPage() {
       if (user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('role')
+          .select('id_role, role')
           .eq('id', user.id)
           .single();
-          
-        const rawRole = profile?.role || 'wali_santri';
-        if (rawRole === 'admin' || rawRole === 'Super Admin') {
+
+        const userRole = profile?.role || 'Wali Santri';
+        const userIdRole = profile?.id_role;
+        if (userRole === 'Super Admin') {
           setCanCreate(true);
           setCanEdit(true);
           setCanDelete(true);
-        } else {
-          let nameMatch = 'Wali Santri';
-          if (rawRole === 'pengasuh') nameMatch = 'Pengasuh';
-          else if (rawRole === 'wali_santri') nameMatch = 'Wali Santri';
-          else nameMatch = rawRole;
+        } else if (userIdRole) {
+          const { data: perms } = await supabase
+            .from('role_permissions')
+            .select('*')
+            .eq('id_role', userIdRole)
+            .eq('feature', 'Santri')
+            .maybeSingle();
 
-          const { data: roleData } = await supabase
-            .from('app_roles')
-            .select('id')
-            .eq('name', nameMatch)
-            .single();
-
-          if (roleData) {
-            const { data: perms } = await supabase
-              .from('role_permissions')
-              .select('*')
-              .eq('id_role', roleData.id)
-              .eq('feature', 'Santri')
-              .single();
-
-            if (perms) {
-              setCanCreate(!!perms.can_create);
-              setCanEdit(!!perms.can_edit);
-              setCanDelete(!!perms.can_delete);
-            } else {
-              setCanCreate(false);
-              setCanEdit(false);
-              setCanDelete(false);
-            }
+          if (perms) {
+            setCanCreate(!!perms.can_create);
+            setCanEdit(!!perms.can_edit);
+            setCanDelete(!!perms.can_delete);
           } else {
             setCanCreate(false);
             setCanEdit(false);
             setCanDelete(false);
           }
+        } else {
+          setCanCreate(false);
+          setCanEdit(false);
+          setCanDelete(false);
         }
       }
 

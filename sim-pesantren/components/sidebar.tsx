@@ -67,7 +67,7 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
 
-  const isSuperAdmin = userRoleRaw === 'admin' || userRoleRaw === 'Super Admin';
+  const isSuperAdmin = userRoleRaw === 'Super Admin';
 
   const filteredMenuItems = MENU_ITEMS.filter((item) => {
     // Dashboard always visible
