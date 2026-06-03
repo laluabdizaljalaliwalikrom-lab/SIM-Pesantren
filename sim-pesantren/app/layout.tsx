@@ -53,11 +53,12 @@ export default async function RootLayout({
       <head>
         <link rel="icon" href={logoUrl} />
         <link rel="manifest" href="/api/manifest" />
-        <meta name="theme-color" content="#047857" />
+        <meta name="theme-color" content="#4f46e5" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="SIM Pesantren" />
         <link rel="apple-touch-icon" href="/icon-192x192.png" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossOrigin="anonymous" referrerPolicy="no-referrer" />
         <title>{title}</title>
       </head>
       <body className="min-h-full flex flex-col">

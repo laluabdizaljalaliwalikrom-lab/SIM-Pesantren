@@ -680,10 +680,10 @@ export default function LembagaDashboardPage() {
     : [];
 
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             {activeTab === 'sekolah_kelas' ? 'Pengelolaan Lembaga & Kelas' : 'Tahun Ajaran & Semester'}
@@ -731,7 +731,7 @@ export default function LembagaDashboardPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-zinc-800 gap-2">
+      <div className="flex border-b border-slate-200 dark:border-zinc-800 gap-2 mb-8">
         <button
           onClick={() => setActiveTab('sekolah_kelas')}
           className={`flex items-center gap-2 px-5 py-3 border-b-2 text-xs font-bold transition-all ${
@@ -759,7 +759,7 @@ export default function LembagaDashboardPage() {
       {activeTab === 'sekolah_kelas' ? (
         <>
           {/* Filters Area */}
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
               {(['Semua', 'Formal', 'Non-Formal'] as const).map((kategori) => (
                 <button
@@ -1616,6 +1616,6 @@ export default function LembagaDashboardPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

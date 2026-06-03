@@ -68,10 +68,10 @@ const MENU_AKADEMIK = [
 
 export default function AkademikPortalHub() {
   return (
-    <div className="p-4 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header Halaman */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 max-w-5xl mx-auto">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 max-w-5xl mx-auto mb-8">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 mb-3 animate-pulse">
             <Sparkles className="h-3 w-3" />
@@ -124,6 +124,6 @@ export default function AkademikPortalHub() {
         })}
       </div>
 
-    </div>
+    </>
   );
 }

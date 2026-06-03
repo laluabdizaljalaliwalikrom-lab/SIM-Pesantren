@@ -44,10 +44,10 @@ export function ThemeToggle() {
           className={`absolute inset-0 flex items-center justify-center transition-all duration-500 transform ${
             isDark 
               ? '-rotate-90 scale-0 opacity-0' 
-              : 'rotate-0 scale-100 opacity-100 text-indigo-500'
+              : 'rotate-0 scale-100 opacity-100 text-emerald-500'
           }`}
         >
-          <Moon className="h-5 w-5 fill-indigo-500/10" />
+          <Moon className="h-5 w-5 fill-emerald-500/10" />
         </span>
       </div>
     </button>

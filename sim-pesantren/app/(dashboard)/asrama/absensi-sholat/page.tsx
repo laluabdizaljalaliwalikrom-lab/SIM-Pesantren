@@ -338,10 +338,10 @@ export default function AbsensiSholatPage() {
   }, [santris]);
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header */}
-      <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 mb-3">
             <Sparkles className="h-3 w-3" />
@@ -357,7 +357,7 @@ export default function AbsensiSholatPage() {
       </div>
 
       {/* Primary Selector Waktu Sholat */}
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto mb-6">
         <div className="grid grid-cols-5 gap-1.5 sm:gap-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-1.5 sm:p-2.5 rounded-2xl shadow-sm">
           {SHOLAT_LIST.map((waktu) => {
             const isActive = selectedWaktu === waktu;
@@ -380,7 +380,7 @@ export default function AbsensiSholatPage() {
       </div>
 
       {/* Control Panel (Filters, Search, Actions) */}
-      <div className="max-w-5xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm space-y-4">
+      <div className="max-w-5xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm space-y-4 mb-6">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Kamar Filter */}
           <div className="space-y-1.5">
@@ -445,7 +445,7 @@ export default function AbsensiSholatPage() {
       </div>
 
       {/* Stats Summary Panel */}
-      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-emerald-50/60 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10 p-4 rounded-2xl">
+      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-emerald-50/60 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10 p-4 rounded-2xl mb-6">
         <div className="flex items-center gap-2.5">
           <CheckCircle2 className="h-6 w-6 text-emerald-600" />
           <div>
@@ -476,7 +476,7 @@ export default function AbsensiSholatPage() {
       </div>
 
       {/* Santri Interactive List Grid */}
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto mb-6">
         {loadingSantri ? (
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl py-20 text-center flex flex-col items-center justify-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
@@ -644,6 +644,6 @@ export default function AbsensiSholatPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

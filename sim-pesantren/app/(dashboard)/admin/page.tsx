@@ -2,68 +2,70 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { 
-  Users, 
-  LogOut, 
-  BookOpen, 
-  Wallet, 
-  TrendingUp, 
-  Activity, 
-  ArrowUpRight, 
-  CheckCircle2, 
-  Clock 
+import {
+  Users,
+  BookOpen,
+  Wallet,
+  School,
+  Home,
+  GraduationCap,
+  Briefcase,
+  CreditCard,
+  Cog,
+  ShieldCheck,
+  BarChart4,
+  ArrowRight,
+  Info,
+  AlertTriangle,
 } from 'lucide-react';
 import Link from 'next/link';
 
-interface ActivityItem {
-  id: string;
-  type: 'tahfidz' | 'perizinan' | 'pembayaran';
-  title: string;
-  subtitle: string;
-  time: string;
-  status?: string;
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Pagi';
+  if (h < 15) return 'Siang';
+  if (h < 18) return 'Sore';
+  return 'Malam';
 }
 
 export default function AdminDashboardHome() {
-  const [stats, setStats] = useState({
-    totalSantri: 0,
-    santriIzin: 0,
-    tahfidzHariIni: 0,
-    saldoKas: 0,
-  });
+  const [stats, setStats] = useState({ totalSantri: 0, santriIzin: 0, tahfidzHariIni: 0, saldoKas: 0 });
   const [loading, setLoading] = useState(true);
-  const [recentActivities, setRecentActivities] = useState<ActivityItem[]>([]);
+  const [userName, setUserName] = useState('Admin');
+  const [userRole, setUserRole] = useState('');
 
   useEffect(() => {
-    async function loadDashboardData() {
+    async function loadDashboard() {
       try {
-        setLoading(true);
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('nama_lengkap, role')
+            .eq('id', user.id)
+            .single();
+          if (profile) {
+            setUserName(profile.nama_lengkap || 'Admin');
+            setUserRole(profile.role || '');
+          }
+        }
 
-        // 1. Fetch Total Santri
         const { count: santriCount } = await supabase
-          .from('santri')
-          .select('*', { count: 'exact', head: true });
+          .from('santri').select('*', { count: 'exact', head: true });
 
-        // 2. Fetch Santri Izin (Status Aktif atau disetujui di tabel perizinan)
         const { count: izinCount } = await supabase
-          .from('perizinan')
-          .select('*', { count: 'exact', head: true })
+          .from('perizinan').select('*', { count: 'exact', head: true })
           .in('status', ['Aktif', 'disetujui']);
 
-        // 3. Fetch Setoran Tahfidz Hari Ini
         const today = new Date().toISOString().split('T')[0];
         const { count: tahfidzCount } = await supabase
-          .from('presensi_tahfidz')
-          .select('*', { count: 'exact', head: true })
+          .from('presensi_tahfidz').select('*', { count: 'exact', head: true })
           .eq('tanggal_setoran', today);
 
-        // 4. Fetch Saldo Kas (Sum of Lunas payments)
         const { data: payments } = await supabase
-          .from('pembayaran')
-          .select('jumlah')
-          .eq('status', 'Lunas');
+          .from('pembayaran').select('jumlah').eq('status', 'Lunas');
 
-        const totalSaldo = payments?.reduce((sum, p) => sum + Number(p.jumlah), 0) || 0;
+        const totalSaldo = payments?.reduce((s, p) => s + Number(p.jumlah), 0) || 0;
 
         setStats({
           totalSantri: santriCount || 0,
@@ -71,296 +73,199 @@ export default function AdminDashboardHome() {
           tahfidzHariIni: tahfidzCount || 0,
           saldoKas: totalSaldo,
         });
-
-        // 5. Build mock/real recent activities from recent inserts
-        const { data: latestTahfidz } = await supabase
-          .from('presensi_tahfidz')
-          .select('id, created_at, nama_surah, juz, santri:id_santri(nama_lengkap)')
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        const { data: latestIzin } = await supabase
-          .from('perizinan')
-          .select('id, created_at, keperluan, status, santri:id_santri(nama_lengkap)')
-          .order('created_at', { ascending: false })
-          .limit(2);
-
-        const activities: ActivityItem[] = [];
-
-        latestTahfidz?.forEach((t: any) => {
-          activities.push({
-            id: t.id,
-            type: 'tahfidz',
-            title: t.santri?.nama_lengkap || 'Santri',
-            subtitle: `Menyetor hafalan Surah ${t.nama_surah} (Juz ${t.juz})`,
-            time: formatTimeAgo(t.created_at),
-          });
-        });
-
-        latestIzin?.forEach((i: any) => {
-          activities.push({
-            id: i.id,
-            type: 'perizinan',
-            title: i.santri?.nama_lengkap || 'Santri',
-            subtitle: `Memperoleh izin keluar: "${i.keperluan}"`,
-            time: formatTimeAgo(i.created_at),
-            status: i.status,
-          });
-        });
-
-        // Urutkan aktivitas berdasarkan waktu (terbaru di atas)
-        setRecentActivities(activities.slice(0, 5));
-
-      } catch (error) {
-        console.error('Error loading dashboard stats:', error);
+      } catch (err) {
+        console.error('Dashboard load error:', err);
       } finally {
         setLoading(false);
       }
     }
-
-    loadDashboardData();
+    loadDashboard();
   }, []);
 
-  function formatTimeAgo(dateString: string) {
-    const now = new Date();
-    const date = new Date(dateString);
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 1) return 'Baru saja';
-    if (diffMins < 60) return `${diffMins} menit lalu`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `${diffHours} jam lalu`;
-
-    return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
-  }
+  const modules = [
+    { name: 'Lembaga', href: '/lembaga', icon: School, color: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white', desc: 'Sekolah & kelas', accent: '#6366f1' },
+    { name: 'Santri', href: '/santri', icon: Users, color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white', desc: 'Data induk & wali santri', accent: '#10b981' },
+    { name: 'Pegawai', href: '/pegawai', icon: Briefcase, color: 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 group-hover:bg-rose-600 group-hover:text-white', desc: 'Data kepegawaian', accent: '#f43f5e' },
+    { name: 'Asrama', href: '/asrama', icon: Home, color: 'bg-violet-50 dark:bg-violet-900/30 text-violet-600 dark:text-violet-400 group-hover:bg-violet-600 group-hover:text-white', desc: 'Kamar, pelanggaran & izin', accent: '#8b5cf6' },
+    { name: 'Tahfidz', href: '/tahfidz', icon: GraduationCap, color: 'bg-orange-50 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 group-hover:bg-orange-600 group-hover:text-white', desc: 'Setoran hafalan harian', accent: '#f59e0b' },
+    { name: 'Akademik', href: '/akademik', icon: BookOpen, color: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white', desc: 'Nilai, absensi & jadwal', accent: '#3b82f6' },
+    { name: 'Pembayaran', href: '/pembayaran', icon: CreditCard, color: 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 group-hover:bg-cyan-600 group-hover:text-white', desc: 'Kasir & kuitansi', accent: '#06b6d4' },
+    { name: 'Keuangan', href: '/keuangan', icon: BarChart4, color: 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 group-hover:bg-teal-600 group-hover:text-white', desc: 'Laporan keuangan', accent: '#14b8a6' },
+  ];
 
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen">
-      
-      {/* 4 Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        {/* Card 1: Total Santri */}
-        <div className="group relative overflow-hidden bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-emerald-500/30 transition-all duration-300 transform hover:-translate-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Total Santri</span>
-            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl group-hover:scale-110 transition-transform">
+    <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+
+        {/* Hero Card */}
+        <div className="hero-card fade-up">
+          <div className="absolute -right-24 -top-24 w-72 h-72 bg-emerald-50 dark:bg-emerald-900/20 rounded-full blur-[60px] opacity-60 pointer-events-none" />
+          <div className="absolute -left-16 -bottom-20 w-64 h-64 bg-teal-50 dark:bg-teal-900/20 rounded-full blur-[60px] opacity-50 pointer-events-none" />
+
+          <div className="relative z-10 p-7 md:p-10">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div>
+                <div className="flex flex-wrap items-center gap-2 mb-4">
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest bg-emerald-800 dark:bg-emerald-700 text-white">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping" />
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full -ml-3" />
+                    <span className="ml-1">{userRole || 'Admin'}</span>
+                  </span>
+                </div>
+                <h3 className="text-3xl md:text-4xl font-medium tracking-tight text-slate-900 dark:text-white mb-2">
+                  Selamat {getGreeting()}, <span className="shimmer-text">{userName}</span>!
+                </h3>
+                <p className="text-slate-500 dark:text-slate-400 text-base leading-relaxed max-w-xl">
+                  Selamat datang di <span className="text-emerald-600 dark:text-emerald-400 font-semibold">SIM Pesantren</span>.
+                  Pilih modul di bawah untuk memulai.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                <Link
+                  href="/pengaturan"
+                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all font-semibold text-sm"
+                >
+                  <Cog className="h-4 w-4" /> Pengaturan Sistem
+                </Link>
+
+                <div className="bg-white dark:bg-[#1a1a2e] border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-3 flex items-center gap-4 shadow-sm">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Total Santri</p>
+                    <p className="text-slate-800 dark:text-slate-200 font-bold text-lg">
+                      {loading ? '...' : stats.totalSantri}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Stat Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="stat-card fade-up delay-1 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Santri Izin</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{loading ? '...' : stats.santriIzin}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Users className="h-5 w-5" />
             </div>
           </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <h3 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              {loading ? '...' : stats.totalSantri}
-            </h3>
-            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-0.5">
-              Aktif
-            </span>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-
-        {/* Card 2: Santri Izin */}
-        <div className="group relative overflow-hidden bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-amber-500/30 transition-all duration-300 transform hover:-translate-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Santri Izin</span>
-            <div className="p-2.5 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl group-hover:scale-110 transition-transform">
-              <LogOut className="h-5 w-5" />
+          <div className="stat-card fade-up delay-2 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Tahfidz Hari Ini</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{loading ? '...' : stats.tahfidzHariIni}</p>
             </div>
-          </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <h3 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              {loading ? '...' : stats.santriIzin}
-            </h3>
-            <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full">
-              Hari Ini
-            </span>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-amber-500 to-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-
-        {/* Card 3: Setoran Tahfidz */}
-        <div className="group relative overflow-hidden bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-teal-500/30 transition-all duration-300 transform hover:-translate-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Tahfidz Hari Ini</span>
-            <div className="p-2.5 bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 rounded-xl group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 flex items-center justify-center">
               <BookOpen className="h-5 w-5" />
             </div>
           </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <h3 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">
-              {loading ? '...' : stats.tahfidzHariIni}
-            </h3>
-            <span className="text-xs font-semibold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 px-2 py-0.5 rounded-full">
-              Setoran
-            </span>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-teal-500 to-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-
-        {/* Card 4: Saldo Kas */}
-        <div className="group relative overflow-hidden bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-md hover:border-cyan-500/30 transition-all duration-300 transform hover:-translate-y-1">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Saldo Kas SPP</span>
-            <div className="p-2.5 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-xl group-hover:scale-110 transition-transform">
+          <div className="stat-card fade-up delay-3 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Saldo Kas SPP</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                {loading ? '...' : `Rp${stats.saldoKas.toLocaleString('id-ID')}`}
+              </p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 flex items-center justify-center">
               <Wallet className="h-5 w-5" />
             </div>
           </div>
-          <div className="mt-4 flex items-baseline justify-between">
-            <h3 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white truncate">
-              {loading ? '...' : `Rp ${stats.saldoKas.toLocaleString('id-ID')}`}
-            </h3>
-            <span className="text-xs font-semibold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10 px-2 py-0.5 rounded-full">
-              Lunas
-            </span>
-          </div>
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-gradient-to-r from-cyan-500 to-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-        </div>
-
-      </div>
-
-      {/* Bento Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Bento Cell 1: Chart Hafalan (Spans 2 columns on large screens) */}
-        <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-6">
+          <div className="stat-card fade-up delay-4 flex items-center justify-between">
             <div>
-              <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <TrendingUp className="h-5 w-5 text-emerald-500" />
-                Tren Setoran Hafalan
-              </h4>
-              <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1">Grafik setoran juz seminggu terakhir</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Aplikasi</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">v0.1</p>
             </div>
-            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 rounded-lg">
-              Juz 1 - 30
-            </span>
-          </div>
-
-          {/* Interactive Custom SVG / Div Bar Chart */}
-          <div className="h-56 flex items-end justify-between gap-3 pt-4 px-2">
-            {[
-              { day: 'Sen', count: 12, height: 'h-[40%]' },
-              { day: 'Sel', count: 18, height: 'h-[60%]' },
-              { day: 'Rab', count: 25, height: 'h-[85%]', active: true },
-              { day: 'Kam', count: 15, height: 'h-[50%]' },
-              { day: 'Jum', count: 9, height: 'h-[30%]' },
-              { day: 'Sab', count: 21, height: 'h-[72%]' },
-              { day: 'Ahd', count: 5, height: 'h-[15%]' },
-            ].map((bar, i) => (
-              <div key={i} className="flex-1 flex flex-col items-center gap-2 group cursor-pointer">
-                <div className="relative w-full flex justify-center">
-                  {/* Tooltip on hover */}
-                  <span className="absolute -top-8 bg-zinc-950 text-white text-[10px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10 font-bold whitespace-nowrap">
-                    {bar.count} Setoran
-                  </span>
-                  
-                  {/* Bar Body */}
-                  <div className={`w-full max-w-[28px] rounded-t-lg transition-all duration-500 ${bar.height} ${
-                    bar.active 
-                      ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 shadow-lg shadow-emerald-500/20' 
-                      : 'bg-slate-200 dark:bg-zinc-800 hover:bg-emerald-500/35 dark:hover:bg-emerald-500/30'
-                  }`} />
-                </div>
-                <span className="text-xs text-slate-400 dark:text-zinc-500 font-semibold">{bar.day}</span>
-              </div>
-            ))}
+            <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+              <BarChart4 className="h-5 w-5" />
+            </div>
           </div>
         </div>
 
-        {/* Bento Cell 2: Recent Activity Feed (Spans 1 column) */}
-        <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm hover:shadow-md transition-shadow flex flex-col">
-          <div className="flex items-center justify-between mb-6">
-            <h4 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Activity className="h-5 w-5 text-emerald-500" />
-              Aktivitas Terbaru
-            </h4>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+        {/* Main Grid: Modules + Info */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-2 space-y-5">
+
+            {/* Modul Aplikasi */}
+            <div className="fade-up delay-2">
+              <div className="section-label">Modul Aplikasi</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {modules.map((mod) => (
+                  <Link key={mod.name} href={mod.href} className="module-card group">
+                    <div className={`module-icon ${mod.color} transition-colors`}>
+                      <mod.icon className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                        {mod.name}
+                      </h4>
+                      <p className="text-xs text-slate-400 dark:text-slate-500 mt-0.5">{mod.desc}</p>
+                    </div>
+                    <div className="w-9 h-9 rounded-full bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-500 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-all shrink-0">
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </div>
+                    <style>{`.module-card:hover::after { background: ${mod.accent}; }`}</style>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto max-h-[224px] pr-1">
-            {recentActivities.length === 0 ? (
-              <div className="text-center py-12 text-slate-400 dark:text-zinc-500 text-xs">
-                Tidak ada aktivitas tercatat hari ini.
-              </div>
-            ) : (
-              recentActivities.map((act) => (
-                <div key={act.id} className="flex gap-3 text-xs group hover:bg-slate-50 dark:hover:bg-zinc-800/40 p-2 rounded-xl transition-all">
-                  <div className="mt-0.5">
-                    {act.type === 'tahfidz' ? (
-                      <div className="p-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                      </div>
-                    ) : (
-                      <div className="p-1.5 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-lg">
-                        <Clock className="h-3.5 w-3.5" />
-                      </div>
-                    )}
+          {/* Info Sidebar */}
+          <div className="space-y-4 fade-up delay-4">
+
+            <div>
+              <div className="section-label">Pengaturan</div>
+              <div className="bg-white dark:bg-[#1a1a2e] border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800">
+                <Link href="/pengaturan" className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-slate-600 dark:group-hover:bg-slate-700 group-hover:text-white transition-colors flex items-center justify-center text-sm">
+                    <Cog className="h-4 w-4" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">{act.title}</p>
-                    <p className="text-slate-400 dark:text-zinc-500 mt-0.5">{act.subtitle}</p>
-                    <span className="text-[10px] text-slate-400 dark:text-zinc-600 font-medium block mt-1">{act.time}</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">Pengaturan</span>
+                  <ArrowRight className="h-3 w-3 ml-auto text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400" />
+                </Link>
+                <Link href="/settings/users" className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-slate-600 dark:group-hover:bg-slate-700 group-hover:text-white transition-colors flex items-center justify-center text-sm">
+                    <ShieldCheck className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">Hak Akses</span>
+                  <ArrowRight className="h-3 w-3 ml-auto text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400" />
+                </Link>
+              </div>
+            </div>
+
+            <div>
+              <div className="section-label">Info Sistem</div>
+              <div className="bg-white dark:bg-[#1a1a2e] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-4 space-y-3">
+                <div className="flex gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
+                  <Info className="h-4 w-4 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200 mb-0.5">SIM Pesantren v0.1</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Sistem Informasi Manajemen Pondok Pesantren terintegrasi.</p>
                   </div>
                 </div>
-              ))
-            )}
+
+                <div className="flex gap-3 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800/30">
+                  <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400 mt-0.5 shrink-0" />
+                  <p className="text-xs text-amber-800 dark:text-amber-200 leading-relaxed">
+                    <strong>Catatan:</strong> Selalu utamakan pengisian data Santri sebelum modul lainnya.
+                  </p>
+                </div>
+
+                <Link
+                  href="/santri"
+                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 text-white text-sm font-semibold hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+                >
+                  <Users className="h-3.5 w-3.5" /> Kelola Santri
+                </Link>
+              </div>
+            </div>
+
           </div>
         </div>
 
       </div>
-
-      {/* Bento Grid Row 3: Quick Navigation / Features */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <Link 
-          href="/santri" 
-          className="group p-6 bg-gradient-to-br from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-40"
-        >
-          <div className="flex justify-between items-start">
-            <div className="p-2 bg-white/10 rounded-xl">
-              <Users className="h-6 w-6 text-white" />
-            </div>
-            <ArrowUpRight className="h-5 w-5 opacity-60 group-hover:opacity-100 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
-          </div>
-          <div>
-            <h4 className="font-bold text-lg">Kelola Santri</h4>
-            <p className="text-xs text-emerald-100 mt-1">Kelola data induk, kamar, dan wali santri</p>
-          </div>
-        </Link>
-
-        <Link 
-          href="/tahfidz" 
-          className="group p-6 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-emerald-500/40 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-40"
-        >
-          <div className="flex justify-between items-start">
-            <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl">
-              <BookOpen className="h-6 w-6" />
-            </div>
-            <ArrowUpRight className="h-5 w-5 text-slate-400 group-hover:text-emerald-500 group-hover:translate-x-1 group-hover:-translate-y-1 transition-all" />
-          </div>
-          <div>
-            <h4 className="font-bold text-lg text-slate-800 dark:text-white">Tahfidz Tracker</h4>
-            <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1">Input setoran hafalan harian santri</p>
-          </div>
-        </Link>
-
-        <div className="p-6 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm hover:shadow-md transition-all flex flex-col justify-between h-40">
-          <div className="flex justify-between items-start">
-            <div className="p-2 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 rounded-xl">
-              <Wallet className="h-6 w-6" />
-            </div>
-            <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-500/10 px-2 py-0.5 rounded-full">Kas SPP</span>
-          </div>
-          <div>
-            <h4 className="font-bold text-lg text-slate-800 dark:text-white">Sistem Keuangan</h4>
-            <p className="text-xs text-slate-400 dark:text-zinc-500 mt-1">Pembayaran SPP terintegrasi dengan RLS Aman</p>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-  );
-}
+    );
+  }

@@ -369,10 +369,10 @@ export default function KeuanganDashboardPage() {
   };
 
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen">
+    <>
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <Settings className="h-6 w-6 text-emerald-600" /> Manajemen & Pengaturan Keuangan
@@ -384,7 +384,7 @@ export default function KeuanganDashboardPage() {
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex border-b border-slate-200 dark:border-zinc-800 gap-2">
+      <div className="flex border-b border-slate-200 dark:border-zinc-800 gap-2 mb-8">
         {[
           { id: 'ringkasan', label: 'Ringkasan Keuangan', icon: Activity },
           { id: 'template', label: 'Template Master Biaya', icon: Layers },
@@ -408,6 +408,7 @@ export default function KeuanganDashboardPage() {
         })}
       </div>
 
+      <div className="mb-8">
       {/* Main Content Area */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20 gap-3">
@@ -781,6 +782,8 @@ export default function KeuanganDashboardPage() {
         </div>
       )}
 
+      </div>
+
       {/* CRUD Modal (Add/Edit master_biaya) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -867,6 +870,6 @@ export default function KeuanganDashboardPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

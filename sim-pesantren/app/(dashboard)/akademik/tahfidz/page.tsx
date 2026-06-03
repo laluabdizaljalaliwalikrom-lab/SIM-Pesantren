@@ -303,10 +303,10 @@ export default function TahfidzDashboard() {
   }, [processedMonthlyData]);
 
   return (
-    <div className="p-4 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <BookMarked className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
@@ -327,6 +327,7 @@ export default function TahfidzDashboard() {
         </div>
       </div>
 
+      <div className="mb-8">
       {/* 1. Statistik Ringkasan (Cards) */}
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -377,6 +378,7 @@ export default function TahfidzDashboard() {
           </div>
         </div>
       )}
+      </div>
 
       {/* Main Grid: Timeline & Search-Profile Chart */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -707,6 +709,6 @@ export default function TahfidzDashboard() {
 
       </div>
 
-    </div>
+    </>
   );
 }

@@ -318,10 +318,10 @@ export default function LaporanTahfidzPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header Panel (Hidden on print) */}
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 print:hidden">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 print:hidden mb-6">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-450 border border-emerald-200/50 mb-3">
             <Award className="h-3.5 w-3.5" />
@@ -354,7 +354,7 @@ export default function LaporanTahfidzPage() {
       </div>
 
       {/* FILTER CONTROL CARD (Hidden on print) */}
-      <div className="max-w-6xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm space-y-4 print:hidden">
+      <div className="max-w-6xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm space-y-4 print:hidden mb-6">
         <h3 className="text-xs font-bold text-slate-450 dark:text-zinc-500 uppercase tracking-wider flex items-center gap-1.5">
           <Filter className="h-3.5 w-3.5" />
           Filter & Pencarian Laporan
@@ -422,7 +422,7 @@ export default function LaporanTahfidzPage() {
       </div>
 
       {/* PRINT-ONLY HEADER (Only visible when printing) */}
-      <div className="hidden print:block text-center space-y-2 border-b-2 border-slate-900 pb-4 max-w-6xl mx-auto">
+      <div className="hidden print:block text-center space-y-2 border-b-2 border-slate-900 pb-4 max-w-6xl mx-auto mb-6">
         <h2 className="text-xl font-bold tracking-wider text-slate-900">SIM PESANTREN - LAPORAN PROGRES TAHFIDZ</h2>
         <p className="text-xs text-slate-600">
           Periode: {monthsList.find(m => m.value === selectedMonth)?.name} {selectedYear} &bull; Kelas: {selectedClassId !== 'Semua' ? classList.find(c => c.id === selectedClassId)?.nama_kelas : 'Semua Kelas'}
@@ -587,6 +587,6 @@ export default function LaporanTahfidzPage() {
 
       </div>
 
-    </div>
+    </>
   );
 }

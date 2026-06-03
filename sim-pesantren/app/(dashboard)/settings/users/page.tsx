@@ -392,10 +392,10 @@ export default function UserRoleSettingsPage() {
   const activeRolePermissions = permissions.filter(p => p.id_role === selectedRoleId);
 
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen">
+    <>
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <ShieldCheck className="h-6 w-6 text-emerald-600" /> Manajemen User & Custom Role
@@ -407,7 +407,7 @@ export default function UserRoleSettingsPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200 dark:border-zinc-800 gap-2">
+      <div className="flex border-b border-slate-200 dark:border-zinc-800 gap-2 mb-8">
         <button
           onClick={() => setActiveTab('users')}
           className={`flex items-center gap-2 px-5 py-3 border-b-2 text-xs font-bold transition-all ${
@@ -999,6 +999,6 @@ export default function UserRoleSettingsPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

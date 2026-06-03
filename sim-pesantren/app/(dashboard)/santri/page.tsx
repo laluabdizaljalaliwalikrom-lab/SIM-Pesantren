@@ -309,10 +309,10 @@ export default function SantriDashboardPage() {
   );
 
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Data Santri
@@ -344,7 +344,7 @@ export default function SantriDashboardPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm flex items-center gap-3">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm flex items-center gap-3 mb-8">
         <div className="relative flex-1">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <Search className="h-4 w-4" />
@@ -360,7 +360,7 @@ export default function SantriDashboardPage() {
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden mb-8">
         
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
@@ -721,6 +721,6 @@ export default function SantriDashboardPage() {
         );
       })()}
 
-    </div>
+    </>
   );
 }

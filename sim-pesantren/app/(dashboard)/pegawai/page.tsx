@@ -303,10 +303,10 @@ export default function PegawaiPage() {
 
   // ─────────────────────────────────────────────────────────────────────────
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen">
+    <>
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Data Kepegawaian
@@ -324,7 +324,7 @@ export default function PegawaiPage() {
       </div>
 
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           { label: 'Total Pegawai', value: totalPegawai, icon: <Users className="h-5 w-5" />, color: 'emerald' },
           { label: 'Ustadz / Ustadzah', value: totalUstadz, icon: <BookOpen className="h-5 w-5" />, color: 'violet' },
@@ -355,7 +355,7 @@ export default function PegawaiPage() {
       </div>
 
       {/* ── Search & Filter Bar ── */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row gap-3 mb-8">
         {/* Search */}
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 pointer-events-none" />
@@ -402,13 +402,16 @@ export default function PegawaiPage() {
         </div>
       </div>
 
+      <div className="mb-8">
       {/* ── Results Count ── */}
       {!loading && (
         <p className="text-xs text-slate-400 dark:text-zinc-500 -mt-4">
           Menampilkan <strong className="text-slate-600 dark:text-zinc-300">{filtered.length}</strong> dari {totalPegawai} pegawai
         </p>
       )}
+      </div>
 
+      <div className="mb-8">
       {/* ── Employee Grid ── */}
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -567,6 +570,9 @@ export default function PegawaiPage() {
         </div>
       )}
 
+      </div>
+
+      <div className="mb-8">
       {/* ════════════════════════════════════════════════════════════════
           ── Add / Edit Pegawai Modal
          ════════════════════════════════════════════════════════════════ */}
@@ -763,6 +769,7 @@ export default function PegawaiPage() {
           </div>
         </div>
       )}
+      </div>
 
       {/* ════════════════════════════════════════════════════════════════
           ── Detail Pegawai Modal
@@ -868,6 +875,6 @@ export default function PegawaiPage() {
         );
       })()}
 
-    </div>
+    </>
   );
 }

@@ -231,10 +231,10 @@ export default function PengaturanPage() {
   }
 
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <Building2 className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
@@ -619,6 +619,6 @@ export default function PengaturanPage() {
         </div>
       </form>
 
-    </div>
+    </>
   );
 }

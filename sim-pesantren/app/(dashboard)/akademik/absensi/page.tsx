@@ -247,10 +247,10 @@ export default function AbsensiKBMPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header */}
-      <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 mb-3">
             <Sparkles className="h-3 w-3" />
@@ -266,8 +266,9 @@ export default function AbsensiKBMPage() {
         </div>
       </div>
 
-      {/* Conditional Mode Rendering: 1. Schedules List OR 2. Active Attendance Mode */}
-      {!activeJadwal ? (
+      <div className="mb-6">
+        {/* Conditional Mode Rendering: 1. Schedules List OR 2. Active Attendance Mode */}
+        {!activeJadwal ? (
         // -------------------------------------------------------------
         // MODE 1: LIST JADWAL HARI INI
         // -------------------------------------------------------------
@@ -588,7 +589,8 @@ export default function AbsensiKBMPage() {
 
         </div>
       )}
+      </div>
 
-    </div>
+    </>
   );
 }

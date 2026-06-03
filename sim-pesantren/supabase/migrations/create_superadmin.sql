@@ -5,10 +5,10 @@
 
 -- OPSI A: Jika Anda telah membuat/mengundang email lazali.berkah@gmail.com
 -- lewat menu Supabase Auth Dashboard -> Users:
--- Cukup jalankan SQL di bawah ini untuk menaikkan role menjadi admin:
+-- Cukup jalankan SQL di bawah ini untuk menaikkan role menjadi Super Admin:
 
 UPDATE public.profiles
-SET role = 'admin'::public.user_role
+SET role = 'Super Admin'
 WHERE id = (SELECT id FROM auth.users WHERE email = 'lazali.berkah@gmail.com');
 
 
@@ -49,7 +49,7 @@ BEGIN
       null,
       null,
       '{"provider":"email","providers":["email"]}',
-      '{"nama_lengkap":"Super Admin Lazali","role":"admin"}',
+      '{"nama_lengkap":"Super Admin Lazali","role":"Super Admin"}',
       now(),
       now(),
       '',
@@ -60,12 +60,12 @@ BEGIN
 
     -- 2. Insert/Update profil publik agar sinkron
     INSERT INTO public.profiles (id, nama_lengkap, role, no_hp)
-    VALUES (new_user_id, 'Super Admin Lazali', 'admin'::public.user_role, '')
-    ON CONFLICT (id) DO UPDATE SET role = 'admin'::public.user_role;
+    VALUES (new_user_id, 'Super Admin Lazali', 'Super Admin', '')
+    ON CONFLICT (id) DO UPDATE SET role = 'Super Admin';
   ELSE
-    -- Jika user sudah ada di auth, pastikan status role-nya adalah 'admin'
+    -- Jika user sudah ada di auth, pastikan status role-nya adalah 'Super Admin'
     UPDATE public.profiles
-    SET role = 'admin'::public.user_role
+    SET role = 'Super Admin'
     WHERE id = (SELECT id FROM auth.users WHERE email = 'lazali.berkah@gmail.com');
   END IF;
 END $$;

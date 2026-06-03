@@ -312,15 +312,15 @@ export default function TahfidzTracker() {
   };
 
   return (
-    <div className={`p-4 md:p-6 space-y-6 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300`}>
+    <>
       
       {/* Top Mobile Bar Style Mockup matching screenshot */}
-      <div className="bg-emerald-800 dark:bg-emerald-950 text-white rounded-2xl p-4 shadow-md text-center font-extrabold text-base tracking-wide">
+      <div className="bg-emerald-800 dark:bg-emerald-950 text-white rounded-2xl p-4 shadow-md text-center font-extrabold text-base tracking-wide mb-6">
         Monitoring Hafalan Santri
       </div>
 
       {/* Sub Tabs Navigation matching screenshot */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-1.5 shadow-sm flex overflow-x-auto gap-1">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-1.5 shadow-sm flex overflow-x-auto gap-1 mb-6">
         {(['quran', 'hadits', 'matan', 'tahsin', 'ujian', 'pengaturan'] as const).map((tab) => (
           <button
             key={tab}
@@ -689,6 +689,6 @@ export default function TahfidzTracker() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

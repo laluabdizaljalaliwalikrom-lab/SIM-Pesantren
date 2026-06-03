@@ -190,10 +190,10 @@ export default function MasterMapelPage() {
   });
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <BookMarked className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
@@ -213,7 +213,7 @@ export default function MasterMapelPage() {
       </div>
 
       {/* Search & Filter Controls */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800/80 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800/80 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
         
         {/* Search */}
         <div className="relative w-full md:max-w-sm">
@@ -249,7 +249,7 @@ export default function MasterMapelPage() {
       </div>
 
       {/* Main List Table */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden mb-6">
         
         {loading ? (
           // Loader
@@ -443,6 +443,6 @@ export default function MasterMapelPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

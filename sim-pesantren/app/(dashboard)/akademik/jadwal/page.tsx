@@ -231,10 +231,10 @@ export default function JadwalPelajaranPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <Calendar className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
@@ -256,7 +256,7 @@ export default function JadwalPelajaranPage() {
       </div>
 
       {/* Filter Section */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800/80 p-5 rounded-2xl shadow-sm space-y-4">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800/80 p-5 rounded-2xl shadow-sm space-y-4 mb-6">
         <h3 className="text-xs font-bold text-slate-400 dark:text-zinc-550 uppercase tracking-wider flex items-center gap-2">
           <BookOpen className="h-4 w-4 text-emerald-500" />
           Filter Kelas Pembelajaran
@@ -315,8 +315,9 @@ export default function JadwalPelajaranPage() {
         )}
       </div>
 
-      {/* Main Weekly Schedule Display */}
-      {!selectedKelas ? (
+      <div className="mb-6">
+        {/* Main Weekly Schedule Display */}
+        {!selectedKelas ? (
         // State Filter Belum Lengkap
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl py-16 px-4 text-center shadow-sm max-w-xl mx-auto">
           <div className="h-16 w-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/10 flex items-center justify-center mx-auto mb-4">
@@ -405,6 +406,7 @@ export default function JadwalPelajaranPage() {
           })}
         </div>
       )}
+      </div>
 
       {/* Add Schedule Modal */}
       {isModalOpen && (
@@ -551,6 +553,6 @@ export default function JadwalPelajaranPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

@@ -466,10 +466,10 @@ export default function AsramaDashboardPage() {
   const totalCapacity = kamarList.reduce((acc, k) => acc + k.kapasitas, 0);
 
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header section with Stats Banner */}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
@@ -548,7 +548,7 @@ export default function AsramaDashboardPage() {
       </div>
 
       {/* Filter and Tab Section */}
-      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm space-y-4">
+      <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm space-y-4 mb-8">
         {/* Building Selector */}
         <div className="flex flex-col gap-2">
           <label className="text-xs font-bold text-slate-400 dark:text-zinc-500 uppercase tracking-wider">Gedung / Asrama</label>
@@ -594,7 +594,7 @@ export default function AsramaDashboardPage() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-1.5 shadow-sm">
+      <div className="flex items-center gap-1 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-1.5 shadow-sm mb-8">
         {(['kamar', 'denah', 'log'] as const).map((tab) => (
           <button
             key={tab}
@@ -610,8 +610,9 @@ export default function AsramaDashboardPage() {
         ))}
       </div>
 
-      {/* TAB CONTENT: Daftar Kamar */}
-      {activeTab === 'kamar' && (
+      <div className="mb-8">
+        {/* TAB CONTENT: Daftar Kamar */}
+        {activeTab === 'kamar' && (
         loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {Array.from({ length: 4 }).map((_, idx) => (
@@ -747,9 +748,11 @@ export default function AsramaDashboardPage() {
           </div>
         )
       )}
+      </div>
 
-      {/* TAB CONTENT: Denah Visual */}
-      {activeTab === 'denah' && (
+      <div className="mb-8">
+        {/* TAB CONTENT: Denah Visual */}
+        {activeTab === 'denah' && (
         <div className="space-y-8">
           {loading ? (
             <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-10 text-center animate-pulse">
@@ -842,9 +845,11 @@ export default function AsramaDashboardPage() {
           )}
         </div>
       )}
+      </div>
 
-      {/* TAB CONTENT: Log Perpindahan */}
-      {activeTab === 'log' && (
+      <div className="mb-8">
+        {/* TAB CONTENT: Log Perpindahan */}
+        {activeTab === 'log' && (
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-slate-100 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-950/40 flex items-center justify-between">
             <div>
@@ -913,6 +918,7 @@ export default function AsramaDashboardPage() {
           )}
         </div>
       )}
+      </div>
 
       {/* Quick Move/Plotting Modal */}
       {isModalOpen && selectedKamar && (
@@ -1380,7 +1386,7 @@ export default function AsramaDashboardPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }
 

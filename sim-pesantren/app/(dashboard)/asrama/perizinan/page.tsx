@@ -329,10 +329,10 @@ export default function PerizinanSantriPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header */}
-      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="max-w-6xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 mb-3">
             <Sparkles className="h-3 w-3" />
@@ -356,7 +356,7 @@ export default function PerizinanSantriPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-5">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
         
         {/* Card 1: Santri Izin Keluar */}
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm flex items-center gap-4">
@@ -394,7 +394,7 @@ export default function PerizinanSantriPage() {
       </div>
 
       {/* Control Panel (Filters & Search) */}
-      <div className="max-w-6xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
+      <div className="max-w-6xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
         
         {/* Filter Tabs */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
@@ -428,7 +428,7 @@ export default function PerizinanSantriPage() {
       </div>
 
       {/* Main Table / List Display */}
-      <div className="max-w-6xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="max-w-6xl mx-auto bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm overflow-hidden mb-6">
         {loading ? (
           <div className="py-20 text-center flex flex-col items-center justify-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
@@ -863,6 +863,6 @@ export default function PerizinanSantriPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

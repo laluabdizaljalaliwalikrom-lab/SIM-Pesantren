@@ -362,10 +362,10 @@ export default function PelanggaranPage() {
   };
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-300">
+    <>
       
       {/* Header */}
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-450 border border-rose-200/50 mb-3">
             <ShieldAlert className="h-3 w-3" />
@@ -391,7 +391,7 @@ export default function PelanggaranPage() {
       </div>
 
       {/* Main Grid: Left side = Leaderboard & Form, Right side = History Table */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         
         {/* LEFT COLUMN: Input Form & Leaderboard */}
         <div className="lg:col-span-1 space-y-6">
@@ -964,6 +964,6 @@ export default function PelanggaranPage() {
         </div>
       )}
 
-    </div>
+    </>
   );
 }

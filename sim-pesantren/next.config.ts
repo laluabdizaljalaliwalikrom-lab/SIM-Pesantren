@@ -19,9 +19,12 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'qaidhzrlxsyjzrczvthp.supabase.co',
+        pathname: '/storage/v1/**',
       },
     ],
+    dangerouslyAllowLocalIP: true,
+    qualities: [25, 50, 75, 100],
   },
 
   // Turbopack: tetapkan root agar tidak tertukar dengan lockfile parent folder

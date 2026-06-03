@@ -178,10 +178,10 @@ export default function LaporanKeuanganPage() {
   const chartHeight = 180;
 
   return (
-    <div className="p-6 md:p-8 space-y-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen">
+    <>
       
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <BarChart4 className="h-6 w-6 text-emerald-600" /> Laporan Keuangan
@@ -201,7 +201,7 @@ export default function LaporanKeuanganPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm">
+      <div className="flex flex-wrap items-center gap-4 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm mb-8">
         <div className="flex items-center gap-2">
           <Calendar className="h-4 w-4 text-slate-400" />
           <select
@@ -245,7 +245,7 @@ export default function LaporanKeuanganPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm">
           <p className="text-xs uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">Total Pendapatan</p>
           <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-2">
@@ -275,7 +275,7 @@ export default function LaporanKeuanganPage() {
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         
         {/* Trend Chart */}
         <div className="lg:col-span-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm space-y-4">
@@ -402,6 +402,6 @@ export default function LaporanKeuanganPage() {
         </div>
       </div>
 
-    </div>
+    </>
   );
 }
