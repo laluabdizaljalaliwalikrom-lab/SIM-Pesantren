@@ -33,6 +33,32 @@ export default function AdminDashboardHome() {
   const [loading, setLoading] = useState(true);
   const [userName, setUserName] = useState('Admin');
   const [userRole, setUserRole] = useState('');
+  const [permissions, setPermissions] = useState<any[]>([]);
+
+  const isSuperAdmin = userRole === 'Super Admin';
+
+  const pathModuleMap: Record<string, string> = {
+    '/lembaga': 'Lembaga',
+    '/santri': 'Santri',
+    '/pegawai': 'Kepegawaian',
+    '/asrama': 'Asrama',
+    '/tahfidz': 'Tahfidz',
+    '/akademik': 'Akademik',
+    '/pembayaran': 'Keuangan',
+    '/keuangan': 'Keuangan',
+  };
+
+  const canAccessModule = (href: string): boolean => {
+    if (href === '/admin') return true;
+    const moduleName = pathModuleMap[href];
+    if (moduleName && !isSuperAdmin) {
+      const modPerm = permissions.find(
+        (p) => p.feature.toLowerCase() === moduleName.toLowerCase()
+      );
+      return !!(modPerm && modPerm.can_view);
+    }
+    return true;
+  };
 
   useEffect(() => {
     async function loadDashboard() {
@@ -41,12 +67,19 @@ export default function AdminDashboardHome() {
         if (user) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('nama_lengkap, role')
+            .select('nama_lengkap, role, id_role')
             .eq('id', user.id)
             .single();
           if (profile) {
             setUserName(profile.nama_lengkap || 'Admin');
             setUserRole(profile.role || '');
+            if (profile.role !== 'Super Admin' && profile.id_role) {
+              const { data: perms } = await supabase
+                .from('role_permissions')
+                .select('*')
+                .eq('id_role', profile.id_role);
+              setPermissions(perms || []);
+            }
           }
         }
 
@@ -62,10 +95,15 @@ export default function AdminDashboardHome() {
           .from('presensi_tahfidz').select('*', { count: 'exact', head: true })
           .eq('tanggal_setoran', today);
 
-        const { data: payments } = await supabase
-          .from('pembayaran').select('jumlah').eq('status', 'Lunas');
+        const { data: groupPayments } = await supabase
+          .from('pembayaran_group').select('total_bayar');
 
-        const totalSaldo = payments?.reduce((s, p) => s + Number(p.jumlah), 0) || 0;
+        const { data: directPayments } = await supabase
+          .from('pembayaran').select('jumlah').eq('status', 'Lunas').is('id_group', null);
+
+        const saldoDariGroup = groupPayments?.reduce((s, p) => s + Number(p.total_bayar), 0) || 0;
+        const saldoDirect = directPayments?.reduce((s, p) => s + Number(p.jumlah), 0) || 0;
+        const totalSaldo = saldoDariGroup + saldoDirect;
 
         setStats({
           totalSantri: santriCount || 0,
@@ -82,7 +120,7 @@ export default function AdminDashboardHome() {
     loadDashboard();
   }, []);
 
-  const modules = [
+  const allModules = [
     { name: 'Lembaga', href: '/lembaga', icon: School, color: 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white', desc: 'Sekolah & kelas', accent: '#6366f1' },
     { name: 'Santri', href: '/santri', icon: Users, color: 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-600 group-hover:text-white', desc: 'Data induk & wali santri', accent: '#10b981' },
     { name: 'Pegawai', href: '/pegawai', icon: Briefcase, color: 'bg-rose-50 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 group-hover:bg-rose-600 group-hover:text-white', desc: 'Data kepegawaian', accent: '#f43f5e' },
@@ -92,6 +130,8 @@ export default function AdminDashboardHome() {
     { name: 'Pembayaran', href: '/pembayaran', icon: CreditCard, color: 'bg-cyan-50 dark:bg-cyan-900/30 text-cyan-600 dark:text-cyan-400 group-hover:bg-cyan-600 group-hover:text-white', desc: 'Kasir & kuitansi', accent: '#06b6d4' },
     { name: 'Keuangan', href: '/keuangan', icon: BarChart4, color: 'bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 group-hover:bg-teal-600 group-hover:text-white', desc: 'Laporan keuangan', accent: '#14b8a6' },
   ];
+
+  const modules = allModules.filter((m) => canAccessModule(m.href));
 
   return (
     <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
@@ -121,12 +161,14 @@ export default function AdminDashboardHome() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 shrink-0">
-                <Link
-                  href="/pengaturan"
-                  className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all font-semibold text-sm"
-                >
-                  <Cog className="h-4 w-4" /> Pengaturan Sistem
-                </Link>
+                {isSuperAdmin && (
+                  <Link
+                    href="/pengaturan"
+                    className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-5 py-3 rounded-xl shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 hover:-translate-y-0.5 transition-all font-semibold text-sm"
+                  >
+                    <Cog className="h-4 w-4" /> Pengaturan Sistem
+                  </Link>
+                )}
 
                 <div className="bg-white dark:bg-[#1a1a2e] border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-3 flex items-center gap-4 shadow-sm">
                   <div>
@@ -163,7 +205,7 @@ export default function AdminDashboardHome() {
           </div>
           <div className="stat-card fade-up delay-3 flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Saldo Kas SPP</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Saldo Kas</p>
               <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                 {loading ? '...' : `Rp${stats.saldoKas.toLocaleString('id-ID')}`}
               </p>
@@ -216,25 +258,27 @@ export default function AdminDashboardHome() {
           {/* Info Sidebar */}
           <div className="space-y-4 fade-up delay-4">
 
-            <div>
-              <div className="section-label">Pengaturan</div>
-              <div className="bg-white dark:bg-[#1a1a2e] border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800">
-                <Link href="/pengaturan" className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-slate-600 dark:group-hover:bg-slate-700 group-hover:text-white transition-colors flex items-center justify-center text-sm">
-                    <Cog className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">Pengaturan</span>
-                  <ArrowRight className="h-3 w-3 ml-auto text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400" />
-                </Link>
-                <Link href="/settings/users" className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                  <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-slate-600 dark:group-hover:bg-slate-700 group-hover:text-white transition-colors flex items-center justify-center text-sm">
-                    <ShieldCheck className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">Hak Akses</span>
-                  <ArrowRight className="h-3 w-3 ml-auto text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400" />
-                </Link>
+            {isSuperAdmin && (
+              <div>
+                <div className="section-label">Pengaturan</div>
+                <div className="bg-white dark:bg-[#1a1a2e] border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800">
+                  <Link href="/pengaturan" className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-slate-600 dark:group-hover:bg-slate-700 group-hover:text-white transition-colors flex items-center justify-center text-sm">
+                      <Cog className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">Pengaturan</span>
+                    <ArrowRight className="h-3 w-3 ml-auto text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400" />
+                  </Link>
+                  <Link href="/settings/users" className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-slate-600 dark:group-hover:bg-slate-700 group-hover:text-white transition-colors flex items-center justify-center text-sm">
+                      <ShieldCheck className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white">Hak Akses</span>
+                    <ArrowRight className="h-3 w-3 ml-auto text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-400" />
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <div className="section-label">Info Sistem</div>
@@ -254,12 +298,14 @@ export default function AdminDashboardHome() {
                   </p>
                 </div>
 
-                <Link
-                  href="/santri"
-                  className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 text-white text-sm font-semibold hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
-                >
-                  <Users className="h-3.5 w-3.5" /> Kelola Santri
-                </Link>
+                {canAccessModule('/santri') && (
+                  <Link
+                    href="/santri"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-slate-800 dark:bg-slate-700 text-white text-sm font-semibold hover:bg-slate-700 dark:hover:bg-slate-600 transition-colors"
+                  >
+                    <Users className="h-3.5 w-3.5" /> Kelola Santri
+                  </Link>
+                )}
               </div>
             </div>
 

@@ -51,6 +51,7 @@ interface MenuItem {
 
 const MENU_ITEMS: MenuItem[] = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Dashboard Eksekutif', href: '/dashboard-eksekutif', icon: BarChart4 },
   { heading: 'Modul Utama' },
   { name: 'Lembaga', href: '/lembaga', icon: School },
   { name: 'Santri', href: '/santri', icon: Users },
@@ -294,7 +295,7 @@ export function Sidebar({
           </nav>
 
           {/* Sidebar Footer / User */}
-          <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a2e]">
+          <div className="sidebar-footer p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a2e]">
             <Link
               href="/profile"
               onClick={() => onClose()}
@@ -312,7 +313,7 @@ export function Sidebar({
                   {userInitial}
                 </div>
               )}
-              <div className="overflow-hidden min-w-0">
+              <div className="sidebar-footer-text overflow-hidden min-w-0">
                 <p className="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">
                   {userDisplayName}
                 </p>
@@ -320,7 +321,7 @@ export function Sidebar({
                   {userEmail || userRoleRaw}
                 </p>
               </div>
-              <ChevronRight className="h-3.5 w-3.5 text-gray-300 dark:text-gray-600 ml-auto shrink-0" />
+              <ChevronRight className="sidebar-footer-text h-3.5 w-3.5 text-gray-300 dark:text-gray-600 ml-auto shrink-0" />
             </Link>
           </div>
         </div>

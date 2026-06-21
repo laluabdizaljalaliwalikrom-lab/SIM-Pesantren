@@ -16,7 +16,7 @@ interface DashboardLayoutProps {
 }
 
 function Clock() {
-  const [dateTime, setDateTime] = useState({ date: '', time: '' });
+  const [dateTime, setDateTime] = useState({ date: '', time: '', hijri: '' });
 
   useEffect(() => {
     function update() {
@@ -29,7 +29,10 @@ function Clock() {
         const time = now.toLocaleTimeString('id-ID', {
           hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
         });
-        setDateTime({ date, time });
+        const hijri = now.toLocaleDateString('id-ID', {
+          calendar: 'islamic-umalqura', day: 'numeric', month: 'long', year: 'numeric',
+        });
+        setDateTime({ date, time, hijri });
       } catch {
         // ignore
       }
@@ -46,6 +49,9 @@ function Clock() {
       <span className="text-gray-300 dark:text-gray-600">|</span>
       <i className="far fa-clock" />
       <span>{dateTime.time}</span>
+      <span className="text-gray-300 dark:text-gray-600 mx-1">•</span>
+      <i className="far fa-moon text-emerald-500" />
+      <span className="text-emerald-600 dark:text-emerald-400 font-medium">{dateTime.hijri}</span>
     </>
   );
 }
@@ -316,7 +322,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <span className="text-gray-300 mx-1.5">|</span>
                   By{' '}
                   <strong className="font-semibold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600">
-                    Pondok Pesantren
+                    tanpaharta007
                   </strong>
                 </span>
               </div>
