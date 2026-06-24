@@ -406,19 +406,26 @@ export interface PesantrenProfile {
 }
 
 export interface LandingPageSettings {
-  id: string;
-  hero_title?: string | null;
-  hero_subtitle?: string | null;
-  about_text?: string | null;
-  visi?: string | null;
-  misi?: string | null;
-  alamat?: string | null;
-  telp?: string | null;
-  email?: string | null;
-  youtube_url?: string | null;
-  facebook_url?: string | null;
-  instagram_url?: string | null;
+  id: number;
+  tagline_title: string;
+  tagline_description: string;
+  status_pendaftaran: boolean;
+  medsos_facebook?: string | null;
+  medsos_instagram?: string | null;
+  medsos_youtube?: string | null;
   created_at: string;
+}
+
+export interface HeroSlide {
+  id: string;
+  image_url: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  sort_order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface RefSurah {

@@ -14,10 +14,12 @@ import {
   Save, 
   Loader2, 
   Info,
-  ShieldAlert
+  ShieldAlert,
+  Image
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageUpload from '@/components/ImageUpload';
+import HeroSlidesManager from '@/components/HeroSlidesManager';
 import { uploadLogoPesantren, uploadFotoPimpinan } from '@/services/storage-actions';
 
 export default function PengaturanPage() {
@@ -478,6 +480,15 @@ export default function PengaturanPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Hero Slideshow Manager Card */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
+                <Image className="h-4.5 w-4.5 text-amber-500" />
+                Slideshow Hero Banner
+              </h3>
+              <HeroSlidesManager isAdmin={isAdmin} />
             </div>
             
           </div>

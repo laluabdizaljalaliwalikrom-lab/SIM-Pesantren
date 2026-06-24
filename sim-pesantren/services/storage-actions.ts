@@ -209,6 +209,49 @@ export async function uploadFotoPimpinan(file: File, fileName: string): Promise<
 
 
 /**
+ * Upload gambar hero slide ke bucket 'foto-pesantren'
+ */
+export async function uploadHeroSlide(file: File, fileName: string): Promise<string> {
+  try {
+    let uploadTarget: File | Blob = file;
+    if (file.type.startsWith('image/')) {
+      try {
+        uploadTarget = await imageCompression(file, compressionOptions);
+      } catch (compErr) {
+        console.warn('Image compression failed, uploading original:', compErr);
+      }
+    }
+
+    const cleanedName = fileName.trim().replace(/\s+/g, '_');
+
+    const { data, error } = await supabase.storage
+      .from('foto-pesantren')
+      .upload(cleanedName, uploadTarget, {
+        upsert: true,
+        cacheControl: '3600'
+      });
+
+    if (error) {
+      console.error('Error uploading hero slide:', error);
+      throw error;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('foto-pesantren')
+      .getPublicUrl(cleanedName);
+
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('Gagal mendapatkan public URL untuk hero slide.');
+    }
+
+    return urlData.publicUrl;
+  } catch (err: any) {
+    console.error('Exception in uploadHeroSlide:', err);
+    throw new Error(err.message || 'Gagal mengunggah gambar hero slide.');
+  }
+}
+
+/**
  * Upload foto user ke bucket 'foto-users'
  * @param file File foto dari input file browser
  * @param userId ID user dari auth (untuk folder upload)

@@ -66,6 +66,51 @@ export default async function Page() {
     console.error('Error fetching landing settings or branding:', err);
   }
 
+  let heroSlides: Array<{
+    id: string;
+    image_url: string;
+    title: string;
+    subtitle: string;
+    description: string;
+  }> = [];
+
+  try {
+    const { data: slidesData } = await supabase
+      .from('hero_slides')
+      .select('id, image_url, title, subtitle, description')
+      .eq('is_active', true)
+      .order('sort_order', { ascending: true });
+
+    if (slidesData && slidesData.length > 0) {
+      heroSlides = slidesData;
+    }
+  } catch (err) {
+    console.warn('Could not load hero slides:', err);
+  }
+
+  let stats = {
+    sekolah: 4,
+    kelas: 24,
+    santri: 780,
+    pegawai: 56
+  };
+
+  try {
+    const [sekolahRes, kelasRes, santriRes, pegawaiRes] = await Promise.all([
+      supabase.from('sekolah').select('*', { count: 'exact', head: true }),
+      supabase.from('kelas').select('*', { count: 'exact', head: true }),
+      supabase.from('santri').select('*', { count: 'exact', head: true }),
+      supabase.from('pegawai').select('*', { count: 'exact', head: true })
+    ]);
+
+    if (sekolahRes.count !== null && sekolahRes.count !== undefined) stats.sekolah = sekolahRes.count;
+    if (kelasRes.count !== null && kelasRes.count !== undefined) stats.kelas = kelasRes.count;
+    if (santriRes.count !== null && santriRes.count !== undefined) stats.santri = santriRes.count;
+    if (pegawaiRes.count !== null && pegawaiRes.count !== undefined) stats.pegawai = pegawaiRes.count;
+  } catch (err) {
+    console.warn('Could not load real-time stats count:', err);
+  }
+
   return (
     <LandingPageClient 
       settings={landingSettings} 
@@ -75,6 +120,8 @@ export default async function Page() {
       pesantrenMisi={brandMisi}
       pesantrenPimpinan={brandPimpinan}
       pesantrenPimpinanFoto={brandFotoPimpinan}
+      stats={stats}
+      heroSlides={heroSlides}
     />
   );
 }
