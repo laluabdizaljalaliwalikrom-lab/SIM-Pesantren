@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
-import { supabase } from '@/lib/supabase';
+
 
 interface Slide {
   id: string;
@@ -127,17 +127,14 @@ export default function LandingPageClient({
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [sekolahRes, kelasRes, santriRes, pegawaiRes] = await Promise.all([
-          supabase.from('sekolah').select('*', { count: 'exact', head: true }),
-          supabase.from('kelas').select('*', { count: 'exact', head: true }),
-          supabase.from('santri').select('*', { count: 'exact', head: true }),
-          supabase.from('pegawai').select('*', { count: 'exact', head: true })
-        ]);
+        const res = await fetch('/api/stats');
+        if (!res.ok) return;
+        const data = await res.json();
         setLiveStats(prev => ({
-          sekolah: sekolahRes.count ?? prev.sekolah,
-          kelas: kelasRes.count ?? prev.kelas,
-          santri: santriRes.count ?? prev.santri,
-          pegawai: pegawaiRes.count ?? prev.pegawai
+          sekolah: data.sekolah ?? prev.sekolah,
+          kelas: data.kelas ?? prev.kelas,
+          santri: data.santri ?? prev.santri,
+          pegawai: data.pegawai ?? prev.pegawai,
         }));
       } catch {
         // silent — keep existing values
