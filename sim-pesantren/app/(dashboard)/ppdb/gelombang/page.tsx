@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getAllGelombang, createGelombang, updateGelombang, deleteGelombang } from '@/services/ppdb-actions';
 import { GelombangPendaftaran, TahunAjaran } from '@/types/database';
+import { supabase } from '@/lib/supabase';
 import { Plus, Pencil, Trash2, Loader2, X, Calendar, Users } from 'lucide-react';
 
 export default function GelombangPage() {
@@ -23,7 +24,6 @@ export default function GelombangPage() {
       const res = await getAllGelombang();
       if (res.error) { setError(res.error); setLoading(false); return; }
       if (res.data) setList(res.data);
-      const supabase = (await import('@/lib/supabase')).supabase;
       const { data: ta } = await supabase.from('tahun_ajaran').select('*').order('nama_tahun', { ascending: false });
       if (ta) setTahunAjaran(ta);
     } catch (e: any) {

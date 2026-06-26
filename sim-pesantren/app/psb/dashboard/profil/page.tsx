@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { getMyProfil, updateProfilCalonSantri } from '@/services/ppdb-actions';
 import { uploadDokumenCalonSantri } from '@/services/storage-actions';
 import { CalonSantri, GelombangPendaftaran } from '@/types/database';
+import { supabase } from '@/lib/supabase';
 import { Loader2, Save, AlertCircle, CheckCircle2, UserCircle, MapPin, Users, ClipboardList, Activity } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -23,7 +24,6 @@ export default function ProfilPage() {
   async function loadData() {
     const res = await getMyProfil();
     if (res.data) { setData(res.data); setForm(res.data); }
-    const supabase = (await import('@/lib/supabase')).supabase;
     const { data: gel } = await supabase.from('gelombang_pendaftaran').select('*').eq('aktif', true).order('tanggal_mulai', { ascending: true });
     if (gel) setGelombangList(gel);
     setLoading(false);

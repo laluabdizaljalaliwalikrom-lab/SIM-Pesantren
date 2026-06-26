@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getMyProfil } from '@/services/ppdb-actions';
 import { CalonSantri, GelombangPendaftaran } from '@/types/database';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { LayoutDashboard, UserCircle, Wallet, CreditCard, Megaphone, CheckCircle2, Clock, ArrowRight, Loader2 } from 'lucide-react';
 
@@ -37,7 +38,6 @@ export default function PpdbDashboardPage() {
     if (res.data) {
       setData(res.data);
       if (res.data.id_gelombang) {
-        const supabase = (await import('@/lib/supabase')).supabase;
         const { data: g } = await supabase.from('gelombang_pendaftaran').select('*').eq('id', res.data.id_gelombang).single();
         if (g) setGelombang(g);
       }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getMyProfil } from '@/services/ppdb-actions';
 import { CalonSantri, PengumumanPpdb } from '@/types/database';
+import { supabase } from '@/lib/supabase';
 import { Megaphone, FileText, Loader2, PartyPopper, Frown } from 'lucide-react';
 
 const resultConfig: Record<string, { icon: any; color: string; bg: string; label: string; message: string }> = {
@@ -55,7 +56,6 @@ export default function PengumumanPage() {
     if (res.data) {
       setData(res.data);
       if (res.data.id_gelombang) {
-        const supabase = (await import('@/lib/supabase')).supabase;
         const { data: list } = await supabase.from('pengumuman_ppdb').select('*').eq('id_gelombang', res.data.id_gelombang).order('tanggal_terbit', { ascending: false });
         if (list) setPengumuman(list);
       }

@@ -16,7 +16,7 @@ export default function DaftarUlangPage() {
 
   async function loadData() {
     setLoading(true);
-    const res = await getAllCalonSantri({ status: tab === 'diterima' ? 'DITERIMA' : 'LUNAS' });
+    const res = await getAllCalonSantri({ status: tab === 'diterima' ? 'DITERIMA' : 'LUNAS', page: 1, pageSize: 200 });
     if (res.data) setList(res.data);
     setLoading(false);
   }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getAllCalonSantri, updateStatusCalonSantri } from '@/services/ppdb-actions';
 import { CalonSantri } from '@/types/database';
 import { Eye, X, CheckCircle2, XCircle, ArrowRight, GraduationCap, ThumbsDown, Loader2, Search } from 'lucide-react';
@@ -38,14 +38,28 @@ export default function PendaftarPage() {
   const [catatan, setCatatan] = useState('');
   const [tempStatus, setTempStatus] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 50;
 
-  useEffect(() => { loadData(); }, [filter]);
+  useEffect(() => { setPage(1); loadData(1); }, [filter]);
 
-  async function loadData() {
+  async function loadData(p?: number) {
     setLoading(true);
-    const res = await getAllCalonSantri(filter ? { status: filter } : undefined);
+    const currentPage = p ?? page;
+    const res = await getAllCalonSantri({
+      ...(filter ? { status: filter } : {}),
+      page: currentPage,
+      pageSize,
+    });
     if (res.data) setList(res.data);
+    if (res.count !== null) setTotalCount(res.count);
     setLoading(false);
+  }
+
+  async function changePage(newPage: number) {
+    setPage(newPage);
+    await loadData(newPage);
   }
 
   async function handleStatus(id: string, status: string) {
@@ -56,9 +70,16 @@ export default function PendaftarPage() {
     loadData();
   }
 
-  const filtered = search
-    ? list.filter(item => item.nama_lengkap.toLowerCase().includes(search.toLowerCase()) || item.email?.toLowerCase().includes(search.toLowerCase()))
-    : list;
+  const filtered = useMemo(() => {
+    if (!search) return list;
+    const q = search.toLowerCase();
+    return list.filter(item =>
+      item.nama_lengkap.toLowerCase().includes(q) ||
+      item.email?.toLowerCase().includes(q)
+    );
+  }, [list, search]);
+
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div className="space-y-6">
@@ -148,6 +169,24 @@ export default function PendaftarPage() {
           </table>
         </div>
       </div>
+
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm px-4 py-3">
+          <p className="text-xs text-slate-500 dark:text-zinc-400">
+            {totalCount} data — Halaman {page} dari {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <button onClick={() => changePage(page - 1)} disabled={page <= 1}
+              className="px-3 py-1.5 border border-slate-200 dark:border-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-lg font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+              Sebelumnya
+            </button>
+            <button onClick={() => changePage(page + 1)} disabled={page >= totalPages}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold text-xs disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+              Selanjutnya
+            </button>
+          </div>
+        </div>
+      )}
 
       {selected && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">

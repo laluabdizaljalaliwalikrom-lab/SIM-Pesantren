@@ -244,7 +244,16 @@ CREATE POLICY "Allow admin manage pengumuman_ppdb" ON public.pengumuman_ppdb
         EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'Super Admin')
     );
 
--- 9. Seed initial data for role_permissions feature
+-- 9. Performance indexes for frequently-queried columns
+CREATE INDEX IF NOT EXISTS idx_calon_santri_status ON public.calon_santri(status);
+CREATE INDEX IF NOT EXISTS idx_calon_santri_id_gelombang ON public.calon_santri(id_gelombang);
+CREATE INDEX IF NOT EXISTS idx_calon_santri_auth_user_id ON public.calon_santri(auth_user_id);
+CREATE INDEX IF NOT EXISTS idx_biaya_ppdb_id_gelombang ON public.biaya_ppdb(id_gelombang);
+CREATE INDEX IF NOT EXISTS idx_hasil_seleksi_id_calon_santri ON public.hasil_seleksi(id_calon_santri);
+CREATE INDEX IF NOT EXISTS idx_pengumuman_ppdb_id_gelombang ON public.pengumuman_ppdb(id_gelombang);
+CREATE INDEX IF NOT EXISTS idx_gelombang_pendaftaran_aktif ON public.gelombang_pendaftaran(aktif);
+
+-- 10. Seed initial data for role_permissions feature
 INSERT INTO public.role_permissions (id_role, feature, can_view, can_create, can_edit, can_delete)
 SELECT r.id, 'PPDB', true, true, true, true
 FROM public.app_roles r

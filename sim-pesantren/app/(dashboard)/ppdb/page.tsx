@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import { ClipboardList, GraduationCap, Users, CheckCircle2, Clock, Wallet, FileSearch, Megaphone, RefreshCcw } from 'lucide-react';
 
 export default function AdminPpdbPage() {
@@ -9,13 +10,20 @@ export default function AdminPpdbPage() {
 
   useEffect(() => {
     async function load() {
-      const supabase = (await import('@/lib/supabase')).supabase;
-      const { count: total } = await supabase.from('calon_santri').select('*', { count: 'exact', head: true });
-      const { count: menunggu } = await supabase.from('calon_santri').select('*', { count: 'exact', head: true }).eq('status', 'MENUNGGU_VERIFIKASI');
-      const { count: lolos } = await supabase.from('calon_santri').select('*', { count: 'exact', head: true }).eq('status', 'LOLOS_ADMIN');
-      const { count: diterima } = await supabase.from('calon_santri').select('*', { count: 'exact', head: true }).eq('status', 'DITERIMA');
-      const { count: gelAktif } = await supabase.from('gelombang_pendaftaran').select('*', { count: 'exact', head: true }).eq('aktif', true);
-      setStats({ total: total || 0, menunggu: menunggu || 0, lolos: lolos || 0, diterima: diterima || 0, gelombangAktif: gelAktif || 0 });
+      const [totalRes, menungguRes, lolosRes, diterimaRes, gelAktifRes] = await Promise.all([
+        supabase.from('calon_santri').select('*', { count: 'exact', head: true }),
+        supabase.from('calon_santri').select('*', { count: 'exact', head: true }).eq('status', 'MENUNGGU_VERIFIKASI'),
+        supabase.from('calon_santri').select('*', { count: 'exact', head: true }).eq('status', 'LOLOS_ADMIN'),
+        supabase.from('calon_santri').select('*', { count: 'exact', head: true }).eq('status', 'DITERIMA'),
+        supabase.from('gelombang_pendaftaran').select('*', { count: 'exact', head: true }).eq('aktif', true),
+      ]);
+      setStats({
+        total: totalRes.count || 0,
+        menunggu: menungguRes.count || 0,
+        lolos: lolosRes.count || 0,
+        diterima: diterimaRes.count || 0,
+        gelombangAktif: gelAktifRes.count || 0,
+      });
     }
     load();
   }, []);

@@ -180,26 +180,19 @@ export async function upsertBiayaPpdb(items: Array<{
   try {
     const supabase = await getServerSupabase();
 
-    const { data: existing } = await supabase
+    const { error: deleteError } = await supabase
       .from('biaya_ppdb')
-      .select('id')
+      .delete()
       .eq('id_gelombang', items[0]?.id_gelombang);
 
-    const existingIds = new Set(existing?.map(b => b.id) || []);
-    const incomingIds = new Set(items.filter(i => i.id).map(i => i.id!));
-    const toDelete = [...existingIds].filter(id => !incomingIds.has(id));
+    if (deleteError) throw deleteError;
 
-    if (toDelete.length > 0) {
-      await supabase.from('biaya_ppdb').delete().in('id', toDelete);
-    }
+    const cleanItems = items.map(({ id, ...rest }) => rest);
+    const { error: insertError } = await supabase
+      .from('biaya_ppdb')
+      .insert(cleanItems);
 
-    for (const item of items) {
-      if (item.id) {
-        await supabase.from('biaya_ppdb').update(item).eq('id', item.id);
-      } else {
-        await supabase.from('biaya_ppdb').insert([item]);
-      }
-    }
+    if (insertError) throw insertError;
 
     revalidatePath(`/ppdb/biaya`);
     return { error: null };
@@ -322,26 +315,34 @@ export async function getMyProfil() {
 export async function getAllCalonSantri(filters?: {
   status?: string;
   id_gelombang?: string;
+  page?: number;
+  pageSize?: number;
 }) {
   const auth = await requirePermission('PPDB', 'view');
-  if (auth.error) return { data: null, error: auth.error };
+  if (auth.error) return { data: null, count: null, error: auth.error };
 
   try {
     const supabase = await getServerSupabase();
     let query = supabase
       .from('calon_santri')
-      .select('*, gelombang:id_gelombang(*)')
+      .select('*, gelombang:id_gelombang(*)', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (filters?.status) query = query.eq('status', filters.status);
     if (filters?.id_gelombang) query = query.eq('id_gelombang', filters.id_gelombang);
 
-    const { data, error } = await query;
+    const page = filters?.page ?? 1;
+    const pageSize = filters?.pageSize ?? 50;
+    const from = (page - 1) * pageSize;
+    const to = from + pageSize - 1;
+    query = query.range(from, to);
+
+    const { data, error, count } = await query;
 
     if (error) throw error;
-    return { data: data as CalonSantri[], error: null };
+    return { data: data as CalonSantri[], count: count ?? 0, error: null };
   } catch (error: any) {
-    return { data: null, error: error.message || 'Gagal mengambil data pendaftar.' };
+    return { data: null, count: null, error: error.message || 'Gagal mengambil data pendaftar.' };
   }
 }
 

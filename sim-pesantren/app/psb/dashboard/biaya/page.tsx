@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getMyProfil } from '@/services/ppdb-actions';
 import { CalonSantri, BiayaPpdb } from '@/types/database';
+import { supabase } from '@/lib/supabase';
 import { Wallet, Info } from 'lucide-react';
 
 export default function BiayaPage() {
@@ -17,7 +18,6 @@ export default function BiayaPage() {
     if (res.data) {
       setData(res.data);
       if (res.data.id_gelombang) {
-        const supabase = (await import('@/lib/supabase')).supabase;
         const { data: biaya } = await supabase.from('biaya_ppdb').select('*').eq('id_gelombang', res.data.id_gelombang).order('created_at', { ascending: true });
         if (biaya) setBiayaList(biaya);
       }

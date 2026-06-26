@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getAllCalonSantri, getHasilSeleksi, upsertHasilSeleksi, updateStatusCalonSantri } from '@/services/ppdb-actions';
 import { CalonSantri, HasilSeleksi } from '@/types/database';
 import { ClipboardList, X, Save, ThumbsUp, ThumbsDown, Loader2, Calculator } from 'lucide-react';
@@ -18,7 +18,7 @@ export default function SeleksiPage() {
 
   async function loadData() {
     setLoading(true);
-    const res = await getAllCalonSantri({ status: 'MENUNGGU_SELEKSI' });
+    const res = await getAllCalonSantri({ status: 'MENUNGGU_SELEKSI', page: 1, pageSize: 200 });
     if (res.data) setList(res.data);
     setLoading(false);
   }
@@ -45,7 +45,10 @@ export default function SeleksiPage() {
     setMessage('');
   }
 
-  const nilaiAkhir = Math.round((nilai.nilai_tes_tulis + nilai.nilai_baca_quran + nilai.nilai_wawancara) / 3);
+  const nilaiAkhir = useMemo(() =>
+    Math.round((nilai.nilai_tes_tulis + nilai.nilai_baca_quran + nilai.nilai_wawancara) / 3),
+    [nilai.nilai_tes_tulis, nilai.nilai_baca_quran, nilai.nilai_wawancara]
+  );
 
   async function handleSave(lulus: boolean) {
     if (!selected) return;
