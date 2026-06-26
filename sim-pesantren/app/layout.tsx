@@ -55,7 +55,8 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${amiri.variable} h-full antialiased`}
     >
       <head>
-        <link rel="icon" href="/api/pwa-icon" />
+        <link rel="icon" type="image/png" href="/api/favicon" />
+        <link rel="icon" href="/api/pwa-icon" sizes="any" />
         <link rel="manifest" href="/api/manifest" />
         <meta name="theme-color" content="#047857" />
         <meta name="mobile-web-app-capable" content="yes" />
