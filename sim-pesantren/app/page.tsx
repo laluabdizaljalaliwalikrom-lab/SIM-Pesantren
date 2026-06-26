@@ -1,5 +1,6 @@
 import React from 'react';
 import { supabase } from '@/lib/supabase';
+import { getServiceRoleClient } from '@/utils/server-supabase';
 import LandingPageClient from '@/components/LandingPageClient';
 
 // Enable Incremental Static Regeneration (ISR) with revalidation time of 60 seconds
@@ -96,11 +97,12 @@ export default async function Page() {
   };
 
   try {
+    const s = getServiceRoleClient();
     const [sekolahRes, kelasRes, santriRes, pegawaiRes] = await Promise.all([
-      supabase.from('sekolah').select('*', { count: 'exact', head: true }),
-      supabase.from('kelas').select('*', { count: 'exact', head: true }),
-      supabase.from('santri').select('*', { count: 'exact', head: true }),
-      supabase.from('pegawai').select('*', { count: 'exact', head: true })
+      s.from('sekolah').select('*', { count: 'exact', head: true }),
+      s.from('kelas').select('*', { count: 'exact', head: true }),
+      s.from('santri').select('*', { count: 'exact', head: true }),
+      s.from('pegawai').select('*', { count: 'exact', head: true })
     ]);
 
     if (sekolahRes.count !== null && sekolahRes.count !== undefined) stats.sekolah = sekolahRes.count;
