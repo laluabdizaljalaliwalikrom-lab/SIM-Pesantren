@@ -7,9 +7,9 @@ export interface AuthResult {
   user: { id: string; email?: string } | null;
 }
 
-export async function getServerUser(): Promise<AuthResult> {
+async function createSupabase() {
   const cookieStore = await cookies();
-  const supabase = createServerClient(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -19,7 +19,10 @@ export async function getServerUser(): Promise<AuthResult> {
       },
     }
   );
+}
 
+export async function getServerUser(): Promise<AuthResult> {
+  const supabase = await createSupabase();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
     return { error: NextResponse.json({ error: 'Unauthorized. Silakan login.' }, { status: 401 }), user: null };
@@ -31,17 +34,7 @@ export async function requirePermission(
   feature: string,
   action: 'view' | 'create' | 'edit' | 'delete'
 ): Promise<AuthResult> {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll() {},
-      },
-    }
-  );
+  const supabase = await createSupabase();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {
@@ -94,17 +87,7 @@ export async function requirePermission(
 }
 
 export async function requireAdmin(): Promise<AuthResult> {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll() {},
-      },
-    }
-  );
+  const supabase = await createSupabase();
 
   const { data: { user }, error: authError } = await supabase.auth.getUser();
   if (authError || !user) {

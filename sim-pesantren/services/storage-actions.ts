@@ -303,3 +303,54 @@ export async function uploadFotoUser(file: File, userId: string, fileName: strin
     throw new Error(err.message || 'Gagal mengunggah foto profil ke storage.');
   }
 }
+
+/**
+ * Upload dokumen calon santri ke bucket 'foto-santri'
+ * @param file File dokumen dari input file browser
+ * @param fileName Nama file tujuan (misal: 'dok_akte_123.pdf')
+ * @returns Public URL string dari dokumen yang berhasil di-upload
+ */
+export async function uploadDokumenCalonSantri(file: File, fileName: string): Promise<string> {
+  try {
+    let uploadTarget: File | Blob = file;
+    
+    // Compress image if it is an image type
+    if (file.type.startsWith('image/')) {
+      try {
+        uploadTarget = await imageCompression(file, compressionOptions);
+      } catch (compErr) {
+        console.warn('Image compression failed for candidate document, uploading original:', compErr);
+      }
+    }
+
+    // Clean up filename to prevent path issues
+    const cleanedName = fileName.trim().replace(/\s+/g, '_');
+
+    // Upload file
+    const { data, error } = await supabase.storage
+      .from('foto-santri')
+      .upload(`ppdb/${cleanedName}`, uploadTarget, {
+        upsert: true,
+        cacheControl: '3600'
+      });
+
+    if (error) {
+      console.error('Error uploading dokumen calon santri:', error);
+      throw error;
+    }
+
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('foto-santri')
+      .getPublicUrl(`ppdb/${cleanedName}`);
+
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('Gagal mendapatkan public URL untuk dokumen.');
+    }
+
+    return urlData.publicUrl;
+  } catch (err: any) {
+    console.error('Exception in uploadDokumenCalonSantri:', err);
+    throw new Error(err.message || 'Gagal mengunggah dokumen ke storage.');
+  }
+}

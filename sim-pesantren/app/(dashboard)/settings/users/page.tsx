@@ -290,7 +290,8 @@ export default function UserRoleSettingsPage() {
           { id_role: roleId, feature: 'Keuangan', can_view: false, can_create: false, can_edit: false, can_delete: false },
           { id_role: roleId, feature: 'Akademik', can_view: false, can_create: false, can_edit: false, can_delete: false },
           { id_role: roleId, feature: 'Asrama', can_view: false, can_create: false, can_edit: false, can_delete: false },
-          { id_role: roleId, feature: 'Perizinan', can_view: false, can_create: false, can_edit: false, can_delete: false }
+          { id_role: roleId, feature: 'Perizinan', can_view: false, can_create: false, can_edit: false, can_delete: false },
+          { id_role: roleId, feature: 'PPDB', can_view: true, can_create: false, can_edit: false, can_delete: false }
         ];
 
         const { error: permErr } = await supabase

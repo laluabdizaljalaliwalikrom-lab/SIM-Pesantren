@@ -238,6 +238,12 @@ export default function LandingPageClient({
             <nav className="hidden md:flex items-center gap-8 text-[11px] font-semibold uppercase tracking-widest text-slate-500 dark:text-zinc-400">
               <a href="#home" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Beranda</a>
               <a href="#program" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Program</a>
+              {settings.status_pendaftaran && (
+                <Link href="/psb" className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors relative">
+                  PPDB
+                  <span className="absolute -top-1 -right-4 w-2 h-2 bg-rose-500 rounded-full animate-pulse" />
+                </Link>
+              )}
               <a href="#kontak" className="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Kontak</a>
             </nav>
 
@@ -301,7 +307,7 @@ export default function LandingPageClient({
             >
               {settings.status_pendaftaran && (
                 <Link
-                  href="/login?tab=register"
+                  href="/psb/daftar"
                   className="w-full sm:w-auto flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-semibold text-xs px-8 py-4 rounded-2xl shadow-xl shadow-emerald-600/20 hover:shadow-emerald-600/40 transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
                 >
                   Daftar Sekarang
@@ -680,7 +686,7 @@ export default function LandingPageClient({
               {settings.status_pendaftaran ? (
                 <div className="pt-4">
                   <Link
-                    href="/login?tab=register"
+                    href="/psb/daftar"
                     className="inline-flex items-center gap-2 px-8 py-4 bg-amber-500 hover:bg-amber-400 text-emerald-950 font-bold text-xs uppercase tracking-widest rounded-2xl shadow-xl shadow-amber-500/20 transition-all transform hover:-translate-y-1 active:translate-y-0"
                   >
                     Daftar Santri Online

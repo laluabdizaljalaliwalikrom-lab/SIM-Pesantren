@@ -18,6 +18,7 @@ import {
   BarChart4,
   ChevronDown,
   ChevronRight,
+  ClipboardList,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -56,6 +57,7 @@ const MENU_ITEMS: MenuItem[] = [
   { name: 'Lembaga', href: '/lembaga', icon: School },
   { name: 'Santri', href: '/santri', icon: Users },
   { name: 'Pegawai', href: '/pegawai', icon: Briefcase },
+  { name: 'PPDB', href: '/ppdb', icon: ClipboardList, badge: 'New' },
   { name: 'Asrama', href: '/asrama', icon: Home },
   { heading: 'Akademik & Tahfidz' },
   { name: 'Tahfidz Tracker', href: '/tahfidz', icon: GraduationCap },
@@ -130,6 +132,7 @@ export function Sidebar({
       '/asrama': 'Asrama',
       '/tahfidz': 'Tahfidz',
       '/pengaturan': 'Pengaturan',
+      '/ppdb': 'PPDB',
     };
     const moduleName = pathModuleMap[href];
     if (moduleName && !isSuperAdmin) {

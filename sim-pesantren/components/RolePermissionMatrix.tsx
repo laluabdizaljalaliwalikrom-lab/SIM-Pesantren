@@ -9,6 +9,7 @@ import {
   BookOpen,
   Home,
   ClipboardCheck,
+  ClipboardList,
   RotateCcw,
   Save,
   Lock,
@@ -37,6 +38,7 @@ const SYSTEM_MODULES: { key: string; label: string; icon: React.ElementType }[] 
   { key: 'Akademik',     label: 'Akademik',         icon: BookOpen      },
   { key: 'Asrama',       label: 'Asrama',           icon: Home          },
   { key: 'Perizinan',    label: 'Perizinan',        icon: ClipboardCheck },
+  { key: 'PPDB',         label: 'PPDB (PSB)',       icon: ClipboardList  },
   { key: 'Pengaturan',   label: 'Pengaturan Sistem', icon: Settings      },
 ];
 

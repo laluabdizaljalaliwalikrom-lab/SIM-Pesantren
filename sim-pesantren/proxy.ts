@@ -14,10 +14,19 @@ const PROTECTED_PREFIXES = [
   '/settings',
   '/profile',
   '/dashboard-eksekutif',
+  '/ppdb',
 ];
+
+const PSB_PREFIXES = ['/psb/dashboard'];
 
 function isProtectedRoute(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
+function isPsbProtectedRoute(pathname: string): boolean {
+  return PSB_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
 }
@@ -52,6 +61,15 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+  // PSB protected routes — must be logged in
+  if (!user && isPsbProtectedRoute(pathname)) {
+    const loginUrl = request.nextUrl.clone();
+    loginUrl.pathname = '/psb/login';
+    loginUrl.searchParams.set('redirectTo', pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Internal protected routes — must be logged in
   if (!user && isProtectedRoute(pathname)) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = '/login';
@@ -59,9 +77,17 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Redirect authenticated users on admin login to dashboard
   if (user && pathname === '/login') {
     const dashboardUrl = request.nextUrl.clone();
     dashboardUrl.pathname = '/admin';
+    return NextResponse.redirect(dashboardUrl);
+  }
+
+  // Redirect authenticated users on PSB login to PSB dashboard
+  if (user && pathname === '/psb/login') {
+    const dashboardUrl = request.nextUrl.clone();
+    dashboardUrl.pathname = '/psb/dashboard';
     return NextResponse.redirect(dashboardUrl);
   }
 

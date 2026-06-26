@@ -351,7 +351,7 @@ export interface AppRole {
 export interface RolePermission {
   id: string;
   id_role: string;
-  feature: 'Santri' | 'Keuangan' | 'Akademik' | string;
+  feature: 'Santri' | 'Keuangan' | 'Akademik' | 'PPDB' | string;
   can_view: boolean;
   can_create: boolean;
   can_edit: boolean;
@@ -460,4 +460,154 @@ export interface AppRolePermission {
   can_create: boolean;
   can_edit: boolean;
   can_delete: boolean;
+}
+
+// =========================================================================
+// PPDB Types
+// =========================================================================
+
+export type JalurPendaftaran = 'reguler' | 'prestasi' | 'afirmasi';
+export type JenisAfirmasi = 'yatim' | 'piatu' | 'yatim_piatu' | 'dhuafa';
+export type StatusPendaftaran =
+  | 'MENUNGGU_VERIFIKASI'
+  | 'LOLOS_ADMIN'
+  | 'DITOLAK'
+  | 'MENUNGGU_SELEKSI'
+  | 'DITERIMA'
+  | 'TIDAK_DITERIMA'
+  | 'MENUNGGU_PEMBAYARAN'
+  | 'LUNAS'
+  | 'SUDAH_DAFTAR_ULANG';
+
+export interface GelombangPendaftaran {
+  id: string;
+  nama: string;
+  tanggal_mulai: string;
+  tanggal_selesai: string;
+  kuota: number;
+  id_tahun_ajaran: string | null;
+  aktif: boolean;
+  created_at: string;
+  tahun_ajaran?: TahunAjaran | null;
+}
+
+export interface CalonSantri {
+  id: string;
+  auth_user_id: string;
+  nama_lengkap: string;
+  email: string;
+  no_hp: string;
+  tempat_lahir?: string | null;
+  tanggal_lahir?: string | null;
+  jenis_kelamin?: 'L' | 'P' | null;
+  nik?: string | null;
+  nisn?: string | null;
+  no_kk?: string | null;
+  agama?: string | null;
+  anak_ke?: number | null;
+  jml_saudara_kandung?: number | null;
+  alamat?: string | null;
+  rt?: string | null;
+  rw?: string | null;
+  dusun?: string | null;
+  kelurahan?: string | null;
+  kecamatan?: string | null;
+  kode_pos?: string | null;
+  jenis_tinggal?: string | null;
+  alat_transportasi?: string | null;
+  jarak_ke_sekolah?: string | null;
+  asal_sekolah?: string | null;
+  nama_ayah?: string | null;
+  tahun_lahir_ayah?: number | null;
+  pendidikan_ayah?: string | null;
+  pekerjaan_ayah?: string | null;
+  penghasilan_ayah?: string | null;
+  nik_ayah?: string | null;
+  nama_ibu?: string | null;
+  tahun_lahir_ibu?: number | null;
+  pendidikan_ibu?: string | null;
+  pekerjaan_ibu?: string | null;
+  penghasilan_ibu?: string | null;
+  nik_ibu?: string | null;
+  nama_wali?: string | null;
+  tahun_lahir_wali?: number | null;
+  pendidikan_wali?: string | null;
+  pekerjaan_wali?: string | null;
+  penghasilan_wali?: string | null;
+  nik_wali?: string | null;
+  no_hp_ortu?: string | null;
+  jalur_pendaftaran: JalurPendaftaran;
+  jenis_afirmasi?: JenisAfirmasi | null;
+  jenis_prestasi?: string | null;
+  id_gelombang: string | null;
+  no_registrasi_akta_lahir?: string | null;
+  skhun?: string | null;
+  penerima_kip_kps?: boolean | null;
+  bank?: string | null;
+  no_rekening?: string | null;
+  layak_pip?: boolean | null;
+  alasan_layak_pip?: string | null;
+  berat_badan?: number | null;
+  tinggi_badan?: number | null;
+  lingkar_kepala?: number | null;
+  foto_url?: string | null;
+  scan_akte?: string | null;
+  scan_kk?: string | null;
+  scan_kip?: string | null;
+  surat_keterangan?: string | null;
+  status: StatusPendaftaran;
+  catatan_admin?: string | null;
+  id_santri?: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joins
+  gelombang?: GelombangPendaftaran | null;
+  santri?: Santri | null;
+  hasil_seleksi?: HasilSeleksi | null;
+}
+
+export interface BiayaPpdb {
+  id: string;
+  id_gelombang: string;
+  nama_biaya: string;
+  nominal_reguler: number;
+  nominal_prestasi: number;
+  nominal_afirmasi: number;
+  wajib: boolean;
+  keterangan?: string | null;
+  created_at: string;
+  // Joins
+  gelombang?: GelombangPendaftaran | null;
+}
+
+export interface HasilSeleksi {
+  id: string;
+  id_calon_santri: string;
+  nilai_tes_tulis?: number | null;
+  nilai_baca_quran?: number | null;
+  nilai_wawancara?: number | null;
+  nilai_akhir?: number | null;
+  lulus?: boolean | null;
+  tanggal_tes?: string | null;
+  jam_tes?: string | null;
+  ruang_tes?: string | null;
+  id_penguji?: string | null;
+  catatan?: string | null;
+  created_at: string;
+  updated_at: string;
+  // Joins
+  calon_santri?: CalonSantri | null;
+  penguji?: Pegawai | null;
+}
+
+export interface PengumumanPpdb {
+  id: string;
+  id_gelombang: string;
+  judul: string;
+  konten?: string | null;
+  file_url?: string | null;
+  tanggal_terbit: string;
+  created_at: string;
+  // Joins
+  gelombang?: GelombangPendaftaran | null;
 }

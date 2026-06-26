@@ -155,6 +155,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const currentPath = pathname;
 
   const pathModuleMap: Record<string, string> = {
+    '/ppdb': 'PPDB',
     '/santri': 'Santri',
     '/pegawai': 'Kepegawaian',
     '/keuangan': 'Keuangan',
