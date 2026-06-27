@@ -103,6 +103,17 @@ export default function LandingPageClient({
   const [currentHijri, setCurrentHijri] = useState('');
   const [liveStats, setLiveStats] = useState(stats);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showPpdbPopup, setShowPpdbPopup] = useState(false);
+
+  useEffect(() => {
+    if (settings.status_pendaftaran) {
+      const dismissed = sessionStorage.getItem('ppdb_popup_dismissed');
+      if (!dismissed) {
+        const timer = setTimeout(() => setShowPpdbPopup(true), 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [settings.status_pendaftaran]);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -850,6 +861,105 @@ export default function LandingPageClient({
           Install App
         </button>
       )}
+
+      {/* PPDB Popup Notification */}
+      <AnimatePresence>
+        {showPpdbPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+          >
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => { setShowPpdbPopup(false); sessionStorage.setItem('ppdb_popup_dismissed', 'true'); }}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+
+            {/* Popup Card */}
+            <motion.div
+              initial={{ scale: 0.85, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 30 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              className="relative w-full max-w-lg bg-gradient-to-br from-emerald-50 to-white dark:from-zinc-900 dark:to-zinc-950 rounded-3xl shadow-2xl shadow-emerald-900/20 overflow-hidden border border-emerald-200/60 dark:border-emerald-800/40"
+            >
+              {/* Decorative top gradient bar */}
+              <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-amber-400 to-emerald-600" />
+
+              {/* Decorative background pattern */}
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-emerald-500/5 rounded-full blur-3xl" />
+              <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-amber-500/5 rounded-full blur-3xl" />
+
+              {/* Close button */}
+              <button
+                onClick={() => { setShowPpdbPopup(false); sessionStorage.setItem('ppdb_popup_dismissed', 'true'); }}
+                className="absolute top-4 right-4 z-10 p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-all"
+                aria-label="Tutup"
+              >
+                <X className="h-5 w-5" />
+              </button>
+
+              <div className="relative p-6 sm:p-8 pt-8 sm:pt-10 flex flex-col items-center text-center">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold uppercase tracking-widest mb-4">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Pendaftaran Dibuka
+                </div>
+
+                {/* Logo or Icon */}
+                {pesantrenLogo ? (
+                  <Image
+                    src={pesantrenLogo}
+                    alt=""
+                    width={64}
+                    height={64}
+                    className="rounded-2xl shadow-md shadow-emerald-600/10 mb-4"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-sufi text-2xl font-bold shadow-lg shadow-emerald-600/20 mb-4">
+                    {brandName.charAt(0)}
+                  </div>
+                )}
+
+                {/* Title */}
+                <h2 className="text-2xl sm:text-3xl font-sufi font-bold text-slate-900 dark:text-white mb-1">
+                  PPDB
+                </h2>
+                <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 mb-1">
+                  {brandName}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-xs mb-6 leading-relaxed">
+                  Tahun Ajaran {new Date().getFullYear()}/{new Date().getFullYear() + 1} — Segera daftarkan putra-putri Anda menjadi bagian dari keluarga besar {brandName}.
+                </p>
+
+                {/* CTA Button */}
+                <Link
+                  href="/psb"
+                  onClick={() => { setShowPpdbPopup(false); sessionStorage.setItem('ppdb_popup_dismissed', 'true'); }}
+                  className="inline-flex items-center gap-2 px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-bold text-sm rounded-2xl shadow-lg shadow-emerald-600/25 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0"
+                >
+                  Daftar Sekarang
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+
+                {/* Dismiss link */}
+                <button
+                  onClick={() => { setShowPpdbPopup(false); sessionStorage.setItem('ppdb_popup_dismissed', 'true'); }}
+                  className="mt-4 text-[11px] text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300 underline underline-offset-2 transition-colors"
+                >
+                  Nanti Saja
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
