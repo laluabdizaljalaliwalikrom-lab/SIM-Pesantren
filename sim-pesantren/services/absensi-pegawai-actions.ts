@@ -14,6 +14,46 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/**
+ * Helper to get local date & time details in Asia/Jakarta (WIB, UTC+7)
+ */
+function getWibTimeDetails() {
+  const now = new Date();
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jakarta',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+  const parts = formatter.formatToParts(now);
+  const map: Record<string, string> = {};
+  for (const p of parts) {
+    if (p.type !== 'literal') {
+      map[p.type] = p.value;
+    }
+  }
+
+  let hour = parseInt(map.hour, 10);
+  if (hour === 24) hour = 0;
+  const minute = parseInt(map.minute, 10);
+
+  const today = `${map.year}-${map.month}-${map.day}`;
+  const minutesSinceMidnight = hour * 60 + minute;
+
+  return { now, today, hour, minute, minutesSinceMidnight };
+}
+
+function parseTimeToMinutes(timeStr: string): number {
+  if (!timeStr) return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
 export async function scanAbsensiPegawai(
   id_pegawai: string,
   lokasi?: { lat: number; lng: number }
@@ -45,14 +85,12 @@ export async function scanAbsensiPegawai(
       }
     }
 
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-    const batasMasuk = profile?.jam_batas_masuk || '07:30';
-    const [batasJam, batasMenit] = batasMasuk.split(':').map(Number);
-    const batasDate = new Date(now);
-    batasDate.setHours(batasJam, batasMenit, 0, 0);
+    const { now, today, minutesSinceMidnight } = getWibTimeDetails();
 
-    const status: StatusAbsensiPegawai = now > batasDate ? 'Terlambat' : 'Hadir';
+    const batasMasuk = profile?.jam_batas_masuk || '07:30';
+    const batasMasukMinutes = parseTimeToMinutes(batasMasuk);
+
+    const status: StatusAbsensiPegawai = minutesSinceMidnight > batasMasukMinutes ? 'Terlambat' : 'Hadir';
 
     const { data: existing } = await supabase
       .from('absensi_pegawai')
@@ -63,11 +101,9 @@ export async function scanAbsensiPegawai(
 
     if (existing && !existing.jam_keluar) {
       const batasPulang = profile?.jam_batas_pulang || '12:00';
-      const [pulangJam, pulangMenit] = batasPulang.split(':').map(Number);
-      const pulangDate = new Date(now);
-      pulangDate.setHours(pulangJam, pulangMenit, 0, 0);
+      const batasPulangMinutes = parseTimeToMinutes(batasPulang);
 
-      if (now < pulangDate) {
+      if (minutesSinceMidnight < batasPulangMinutes) {
         return {
           success: false,
           error: `Belum waktunya absen pulang. Absen pulang dibuka mulai pukul ${batasPulang.slice(0, 5)}.`,
@@ -136,7 +172,7 @@ export async function getAbsensiHariIni(tanggal?: string) {
 
   try {
     const supabase = await getServerSupabase();
-    const targetDate = tanggal || new Date().toISOString().split('T')[0];
+    const targetDate = tanggal || getWibTimeDetails().today;
 
     const { data, error } = await supabase
       .from('absensi_pegawai')
