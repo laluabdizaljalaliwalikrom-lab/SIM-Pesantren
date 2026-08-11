@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -45,11 +45,6 @@ const formatNama = (p: Pegawai) => {
   return parts.join(' ');
 };
 
-const formatDate = (d?: string | null) => {
-  if (!d) return '-';
-  return new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-};
-
 const formatNamaPesantren = (name?: string | null) => {
   if (!name) return 'SIM Pesantren';
   const words = name.trim().split(/\s+/);
@@ -74,7 +69,7 @@ const formatNamaPesantrenString = (name?: string | null) => {
   return name;
 };
 
-const CARD_PRINT_CSS = "@page{size:A4 portrait;margin:0}*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{font-family:'Inter',sans-serif;background:#fff;color:#1e293b}.page{width:210mm;height:297mm;box-sizing:border-box;padding:12mm 10mm;display:flex;flex-direction:column;align-items:center;gap:12mm;page-break-after:always}.page:last-child{page-break-after:avoid}.pair{display:flex;justify-content:center;gap:12mm}.card{width:54mm;height:85.6mm;border-radius:4.5mm;overflow:hidden;position:relative;display:flex;flex-direction:column;border:.5pt solid rgba(4,47,38,0.4);box-shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);flex-shrink:0}.card-bg-svg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}.blob{position:absolute;border-radius:50%;opacity:0.12;filter:blur(6mm);pointer-events:none;z-index:2}.blob-1{top:15mm;right:-6mm;width:25mm;height:25mm;background:#047857}.blob-2{bottom:10mm;left:-6mm;width:25mm;height:25mm;background:#fbbf24}.blob-3{top:35mm;left:4mm;width:15mm;height:15mm;background:#10b981}.header{position:relative;display:flex;align-items:center;gap:2.5mm;padding:3mm 3.5mm 2.5mm;border-bottom:0.2pt solid rgba(255,255,255,0.1);background:rgba(0,0,0,0.15);z-index:2;width:100%}.logo-wrap{background:rgba(255,255,255,0.95);padding:0.4mm;border-radius:1.2mm;box-shadow:0 1px 2px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0}.logo{width:5mm;height:5mm;object-fit:contain}.logo-ph{width:5mm;height:5mm;border-radius:1.2mm;background:#ffffff;color:#047857;display:flex;align-items:center;justify-content:center;font-size:2mm;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.05);flex-shrink:0}.logo-wrap-sm{background:rgba(255,255,255,0.95);padding:0.4mm;border-radius:1mm;box-shadow:0 1px 2px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0}.logo-sm{width:4mm;height:4mm;object-fit:contain}.logo-ph-sm{width:4mm;height:4mm;border-radius:1mm;background:#ffffff;color:#047857;display:flex;align-items:center;justify-content:center;font-size:1.8mm;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.05);flex-shrink:0}.header-text{display:flex;flex-direction:column;text-align:left;flex:1;min-width:0}.inst{font-size:1.9mm;font-weight:800;color:rgba(255,255,255,0.95);text-transform:uppercase;letter-spacing:0.3pt;line-height:1.25}.inst-sm{font-size:1.7mm;font-weight:800;color:rgba(255,255,255,0.95);text-transform:uppercase;letter-spacing:0.3pt;line-height:1.25}.glass-container{margin:2.2mm;padding:2.5mm 2.5mm 3.2mm;border-radius:3mm;background:rgba(255,255,255,0.06);border:0.25pt solid rgba(251,191,36,0.2);box-shadow:0 4px 16px rgba(0,0,0,0.15);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;z-index:2}.glass-container-back{margin:2.2mm;padding:3.5mm 3.5mm 3.2mm;border-radius:3mm;background:rgba(255,255,255,0.06);border:0.25pt solid rgba(251,191,36,0.2);box-shadow:0 4px 16px rgba(0,0,0,0.15);flex:1;display:flex;flex-direction:column;justify-content:space-between;z-index:2}.photo-area{position:relative;display:flex;justify-content:center;z-index:2}.photo-ring{position:relative;border-radius:50%;padding:0.5mm;border:0.5mm solid;background:rgba(255,255,255,0.1);box-shadow:0 3px 5px -1px rgba(0,0,0,0.05)}.photo{width:16.5mm;height:16.5mm;border-radius:50%;object-fit:cover}.photo-ph{width:16.5mm;height:16.5mm;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:4.2mm;font-weight:700}.badge-check-icon{position:absolute;bottom:0;right:0;width:3.8mm;height:3.8mm;background:#d97706;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.8mm;font-weight:bold;box-shadow:0 1px 2px rgba(0,0,0,0.15);border:0.2mm solid #ffffff}.info{display:flex;flex-direction:column;align-items:center;padding:0 3mm;margin-top:1mm;width:100%;text-align:center;justify-content:flex-start;z-index:2}.name{font-size:2.5mm;font-weight:800;color:#ffffff;line-height:1.2;max-width:48mm;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:0.2pt}.nip{font-size:1.7mm;color:#fbbf24;font-family:'Courier New',monospace;letter-spacing:0.3pt;margin-top:0.3mm}.nip-ph{height:1mm;margin-top:0.3mm}.jabatan{font-size:1.4mm;font-weight:800;text-align:center;padding:0.2mm 2mm;border-radius:2.5mm;margin-top:1.2mm;background:rgba(217,119,6,0.15);color:#fde047;border:0.25pt solid rgba(217,119,6,0.3);text-transform:uppercase;letter-spacing:0.5pt}.satminkal{font-size:1.5mm;color:#d1fae5;font-weight:800;letter-spacing:0.2pt;margin-top:1mm;text-transform:uppercase}.date{font-size:1.2mm;color:rgba(255,255,255,0.75);font-weight:700;letter-spacing:0.3pt;margin-top:1mm}.qr-area{display:flex;justify-content:center;z-index:2}.qr-wrap{background:#ffffff;padding:0.7mm;border-radius:2mm;border:0.25pt solid rgba(255,255,255,0.1);box-shadow:0 1px 2px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center}.qr{width:15mm;height:15mm}.contact-area{display:flex;flex-direction:column;gap:1.5mm;width:100%;z-index:2}.contact-item{display:flex;flex-direction:column;border-bottom:0.2pt solid rgba(255,255,255,0.1);padding-bottom:0.8mm}.contact-item:last-child{border-bottom:none;padding-bottom:0}.contact-label{font-size:1.4mm;font-weight:800;color:#fbbf24;text-transform:uppercase;letter-spacing:0.5pt;margin-bottom:0.1mm}.contact-value{font-size:1.8mm;font-weight:600;color:#ffffff;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.custom-box{padding:1.5mm 3.5mm;border-radius:1.2mm;background:rgba(255,255,255,0.04);border:0.25pt solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;z-index:2;margin:1mm 0}.custom-text{font-size:1.4mm;color:#ffffff;line-height:1.35;text-align:center;font-weight:500}.footer-sign{display:flex;justify-content:between;align-items:center;margin-top:auto;z-index:2;padding-top:2mm;border-top:0.25pt solid rgba(255,255,255,0.1);width:100%}.sign-info{display:flex;flex-direction:column;text-align:left}.sign-title{font-size:1.2mm;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:0.3pt}.sign-name{font-size:1.5mm;font-weight:800;color:#ffffff;text-transform:uppercase;letter-spacing:0.2pt;margin-top:0.2mm}.sign-stamp{display:flex;flex-direction:column;align-items:center}.sign-line{width:11mm;border-bottom:0.2pt dashed rgba(255,255,255,0.3);height:2.5mm}.stamp-label{font-size:1mm;font-weight:700;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:0.3pt;margin-top:0.3mm}@media print{body{margin:0;background:#ffffff}.card{box-shadow:none;border:.5pt solid rgba(4,47,38,0.5)}}";
+const CARD_PRINT_CSS = `@page{size:A4 portrait;margin:0}*{margin:0;padding:0;box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}body{font-family:'Inter',sans-serif;background:#fff;color:#1e293b}.page{width:210mm;height:297mm;box-sizing:border-box;padding:12mm 10mm;display:flex;flex-direction:column;align-items:center;gap:12mm;page-break-after:always}.page:last-child{page-break-after:avoid}.pair{display:flex;justify-content:center;gap:12mm}.card{width:54mm;height:85.6mm;border-radius:4.5mm;overflow:hidden;position:relative;display:flex;flex-direction:column;border:.5pt solid rgba(4,47,38,0.4);box-shadow:0 4px 6px -1px rgba(0,0,0,0.05),0 2px 4px -1px rgba(0,0,0,0.03);flex-shrink:0}.card-bg-svg{position:absolute;top:0;left:0;width:100%;height:100%;z-index:1;pointer-events:none}.blob{position:absolute;border-radius:50%;opacity:0.12;filter:blur(6mm);pointer-events:none;z-index:2}.blob-1{top:15mm;right:-6mm;width:25mm;height:25mm;background:#047857}.blob-2{bottom:10mm;left:-6mm;width:25mm;height:25mm;background:#fbbf24}.blob-3{top:35mm;left:4mm;width:15mm;height:15mm;background:#10b981}.header{position:relative;display:flex;align-items:center;gap:2.5mm;padding:2.5mm 3.5mm 2mm;border-bottom:0.2pt solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.2);z-index:2;width:100%}.logo-wrap{background:rgba(255,255,255,0.95);padding:0.4mm;border-radius:1.2mm;box-shadow:0 1px 2px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0}.logo{width:5mm;height:5mm;object-fit:contain}.logo-ph{width:5mm;height:5mm;border-radius:1.2mm;background:#ffffff;color:#047857;display:flex;align-items:center;justify-content:center;font-size:2mm;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.05);flex-shrink:0}.logo-wrap-sm{background:rgba(255,255,255,0.95);padding:0.4mm;border-radius:1mm;box-shadow:0 1px 2px rgba(0,0,0,0.05);display:flex;align-items:center;justify-content:center;flex-shrink:0}.logo-sm{width:4mm;height:4mm;object-fit:contain}.logo-ph-sm{width:4mm;height:4mm;border-radius:1mm;background:#ffffff;color:#047857;display:flex;align-items:center;justify-content:center;font-size:1.8mm;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,0.05);flex-shrink:0}.header-text{display:flex;flex-direction:column;text-align:left;flex:1;min-width:0}.inst{font-size:1.9mm;font-weight:800;color:rgba(255,255,255,0.95);text-transform:uppercase;letter-spacing:0.3pt;line-height:1.2}.inst-sm{font-size:1.7mm;font-weight:800;color:rgba(255,255,255,0.95);text-transform:uppercase;letter-spacing:0.3pt;line-height:1.2}.glass-container{margin:1.8mm;padding:2.2mm 2mm 2.2mm;border-radius:3mm;background:rgba(255,255,255,0.07);border:0.25pt solid rgba(251,191,36,0.25);box-shadow:0 4px 16px rgba(0,0,0,0.15);flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;z-index:2}.glass-container-back{margin:2.2mm;padding:3.5mm 3.5mm 3.2mm;border-radius:3mm;background:rgba(255,255,255,0.06);border:0.25pt solid rgba(251,191,36,0.2);box-shadow:0 4px 16px rgba(0,0,0,0.15);flex:1;display:flex;flex-direction:column;justify-content:space-between;z-index:2}.photo-area{position:relative;display:flex;justify-content:center;z-index:2}.photo-ring{position:relative;border-radius:50%;padding:0.4mm;border:0.4mm solid;background:rgba(255,255,255,0.1);box-shadow:0 3px 5px -1px rgba(0,0,0,0.1)}.photo{width:14mm;height:14mm;border-radius:50%;object-fit:cover}.photo-ph{width:14mm;height:14mm;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:3.8mm;font-weight:700}.badge-check-icon{position:absolute;bottom:0;right:0;width:3.5mm;height:3.5mm;background:#d97706;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:1.6mm;font-weight:bold;box-shadow:0 1px 2px rgba(0,0,0,0.15);border:0.2mm solid #ffffff}.info{display:flex;flex-direction:column;align-items:center;padding:0 2mm;margin-top:0.8mm;width:100%;text-align:center;justify-content:flex-start;z-index:2}.name{font-size:2.4mm;font-weight:800;color:#ffffff;line-height:1.2;max-width:48mm;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase;letter-spacing:0.2pt}.nip{font-size:1.6mm;color:#fbbf24;font-family:'Courier New',monospace;letter-spacing:0.4pt;margin-top:0.3mm}.nip-ph{height:0.8mm;margin-top:0.3mm}.jabatan{font-size:1.4mm;font-weight:800;text-align:center;padding:0.3mm 2.2mm;border-radius:2.5mm;margin-top:0.8mm;background:rgba(217,119,6,0.2);color:#fde047;border:0.25pt solid rgba(217,119,6,0.4);text-transform:uppercase;letter-spacing:0.5pt}.satminkal{font-size:1.3mm;color:#d1fae5;font-weight:700;letter-spacing:0.2pt;margin-top:0.6mm;text-transform:uppercase}.qr-area{display:flex;justify-content:center;z-index:2;margin-top:1mm}.qr-wrap{background:#ffffff;padding:1mm;border-radius:2mm;border:0.25pt solid rgba(255,255,255,0.2);box-shadow:0 2px 4px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center}.qr{width:23mm;height:23mm}.contact-area{display:flex;flex-direction:column;gap:1.5mm;width:100%;z-index:2}.contact-item{display:flex;flex-direction:column;border-bottom:0.2pt solid rgba(255,255,255,0.1);padding-bottom:0.8mm}.contact-item:last-child{border-bottom:none;padding-bottom:0}.contact-label{font-size:1.4mm;font-weight:800;color:#fbbf24;text-transform:uppercase;letter-spacing:0.5pt;margin-bottom:0.1mm}.contact-value{font-size:1.8mm;font-weight:600;color:#ffffff;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.custom-box{padding:1.5mm 3.5mm;border-radius:1.2mm;background:rgba(255,255,255,0.04);border:0.25pt solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;z-index:2;margin:1mm 0}.custom-text{font-size:1.4mm;color:#ffffff;line-height:1.35;text-align:center;font-weight:500}.footer-sign{display:flex;justify-content:between;align-items:center;margin-top:auto;z-index:2;padding-top:2mm;border-top:0.25pt solid rgba(255,255,255,0.1);width:100%}.sign-info{display:flex;flex-direction:column;text-align:left}.sign-title{font-size:1.2mm;font-weight:700;color:#fbbf24;text-transform:uppercase;letter-spacing:0.3pt}.sign-name{font-size:1.5mm;font-weight:800;color:#ffffff;text-transform:uppercase;letter-spacing:0.2pt;margin-top:0.2mm}.sign-stamp{display:flex;flex-direction:column;align-items:center}.sign-line{width:11mm;border-bottom:0.2pt dashed rgba(255,255,255,0.3);height:2.5mm}.stamp-label{font-size:1mm;font-weight:700;color:rgba(255,255,255,0.75);text-transform:uppercase;letter-spacing:0.3pt;margin-top:0.3mm}@media print{body{margin:0;background:#ffffff}.card{box-shadow:none;border:.5pt solid rgba(4,47,38,0.5)}}`;
 
 interface CardFlipProps {
   pegawai: Pegawai & { satminkal?: string[] };
@@ -91,7 +86,7 @@ function CardPreview({ pegawai, profile, isFlipped, onFlip }: CardFlipProps) {
       <div className={`relative w-[216px] h-[344px] transition-transform duration-700 [transform-style:preserve-3d] ${isFlipped ? '[transform:rotateY(180deg)]' : ''}`}>
         
         {/* FRONT SIDE */}
-        <div className="absolute inset-0 [backface-visibility:hidden] rounded-2xl overflow-hidden shadow-lg border border-emerald-900/30 flex flex-col">
+        <div className="absolute inset-0 [backface-visibility:hidden] rounded-2xl overflow-hidden shadow-xl border border-emerald-900/30 flex flex-col">
           <svg className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none rounded-2xl" viewBox="0 0 180 285" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="cardGradFront" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -129,13 +124,13 @@ function CardPreview({ pegawai, profile, isFlipped, onFlip }: CardFlipProps) {
           <div className="absolute bottom-[40px] -left-12 w-28 h-28 rounded-full bg-yellow-500/10 blur-3xl pointer-events-none" />
 
           {/* Header */}
-          <div className="relative flex items-center gap-2.5 px-3.5 pt-4 pb-3 border-b border-white/10 z-10 w-full bg-black/10">
+          <div className="relative flex items-center gap-2 px-3 pt-3.5 pb-2 border-b border-white/15 z-10 w-full bg-black/20">
             {profile?.logo_url ? (
               <div className="bg-white/95 p-0.5 rounded shadow-sm flex items-center justify-center flex-shrink-0">
-                <Image src={profile.logo_url} alt="Logo" width={22} height={22} className="object-contain" unoptimized />
+                <Image src={profile.logo_url} alt="Logo" width={20} height={20} className="object-contain" unoptimized />
               </div>
             ) : (
-              <div className="w-5.5 h-5.5 rounded bg-white text-emerald-950 flex items-center justify-center font-bold text-[8px] shadow-sm flex-shrink-0">SP</div>
+              <div className="w-5 h-5 rounded bg-white text-emerald-950 flex items-center justify-center font-bold text-[8px] shadow-sm flex-shrink-0">SP</div>
             )}
             <div className="flex flex-col text-left justify-center flex-1 min-w-0">
               <span className="text-[8.5px] font-extrabold text-white tracking-wide uppercase leading-tight line-clamp-2">
@@ -145,15 +140,15 @@ function CardPreview({ pegawai, profile, isFlipped, onFlip }: CardFlipProps) {
           </div>
 
           {/* Frosted Glass Container */}
-          <div className="mx-2.5 my-2.5 p-3 rounded-xl bg-white/[0.06] dark:bg-black/[0.25] border border-amber-500/20 backdrop-blur-md flex-1 flex flex-col items-center justify-between shadow-lg shadow-black/25 z-10">
+          <div className="mx-2 my-2 p-2.5 rounded-xl bg-white/[0.07] dark:bg-black/[0.3] border border-amber-500/25 backdrop-blur-md flex-1 flex flex-col items-center justify-between shadow-xl shadow-black/30 z-10">
             {/* Profile Photo */}
             <div className="relative p-0.5 rounded-full border bg-white/10" style={{ borderColor: c.solid }}>
               {pegawai.foto_url ? (
-                <div className="w-[66px] h-[66px] rounded-full overflow-hidden bg-white/5">
-                  <Image src={pegawai.foto_url} alt={pegawai.nama_lengkap} width={66} height={66} className="w-full h-full object-cover" unoptimized />
+                <div className="w-[56px] h-[56px] rounded-full overflow-hidden bg-white/5">
+                  <Image src={pegawai.foto_url} alt={pegawai.nama_lengkap} width={56} height={56} className="w-full h-full object-cover" unoptimized />
                 </div>
               ) : (
-                <div className={`w-[66px] h-[66px] rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 flex items-center justify-center text-white text-xl font-bold`}>
+                <div className={`w-[56px] h-[56px] rounded-full bg-gradient-to-br from-emerald-800 to-emerald-950 flex items-center justify-center text-white text-lg font-bold`}>
                   {getInitials(pegawai.nama_lengkap)}
                 </div>
               )}
@@ -163,42 +158,36 @@ function CardPreview({ pegawai, profile, isFlipped, onFlip }: CardFlipProps) {
             </div>
 
             {/* Employee Info */}
-            <div className="flex flex-col items-center mt-2 text-center justify-start w-full">
-              <p className="text-[10px] font-extrabold text-white uppercase tracking-wide leading-tight line-clamp-2 max-w-[170px]">
+            <div className="flex flex-col items-center mt-1 text-center justify-start w-full">
+              <p className="text-[10.5px] font-extrabold text-white uppercase tracking-wide leading-tight line-clamp-2 max-w-[175px]">
                 {formatNama(pegawai)}
               </p>
               {pegawai.nip ? (
-                <p className="text-[7px] text-amber-400 mt-0.5 font-mono tracking-widest uppercase">ID. {pegawai.nip}</p>
+                <p className="text-[7.5px] text-amber-400 mt-0.5 font-mono tracking-widest uppercase">ID. {pegawai.nip}</p>
               ) : (
                 <div className="h-1" />
               )}
               
-              <div className="mt-2 px-2.5 py-0.5 rounded-full text-[6px] font-extrabold uppercase tracking-widest bg-amber-500/10 text-amber-300 border border-amber-500/30">
+              <div className="mt-1 px-2.5 py-0.5 rounded-full text-[6.5px] font-extrabold uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs">
                 {pegawai.jabatan}
               </div>
 
               {pegawai.satminkal && pegawai.satminkal.length > 0 && (
-                <p className="text-[6.5px] font-bold text-emerald-100 mt-1 uppercase tracking-wide">
+                <p className="text-[6.5px] font-bold text-emerald-200 mt-1 uppercase tracking-wide">
                   {pegawai.satminkal.join(', ')}
-                </p>
-              )}
-              
-              {pegawai.tanggal_bergabung && (
-                <p className="text-[5px] text-white/75 mt-1 font-bold tracking-wider uppercase">
-                  SINCE: {formatDate(pegawai.tanggal_bergabung)}
                 </p>
               )}
             </div>
 
-            {/* QR Code */}
-            <div className="mt-2 flex justify-center">
+            {/* Enlarged QR Code (Maximum Readability) */}
+            <div className="mt-1.5 flex justify-center w-full">
               {pegawai.qr_code_url ? (
-                <div className="bg-white p-1 rounded-lg border border-white/10 shadow-md transition-transform hover:scale-105 duration-300">
-                  <img src={pegawai.qr_code_url} alt="QR" width={60} height={60} />
+                <div className="bg-white p-1.5 rounded-xl border border-white/20 shadow-2xl transition-transform hover:scale-105 duration-300 flex items-center justify-center">
+                  <img src={pegawai.qr_code_url} alt="QR" width={92} height={92} className="w-[92px] h-[92px] object-contain" />
                 </div>
               ) : (
-                <div className="w-[64px] h-[64px] rounded-lg border border-dashed border-white/20 flex items-center justify-center bg-white/5">
-                  <QrCode className="h-5 w-5 text-white/30" />
+                <div className="w-[92px] h-[92px] rounded-xl border border-dashed border-white/20 flex items-center justify-center bg-white/5">
+                  <QrCode className="h-7 w-7 text-white/30" />
                 </div>
               )}
             </div>
@@ -206,7 +195,7 @@ function CardPreview({ pegawai, profile, isFlipped, onFlip }: CardFlipProps) {
         </div>
 
         {/* BACK SIDE */}
-        <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl overflow-hidden shadow-lg border border-emerald-900/30 flex flex-col">
+        <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-2xl overflow-hidden shadow-xl border border-emerald-900/30 flex flex-col">
           <svg className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none rounded-2xl" viewBox="0 0 180 285" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
               <linearGradient id="cardGradBack" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -366,7 +355,11 @@ export default function KartuPegawaiPage() {
     try {
       setGenerating(pegawai.id);
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-      const dataUrl = await QRCodeLib.toDataURL(`${baseUrl}/absen-pegawai/scan?id=${pegawai.id}`, { width: 200, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
+      const dataUrl = await QRCodeLib.toDataURL(`${baseUrl}/absen-pegawai/scan?id=${pegawai.id}`, {
+        width: 400,
+        margin: 1,
+        color: { dark: '#000000', light: '#ffffff' }
+      });
       const result = await saveQrCode(pegawai.id, dataUrl);
       if (result.success) {
         setPegawaiList((prev) => prev.map((p) => (p.id === pegawai.id ? { ...p, qr_code_url: dataUrl } : p)));
@@ -381,7 +374,11 @@ export default function KartuPegawaiPage() {
       setGenerating('all');
       const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
       for (const p of pegawaiList) {
-        const dataUrl = await QRCodeLib.toDataURL(`${baseUrl}/absen-pegawai/scan?id=${p.id}`, { width: 200, margin: 2, color: { dark: '#000000', light: '#ffffff' } });
+        const dataUrl = await QRCodeLib.toDataURL(`${baseUrl}/absen-pegawai/scan?id=${p.id}`, {
+          width: 400,
+          margin: 1,
+          color: { dark: '#000000', light: '#ffffff' }
+        });
         await saveQrCode(p.id, dataUrl);
         setPegawaiList((prev) => prev.map((x) => (x.id === p.id ? { ...x, qr_code_url: dataUrl } : x)));
       }
@@ -399,7 +396,7 @@ export default function KartuPegawaiPage() {
       const cardHtml = buildPrintCardHtml(pegawai, side);
       const container = document.createElement('div');
       container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
-        container.innerHTML = `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${CARD_PRINT_CSS}</style>${cardHtml}`;
+      container.innerHTML = `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${CARD_PRINT_CSS}</style>${cardHtml}`;
       document.body.appendChild(container);
 
       const cardEl = container.querySelector('.card') as HTMLElement;
@@ -435,7 +432,7 @@ export default function KartuPegawaiPage() {
         const cardHtml = buildPrintCardHtml(p, side);
         const container = document.createElement('div');
         container.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
-      container.innerHTML = `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${CARD_PRINT_CSS}</style>${cardHtml}`;
+        container.innerHTML = `<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>${CARD_PRINT_CSS}</style>${cardHtml}`;
         document.body.appendChild(container);
 
         const cardEl = container.querySelector('.card') as HTMLElement;
@@ -524,7 +521,6 @@ export default function KartuPegawaiPage() {
               ${p.nip ? `<div class="nip">ID. ${p.nip}</div>` : '<div class="nip-ph"></div>'}
               <div class="jabatan">${p.jabatan}</div>
               ${p.satminkal && p.satminkal.length > 0 ? `<div class="satminkal">${p.satminkal.join(', ').toUpperCase()}</div>` : ''}
-              ${p.tanggal_bergabung ? `<div class="date">SINCE: ${formatDate(p.tanggal_bergabung).toUpperCase()}</div>` : ''}
             </div>
 
             <div class="qr-area">
