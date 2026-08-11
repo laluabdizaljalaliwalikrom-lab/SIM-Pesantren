@@ -122,6 +122,9 @@ export default function FastQrScanner({ onScan, onError, active, className = '' 
     onScanRef.current(result);
   }, []);
 
+  const lastScannedTextRef = useRef<string>('');
+  const lastScannedTimeRef = useRef<number>(0);
+
   // Main high-frequency scan loop
   const scanLoop = useCallback(() => {
     const video = videoRef.current;
@@ -208,10 +211,19 @@ export default function FastQrScanner({ onScan, onError, active, className = '' 
       }
 
       if (detectedCode) {
-        handleDetected(detectedCode);
-      } else {
-        animFrameRef.current = requestAnimationFrame(scanLoop);
+        const now = Date.now();
+        const isSameCode = detectedCode === lastScannedTextRef.current;
+        const isRecent = now - lastScannedTimeRef.current < 2500; // 2.5 seconds cooldown
+
+        if (!isSameCode || !isRecent) {
+          lastScannedTextRef.current = detectedCode;
+          lastScannedTimeRef.current = now;
+          handleDetected(detectedCode);
+        }
       }
+
+      // Always continue scan loop for continuous multi-QR scanning
+      animFrameRef.current = requestAnimationFrame(scanLoop);
     };
 
     runDetection();
