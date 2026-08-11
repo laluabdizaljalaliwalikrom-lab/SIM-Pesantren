@@ -241,9 +241,15 @@ export default function PegawaiPage() {
   });
 
   const totalPegawai = pegawaiList.length;
-  const totalUstadz = pegawaiList.filter(p => p.jabatan === 'Ustadz' || p.jabatan === 'Ustadzah').length;
-  const totalGuruFormal = pegawaiList.filter(p => p.jabatan === 'Guru Formal').length;
-  const totalAktif = pegawaiList.filter(p => p.status === 'Aktif').length;
+  const totalAktif = pegawaiList.filter(p => !p.status || p.status.toLowerCase() === 'aktif').length;
+  const totalUstadzPengasuh = pegawaiList.filter(p => {
+    const j = (p.jabatan || '').toLowerCase();
+    return j.includes('ustadz') || j.includes('pengasuh');
+  }).length;
+  const totalGuru = pegawaiList.filter(p => {
+    const j = (p.jabatan || '').toLowerCase();
+    return j.includes('guru') || j.includes('kepala sekolah');
+  }).length;
 
   const openAdd = () => {
     setSelectedPegawai(null);
@@ -403,9 +409,9 @@ export default function PegawaiPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[
           { label: 'Total Pegawai', value: totalPegawai, icon: <Users className="h-5 w-5" />, color: 'emerald' },
-          { label: 'Ustadz / Ustadzah', value: totalUstadz, icon: <BookOpen className="h-5 w-5" />, color: 'violet' },
-          { label: 'Guru Formal', value: totalGuruFormal, icon: <GraduationCap className="h-5 w-5" />, color: 'blue' },
-          { label: 'Pegawai Aktif', value: totalAktif, icon: <UserCheck className="h-5 w-5" />, color: 'amber' },
+          { label: 'Pegawai Aktif', value: totalAktif, icon: <UserCheck className="h-5 w-5" />, color: 'emerald' },
+          { label: 'Ustadz & Pengasuh', value: totalUstadzPengasuh, icon: <BookOpen className="h-5 w-5" />, color: 'violet' },
+          { label: 'Guru & Pendidik', value: totalGuru, icon: <GraduationCap className="h-5 w-5" />, color: 'blue' },
         ].map((stat) => (
           <div
             key={stat.label}
