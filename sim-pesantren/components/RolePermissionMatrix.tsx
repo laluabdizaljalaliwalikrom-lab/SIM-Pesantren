@@ -18,7 +18,9 @@ import {
   AlertCircle,
   Users,
   School,
-  Settings
+  Settings,
+  AlertTriangle,
+  BarChart4
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateRolePermissions } from '@/services/role-actions';
@@ -30,16 +32,18 @@ import { updateRolePermissions } from '@/services/role-actions';
 type ActionKey = 'can_view' | 'can_create' | 'can_edit' | 'can_delete';
 
 const SYSTEM_MODULES: { key: string; label: string; icon: React.ElementType }[] = [
-  { key: 'Lembaga',      label: 'Lembaga & Kelas',  icon: School        },
-  { key: 'Santri',       label: 'Data Santri',      icon: Users         },
-  { key: 'Tahfidz',      label: 'Tahfidz Tracker',   icon: GraduationCap },
-  { key: 'Kepegawaian',  label: 'Kepegawaian',      icon: Briefcase     },
-  { key: 'Keuangan',     label: 'Keuangan',         icon: Wallet        },
-  { key: 'Akademik',     label: 'Akademik',         icon: BookOpen      },
-  { key: 'Asrama',       label: 'Asrama',           icon: Home          },
-  { key: 'Perizinan',    label: 'Perizinan',        icon: ClipboardCheck },
-  { key: 'PPDB',         label: 'PPDB (PSB)',       icon: ClipboardList  },
-  { key: 'Pengaturan',   label: 'Pengaturan Sistem', icon: Settings      },
+  { key: 'Lembaga',      label: 'Lembaga & Kelas',       icon: School          },
+  { key: 'Santri',       label: 'Data Santri',           icon: Users           },
+  { key: 'Kepegawaian',  label: 'Kepegawaian & Absen',   icon: Briefcase       },
+  { key: 'PPDB',         label: 'PPDB (PSB)',            icon: ClipboardList   },
+  { key: 'Asrama',       label: 'Asrama & Kamar',        icon: Home            },
+  { key: 'Perizinan',    label: 'Perizinan Santri',      icon: ClipboardCheck  },
+  { key: 'Pelanggaran',  label: 'Kedisiplinan & Poin',   icon: AlertTriangle   },
+  { key: 'Tahfidz',      label: 'Tahfidz Tracker',        icon: GraduationCap   },
+  { key: 'Akademik',     label: 'Akademik & Nilai',      icon: BookOpen        },
+  { key: 'Keuangan',     label: 'Keuangan & Kasir',      icon: Wallet          },
+  { key: 'Laporan',      label: 'Laporan & Eksekutif',   icon: BarChart4       },
+  { key: 'Pengaturan',   label: 'Pengaturan Sistem',     icon: Settings        },
 ];
 
 const ACTION_COLUMNS: { key: ActionKey; label: string }[] = [

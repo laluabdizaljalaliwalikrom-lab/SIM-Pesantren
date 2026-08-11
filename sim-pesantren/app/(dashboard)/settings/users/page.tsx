@@ -285,13 +285,16 @@ export default function UserRoleSettingsPage() {
         const defaultPerms = [
           { id_role: roleId, feature: 'Lembaga', can_view: false, can_create: false, can_edit: false, can_delete: false },
           { id_role: roleId, feature: 'Santri', can_view: true, can_create: false, can_edit: false, can_delete: false },
-          { id_role: roleId, feature: 'Tahfidz', can_view: true, can_create: false, can_edit: false, can_delete: false },
           { id_role: roleId, feature: 'Kepegawaian', can_view: false, can_create: false, can_edit: false, can_delete: false },
-          { id_role: roleId, feature: 'Keuangan', can_view: false, can_create: false, can_edit: false, can_delete: false },
-          { id_role: roleId, feature: 'Akademik', can_view: false, can_create: false, can_edit: false, can_delete: false },
+          { id_role: roleId, feature: 'PPDB', can_view: true, can_create: false, can_edit: false, can_delete: false },
           { id_role: roleId, feature: 'Asrama', can_view: false, can_create: false, can_edit: false, can_delete: false },
           { id_role: roleId, feature: 'Perizinan', can_view: false, can_create: false, can_edit: false, can_delete: false },
-          { id_role: roleId, feature: 'PPDB', can_view: true, can_create: false, can_edit: false, can_delete: false }
+          { id_role: roleId, feature: 'Pelanggaran', can_view: false, can_create: false, can_edit: false, can_delete: false },
+          { id_role: roleId, feature: 'Tahfidz', can_view: true, can_create: false, can_edit: false, can_delete: false },
+          { id_role: roleId, feature: 'Akademik', can_view: false, can_create: false, can_edit: false, can_delete: false },
+          { id_role: roleId, feature: 'Keuangan', can_view: false, can_create: false, can_edit: false, can_delete: false },
+          { id_role: roleId, feature: 'Laporan', can_view: false, can_create: false, can_edit: false, can_delete: false },
+          { id_role: roleId, feature: 'Pengaturan', can_view: false, can_create: false, can_edit: false, can_delete: false },
         ];
 
         const { error: permErr } = await supabase

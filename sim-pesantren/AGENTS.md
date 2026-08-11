@@ -117,18 +117,21 @@ sim-pesantren/
 | URL | Modul | Permission Feature |
 |---|---|---|
 | `/admin` | Dashboard Overview | — (always accessible) |
-| `/dashboard-eksekutif` | Dashboard Eksekutif | — |
+| `/dashboard-eksekutif` | Dashboard Eksekutif | `Laporan` |
 | `/lembaga` | Lembaga | `Lembaga` |
 | `/santri` | Santri | `Santri` |
-| `/pegawai` | Pegawai | `Kepegawaian` |
-| `/asrama` | Asrama | `Asrama` |
+| `/pegawai` | Pegawai & Absensi | `Kepegawaian` |
+| `/ppdb` | PPDB (PSB) | `PPDB` |
+| `/asrama` | Asrama & Kamar | `Asrama` |
+| `/asrama/perizinan` | Perizinan Santri | `Perizinan` |
+| `/asrama/pelanggaran` | Pelanggaran Santri | `Pelanggaran` |
 | `/tahfidz` | Tahfidz Tracker | `Tahfidz` |
-| `/akademik/*` | Akademik | `Akademik` |
+| `/akademik/*` | Akademik & Nilai | `Akademik` |
 | `/pembayaran` | Kasir Pembayaran | `Keuangan` |
 | `/keuangan` | Atur Keuangan | `Keuangan` |
-| `/laporan` | Laporan Keuangan | `Keuangan` |
-| `/pengaturan` | Pengaturan | `Pengaturan` |
-| `/settings/*` | Manajemen User/Role | Super Admin only |
+| `/laporan` | Laporan Keuangan | `Laporan` |
+| `/pengaturan` | Pengaturan Sistem | `Pengaturan` |
+| `/settings/*` | Hak Akses & User | Super Admin only |
 | `/profile` | Profile User | — (own profile) |
 
 ## CRITICAL: Database Access Rules

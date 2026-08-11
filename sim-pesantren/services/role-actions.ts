@@ -79,14 +79,16 @@ export async function updateRolePermissions(
   const VALID_FEATURES = [
     'Lembaga',
     'Santri',
-    'Tahfidz',
     'Kepegawaian',
-    'Keuangan',
-    'Akademik',
+    'PPDB',
     'Asrama',
     'Perizinan',
+    'Pelanggaran',
+    'Tahfidz',
+    'Akademik',
+    'Keuangan',
+    'Laporan',
     'Pengaturan',
-    'PPDB',
   ];
   for (const p of permissions) {
     if (!VALID_FEATURES.includes(p.feature)) {
