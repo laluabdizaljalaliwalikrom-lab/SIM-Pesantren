@@ -15,12 +15,12 @@ function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: numbe
 }
 
 /**
- * Helper to get local date & time details in Asia/Jakarta (WIB, UTC+7)
+ * Helper to get local date & time details in Asia/Makassar (WITA, UTC+8) for Lombok Timur / NTB
  */
-function getWibTimeDetails() {
+function getWibTimeDetails(timeZone: string = 'Asia/Makassar') {
   const now = new Date();
   const formatter = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Jakarta',
+    timeZone,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
