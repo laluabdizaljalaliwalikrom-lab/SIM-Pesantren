@@ -162,11 +162,7 @@ function CardPreview({ pegawai, profile, isFlipped, onFlip }: CardFlipProps) {
               <p className="text-[10.5px] font-extrabold text-white uppercase tracking-wide leading-tight line-clamp-2 max-w-[175px]">
                 {formatNama(pegawai)}
               </p>
-              {pegawai.nip ? (
-                <p className="text-[7.5px] text-amber-400 mt-0.5 font-mono tracking-widest uppercase">ID. {pegawai.nip}</p>
-              ) : (
-                <div className="h-1" />
-              )}
+
               
               <div className="mt-1 px-2.5 py-0.5 rounded-full text-[6.5px] font-extrabold uppercase tracking-widest bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-xs">
                 {pegawai.jabatan}
@@ -518,7 +514,6 @@ export default function KartuPegawaiPage() {
 
             <div class="info">
               <div class="name">${nama}</div>
-              ${p.nip ? `<div class="nip">ID. ${p.nip}</div>` : '<div class="nip-ph"></div>'}
               <div class="jabatan">${p.jabatan}</div>
               ${p.satminkal && p.satminkal.length > 0 ? `<div class="satminkal">${p.satminkal.join(', ').toUpperCase()}</div>` : ''}
             </div>
