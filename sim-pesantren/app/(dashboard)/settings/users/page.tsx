@@ -368,7 +368,7 @@ export default function UserRoleSettingsPage() {
       const { updateRole } = await import('@/services/role-actions');
       const result = await updateRole(editingRole.id, {
         name: editRoleName.trim(),
-        description: editRoleDesc.trim() || null,
+        description: editRoleDesc.trim() || undefined,
       });
       if (!result.success) {
         toast.error(result.message);

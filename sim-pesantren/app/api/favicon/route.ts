@@ -39,7 +39,7 @@ export async function GET() {
       .png()
       .toBuffer();
 
-    return new NextResponse(resizedBuffer, {
+    return new NextResponse(new Uint8Array(resizedBuffer), {
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=3600, immutable',
@@ -61,7 +61,7 @@ async function fallbackIcon() {
       .resize(32, 32, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
       .png()
       .toBuffer();
-    return new NextResponse(resizedBuffer, {
+    return new NextResponse(new Uint8Array(resizedBuffer), {
       headers: {
         'Content-Type': 'image/png',
         'Cache-Control': 'public, max-age=3600, immutable',
