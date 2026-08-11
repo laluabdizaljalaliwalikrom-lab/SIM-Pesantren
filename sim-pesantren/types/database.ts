@@ -41,7 +41,7 @@ export interface Kamar {
   gedung_relation?: Gedung | null;
 }
 
-export type SantriStatus = 'Aktif' | 'Alumni' | 'Keluar' | 'Drop Out' | 'Non-Aktif' | 'Cuti';
+export type SantriStatus = 'Aktif' | 'Alumni' | 'Keluar' | 'Drop Out' | 'Non-Aktif' | 'Cuti' | 'aktif' | 'alumni' | 'keluar' | 'non-aktif' | (string & {});
 
 export interface Santri {
   id: string;
