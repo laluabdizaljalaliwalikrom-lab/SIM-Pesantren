@@ -19,6 +19,7 @@ import {
   ChevronDown,
   ChevronRight,
   ClipboardList,
+  CalendarCheck,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -57,6 +58,16 @@ const MENU_ITEMS: MenuItem[] = [
   { name: 'Lembaga', href: '/lembaga', icon: School },
   { name: 'Santri', href: '/santri', icon: Users },
   { name: 'Pegawai', href: '/pegawai', icon: Briefcase },
+  {
+    name: 'Absensi Pegawai', icon: CalendarCheck,
+    submenu: [
+      { name: 'Riwayat Harian', href: '/absen-pegawai' },
+      { name: 'Scan QR', href: '/absen-pegawai/scan' },
+      { name: 'Kartu Pegawai', href: '/absen-pegawai/kartu' },
+      { name: 'Atur Absensi', href: '/absen-pegawai/atur' },
+      { name: 'Rekap Bulanan', href: '/absen-pegawai/rekap' },
+    ],
+  },
   { name: 'PPDB', href: '/ppdb', icon: ClipboardList, badge: 'New' },
   { name: 'Asrama', href: '/asrama', icon: Home },
   { heading: 'Akademik & Tahfidz' },
@@ -124,6 +135,7 @@ export function Sidebar({
     const pathModuleMap: Record<string, string> = {
       '/santri': 'Santri',
       '/pegawai': 'Kepegawaian',
+      '/absen-pegawai': 'Kepegawaian',
       '/keuangan': 'Keuangan',
       '/pembayaran': 'Keuangan',
       '/laporan': 'Keuangan',

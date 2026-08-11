@@ -5,6 +5,7 @@ const PROTECTED_PREFIXES = [
   '/admin',
   '/santri',
   '/pegawai',
+  '/absen-pegawai',
   '/akademik',
   '/asrama',
   '/keuangan',

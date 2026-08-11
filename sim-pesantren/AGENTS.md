@@ -74,6 +74,7 @@ sim-pesantren/
 │   ├── FormTambahSantri.tsx
 │   ├── ImageUpload.tsx
 │   ├── import-santri-modal.tsx
+│   ├── import-pegawai-modal.tsx
 │   ├── KartuProgresTahfidz.tsx
 │   ├── kuitansi-print-toolbar.tsx
 │   └── RolePermissionMatrix.tsx
@@ -92,6 +93,7 @@ sim-pesantren/
 │   ├── akademik-actions.ts
 │   ├── role-actions.ts
 │   ├── santri-import.ts
+│   ├── pegawai-import.ts
 │   ├── storage-actions.ts
 │   └── whatsapp-actions.ts
 ├── utils/
@@ -99,13 +101,14 @@ sim-pesantren/
 │   ├── auth-api.ts             # requirePermission() for API routes
 │   ├── permission-helper.ts
 │   └── dapodik-transformer.ts
+│   └── dapodik-pegawai-transformer.ts
 ├── lib/
 │   └── supabase.ts             # createBrowserClient (client-side)
 ├── types/
 │   └── database.ts             # Single source of truth for all DB types
 ├── hooks/
 │   └── usePWAInstall.ts
-├── supabase/migrations/        # 44 migration files
+├── supabase/migrations/        # 56 migration files
 ├── proxy.ts                    # Auth middleware (replaces middleware.ts)
 └── next.config.ts              # With PWA, image remote patterns, Turbopack
 ```
@@ -225,7 +228,7 @@ The `mata_pelajaran` table has been DROPPED and replaced by `mapel`. All code, j
 - Never use `FOR ALL USING (true)` in RLS policies — use separate `FOR SELECT` / `FOR INSERT` / `FOR UPDATE` / `FOR DELETE` policies
 - Never hardcode UUIDs in migrations (use `SELECT id INTO ... FROM ... WHERE ...` instead)
 - After writing a migration, update `types/database.ts` to match the new schema FIRST
-- Total: 44 existing migrations
+- Total: 56 existing migrations
 
 ## Permission System
 - `requirePermission(feature, action)` in `utils/server-supabase.ts` (for server actions)

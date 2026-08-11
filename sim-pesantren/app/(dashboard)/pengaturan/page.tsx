@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import { 
   Building2, 
@@ -9,24 +10,38 @@ import {
   Mail, 
   Globe, 
   User, 
-  BookOpen, 
   FileText, 
   Save, 
   Loader2, 
   Info,
   ShieldAlert,
-  Image
+  Image,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageUpload from '@/components/ImageUpload';
 import HeroSlidesManager from '@/components/HeroSlidesManager';
 import { uploadLogoPesantren, uploadFotoPimpinan } from '@/services/storage-actions';
 
+const LeafletMap = dynamic(() => import('@/components/LeafletMap'), { ssr: false, loading: () => <div className="h-[350px] bg-slate-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div> });
+
+const HARI_KERJA_OPTIONS: { value: number; label: string }[] = [
+  { value: 1, label: 'Senin' },
+  { value: 2, label: 'Selasa' },
+  { value: 3, label: 'Rabu' },
+  { value: 4, label: 'Kamis' },
+  { value: 5, label: 'Jumat' },
+  { value: 6, label: 'Sabtu' },
+  { value: 0, label: 'Ahad' },
+];
+
+const DEFAULT_HARI_KERJA = [0, 1, 2, 3, 4, 5, 6];
+
 export default function PengaturanPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'umum' | 'kontak' | 'visimisi' | 'landing'>('umum');
+  const [activeTab, setActiveTab] = useState<'umum' | 'kontak' | 'visimisi' | 'landing' | 'absensi'>('umum');
   
   const [profileId, setProfileId] = useState<string>('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -46,7 +61,8 @@ export default function PengaturanPage() {
     visi: '',
     misi: '',
     logo_url: '',
-    foto_pimpinan_url: ''
+    foto_pimpinan_url: '',
+    kartu_belakang_teks: ''
   });
 
 
@@ -58,6 +74,16 @@ export default function PengaturanPage() {
     medsos_instagram: '',
     medsos_youtube: ''
   });
+
+  const [absensiForm, setAbsensiForm] = useState({
+    jam_batas_masuk: '07:30',
+    jam_batas_pulang: '12:00',
+    latitude: '' as string,
+    longitude: '' as string,
+    radius_meter: 500,
+    hari_kerja: DEFAULT_HARI_KERJA as number[],
+  });
+  const [detectingLocation, setDetectingLocation] = useState<boolean>(false);
 
   const fetchData = useCallback(async () => {
     try {
@@ -97,7 +123,17 @@ export default function PengaturanPage() {
           visi: data.visi || '',
           misi: data.misi || '',
           logo_url: data.logo_url || '',
-          foto_pimpinan_url: data.foto_pimpinan_url || ''
+          foto_pimpinan_url: data.foto_pimpinan_url || '',
+          kartu_belakang_teks: data.kartu_belakang_teks || ''
+        });
+
+        setAbsensiForm({
+          jam_batas_masuk: data.jam_batas_masuk || '07:30',
+          jam_batas_pulang: data.jam_batas_pulang || '12:00',
+          latitude: data.latitude != null ? String(data.latitude) : '',
+          longitude: data.longitude != null ? String(data.longitude) : '',
+          radius_meter: data.radius_meter || 500,
+          hari_kerja: data.hari_kerja && data.hari_kerja.length > 0 ? data.hari_kerja : DEFAULT_HARI_KERJA,
         });
       }
 
@@ -179,7 +215,13 @@ export default function PengaturanPage() {
       const submissionData = {
         ...form,
         logo_url: uploadedLogoUrl,
-        foto_pimpinan_url: uploadedFotoPimpinanUrl
+        foto_pimpinan_url: uploadedFotoPimpinanUrl,
+        jam_batas_masuk: absensiForm.jam_batas_masuk || null,
+        jam_batas_pulang: absensiForm.jam_batas_pulang || null,
+        latitude: absensiForm.latitude ? Number(absensiForm.latitude) : null,
+        longitude: absensiForm.longitude ? Number(absensiForm.longitude) : null,
+        radius_meter: absensiForm.radius_meter || null,
+        hari_kerja: absensiForm.hari_kerja,
       };
 
       if (profileId) {
@@ -222,6 +264,35 @@ export default function PengaturanPage() {
     }
   };
 
+  const handleDetectLocation = () => {
+    if (!isAdmin || !navigator.geolocation) {
+      toast.error('Geolokasi tidak didukung di perangkat/browser ini.');
+      return;
+    }
+    setDetectingLocation(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setAbsensiForm(prev => ({
+          ...prev,
+          latitude: position.coords.latitude.toFixed(6),
+          longitude: position.coords.longitude.toFixed(6),
+        }));
+        setDetectingLocation(false);
+        toast.success('Lokasi terdeteksi! Cek marker pada peta.');
+      },
+      (err) => {
+        const messages: Record<number, string> = {
+          1: 'Izin lokasi ditolak. Izinkan akses lokasi di browser lalu coba lagi.',
+          2: 'Posisi tidak dapat ditentukan. Pastikan GPS diaktifkan.',
+          3: 'Waktu deteksi lokasi habis. Coba lagi.',
+        };
+        setDetectingLocation(false);
+        toast.error(messages[err.code] || 'Gagal mendeteksi lokasi.');
+      },
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-slate-50 dark:bg-zinc-950">
@@ -237,6 +308,7 @@ export default function PengaturanPage() {
     { id: 'umum', label: 'Informasi Umum', icon: Building2 },
     { id: 'kontak', label: 'Kontak & Media', icon: Phone },
     { id: 'visimisi', label: 'Visi & Misi', icon: FileText },
+    { id: 'absensi', label: 'Absensi', icon: Clock },
     { id: 'landing', label: 'Landing Page', icon: Globe },
   ] as const;
 
@@ -430,6 +502,148 @@ export default function PengaturanPage() {
                 <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Misi Pesantren</label>
                 <textarea placeholder="1. Mendidik santri secara islami&#10;2. Menyelenggarakan kajian kitab..." value={form.misi} onChange={(e) => setForm(prev => ({ ...prev, misi: e.target.value }))} disabled={!isAdmin} rows={6}
                   className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Teks Belakang Kartu Pegawai</label>
+                <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Teks custom yang ditampilkan di bagian belakang kartu pegawai (setelah informasi kontak)</p>
+                <textarea placeholder="Contoh:&#10;Dilarang memindahtangankan kartu ini kepada pihak lain.&#10;Kartu harus dibawa setiap saat selama berada di lingkungan pesantren." value={form.kartu_belakang_teks} onChange={(e) => setForm(prev => ({ ...prev, kartu_belakang_teks: e.target.value }))} disabled={!isAdmin} rows={4}
+                  className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm" />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'absensi' && (
+          <div className="space-y-6">
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-emerald-500" />
+                Pengaturan Absensi Pegawai
+              </h3>
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Hari Kerja Mingguan</label>
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Hari yang tidak dipilih dianggap libur mingguan dan tidak dihitung sebagai Alpha. Contoh: nonaktifkan Ahad jika hari Ahad libur.</p>
+                  <div className="flex flex-wrap gap-2">
+                    {HARI_KERJA_OPTIONS.map((day) => {
+                      const isActive = absensiForm.hari_kerja.includes(day.value);
+                      return (
+                        <button
+                          key={day.value}
+                          type="button"
+                          disabled={!isAdmin}
+                          onClick={() => {
+                            const next = isActive
+                              ? absensiForm.hari_kerja.filter((d) => d !== day.value)
+                              : [...absensiForm.hari_kerja, day.value];
+                            if (next.length === 0) {
+                              toast.error('Minimal satu hari kerja harus dipilih');
+                              return;
+                            }
+                            setAbsensiForm((prev) => ({ ...prev, hari_kerja: next }));
+                          }}
+                          className={`px-4 py-2 rounded-xl text-sm font-medium border-2 transition-all disabled:opacity-60 ${
+                            isActive
+                              ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                              : 'border-slate-200 dark:border-zinc-700 text-slate-400 dark:text-zinc-500 hover:border-slate-300 dark:hover:border-zinc-600'
+                          }`}
+                        >
+                          {day.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Jam Batas Masuk</label>
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Pegawai yang scan sebelum jam ini dikategorikan Hadir. Scan setelah jam ini dikategorikan Terlambat.</p>
+                  <input
+                    type="time"
+                    value={absensiForm.jam_batas_masuk}
+                    onChange={(e) => setAbsensiForm(prev => ({ ...prev, jam_batas_masuk: e.target.value }))}
+                    disabled={!isAdmin}
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Jam Minimal Absen Pulang</label>
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Scan absen pulang sebelum jam ini akan ditolak. Gunakan untuk mencegah scan ganda/salah scan.</p>
+                  <input
+                    type="time"
+                    value={absensiForm.jam_batas_pulang}
+                    onChange={(e) => setAbsensiForm(prev => ({ ...prev, jam_batas_pulang: e.target.value }))}
+                    disabled={!isAdmin}
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Radius Geofencing (meter)</label>
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Jarak maksimal dari titik pusat yang diizinkan untuk absen. Di luar radius = scan ditolak.</p>
+                  <input
+                    type="number"
+                    min={50}
+                    step={50}
+                    value={absensiForm.radius_meter}
+                    onChange={(e) => setAbsensiForm(prev => ({ ...prev, radius_meter: Number(e.target.value) }))}
+                    disabled={!isAdmin}
+                    placeholder="500"
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">Titik Pusat Pesantren</label>
+                    <button
+                      type="button"
+                      onClick={handleDetectLocation}
+                      disabled={!isAdmin || detectingLocation}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {detectingLocation ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <MapPin className="h-3.5 w-3.5" />
+                      )}
+                      {detectingLocation ? 'Mendeteksi...' : 'Deteksi Lokasi Saya'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Klik pada peta, seret marker, atau gunakan tombol deteksi untuk menentukan lokasi pusat pesantren.</p>
+                  <div className="flex gap-3 mb-3">
+                    <div className="flex-1">
+                      <label className="block text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase mb-1">Latitude</label>
+                      <input
+                        type="text"
+                        value={absensiForm.latitude}
+                        onChange={(e) => setAbsensiForm(prev => ({ ...prev, latitude: e.target.value }))}
+                        disabled={!isAdmin}
+                        placeholder="-6.200000"
+                        className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm font-mono text-xs"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-[10px] font-semibold text-slate-400 dark:text-zinc-500 uppercase mb-1">Longitude</label>
+                      <input
+                        type="text"
+                        value={absensiForm.longitude}
+                        onChange={(e) => setAbsensiForm(prev => ({ ...prev, longitude: e.target.value }))}
+                        disabled={!isAdmin}
+                        placeholder="106.800000"
+                        className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm font-mono text-xs"
+                      />
+                    </div>
+                  </div>
+                  <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-zinc-800">
+                    <LeafletMap
+                      latitude={absensiForm.latitude ? Number(absensiForm.latitude) : -6.200000}
+                      longitude={absensiForm.longitude ? Number(absensiForm.longitude) : 106.800000}
+                      radius={absensiForm.radius_meter}
+                      draggable={isAdmin}
+                      onPositionChange={(lat, lng) => {
+                        setAbsensiForm(prev => ({ ...prev, latitude: String(lat), longitude: String(lng) }));
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>

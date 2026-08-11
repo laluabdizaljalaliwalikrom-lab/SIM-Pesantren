@@ -25,10 +25,12 @@ import {
   BadgeCheck,
   Shield,
   Sparkles,
+  Upload,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageUpload from '@/components/ImageUpload';
 import { uploadFotoPegawai } from '@/services/storage-actions';
+import { ImportPegawaiModal } from '@/components/import-pegawai-modal';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -42,6 +44,35 @@ const JABATAN_LIST: JabatanPegawai[] = [
   'Tenaga Kebersihan',
   'Keamanan',
   'Lainnya',
+  'Guru Kelas',
+  'Guru Mapel',
+  'Guru BK',
+  'Guru Inklusi',
+  'Guru Pendamping',
+  'Guru Magang',
+  'Guru TIK',
+  'Guru Kehormatan',
+  'Kepala Sekolah',
+  'Wakil Kepala Sekolah',
+  'Kepala TU',
+  'Tenaga Administrasi Sekolah',
+  'Pustakawan',
+  'Kepala Perpustakaan',
+  'Laboran',
+  'Kepala Laboratorium',
+  'Koordinator Laboratorium',
+  'Teknisi',
+  'Penjaga Sekolah',
+  'Pesuruh',
+  'Tukang Kebun',
+  'Petugas Keamanan',
+  'Perawat',
+  'Pengemudi',
+  'Supervisor',
+  'Operator Sekolah',
+  'Ketua Jurusan',
+  'Bendahara',
+  'Pembantu Bendahara',
 ];
 
 const STATUS_LIST: StatusPegawai[] = ['Aktif', 'Tidak Aktif', 'Cuti'];
@@ -58,22 +89,48 @@ const getJabatanStyle = (jabatan: JabatanPegawai) => {
       };
     case 'Guru Formal':
     case 'Guru Non-Formal':
+    case 'Guru Kelas':
+    case 'Guru Mapel':
+    case 'Guru BK':
+    case 'Guru Inklusi':
+    case 'Guru Pendamping':
+    case 'Guru Magang':
+    case 'Guru TIK':
+    case 'Guru Kehormatan':
       return {
         badge: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20',
         icon: <GraduationCap className="h-3 w-3" />,
         avatar: 'from-blue-400 to-blue-600',
       };
     case 'Pengasuh':
+    case 'Kepala Sekolah':
+    case 'Wakil Kepala Sekolah':
       return {
         badge: 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-500/20',
         icon: <Shield className="h-3 w-3" />,
         avatar: 'from-violet-400 to-violet-600',
       };
     case 'Administrasi':
+    case 'Kepala TU':
+    case 'Tenaga Administrasi Sekolah':
+    case 'Operator Sekolah':
+    case 'Bendahara':
+    case 'Pembantu Bendahara':
       return {
         badge: 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20',
         icon: <Briefcase className="h-3 w-3" />,
         avatar: 'from-amber-400 to-amber-600',
+      };
+    case 'Pustakawan':
+    case 'Kepala Perpustakaan':
+    case 'Laboran':
+    case 'Kepala Laboratorium':
+    case 'Koordinator Laboratorium':
+    case 'Teknisi':
+      return {
+        badge: 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/20',
+        icon: <Sparkles className="h-3 w-3" />,
+        avatar: 'from-cyan-400 to-cyan-600',
       };
     default:
       return {
@@ -106,6 +163,7 @@ const getInitials = (name: string) => {
 
 const emptyForm = (): Omit<Pegawai, 'id' | 'created_at'> => ({
   nip: '',
+  nik: '',
   nama_lengkap: '',
   gelar_depan: '',
   gelar_belakang: '',
@@ -121,12 +179,14 @@ const emptyForm = (): Omit<Pegawai, 'id' | 'created_at'> => ({
   spesialisasi: '',
   tanggal_bergabung: '',
   status: 'Aktif',
+  id_sekolah: '',
 });
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function PegawaiPage() {
   const [pegawaiList, setPegawaiList] = useState<Pegawai[]>([]);
+  const [sekolahList, setSekolahList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [jabatanFilter, setJabatanFilter] = useState<JabatanPegawai | 'Semua'>('Semua');
@@ -144,16 +204,20 @@ export default function PegawaiPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailPegawai, setDetailPegawai] = useState<Pegawai | null>(null);
 
+  // Import modal
+  const [isImportOpen, setIsImportOpen] = useState(false);
+
   // ── Data Fetching ──────────────────────────────────────────────────────────
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('pegawai')
-        .select('*')
-        .order('nama_lengkap', { ascending: true });
-      if (error) throw error;
-      setPegawaiList(data || []);
+      const [pegawaiResult, sekolahResult] = await Promise.all([
+        supabase.from('pegawai').select('*').order('nama_lengkap', { ascending: true }),
+        supabase.from('sekolah').select('id, nama_sekolah').order('nama_sekolah', { ascending: true }),
+      ]);
+      if (pegawaiResult.error) throw pegawaiResult.error;
+      setPegawaiList(pegawaiResult.data || []);
+      setSekolahList(sekolahResult.data || []);
     } catch (err: any) {
       toast.error('Gagal memuat data pegawai: ' + err.message);
     } finally {
@@ -192,6 +256,7 @@ export default function PegawaiPage() {
     setSelectedPegawai(p);
     setFormData({
       nip: p.nip || '',
+      nik: p.nik || '',
       nama_lengkap: p.nama_lengkap,
       gelar_depan: p.gelar_depan || '',
       gelar_belakang: p.gelar_belakang || '',
@@ -207,6 +272,7 @@ export default function PegawaiPage() {
       spesialisasi: p.spesialisasi || '',
       tanggal_bergabung: p.tanggal_bergabung || '',
       status: p.status,
+      id_sekolah: p.id_sekolah || '',
     });
     setFotoFile(null);
     setIsFormOpen(true);
@@ -243,6 +309,7 @@ export default function PegawaiPage() {
       const payload = {
         ...formData,
         nip: formData.nip || null,
+        nik: formData.nik || null,
         gelar_depan: formData.gelar_depan || null,
         gelar_belakang: formData.gelar_belakang || null,
         tempat_lahir: formData.tempat_lahir || null,
@@ -254,6 +321,7 @@ export default function PegawaiPage() {
         pendidikan_terakhir: formData.pendidikan_terakhir || null,
         spesialisasi: formData.spesialisasi || null,
         tanggal_bergabung: formData.tanggal_bergabung || null,
+        id_sekolah: formData.id_sekolah || null,
       };
 
       if (selectedPegawai) {
@@ -315,12 +383,20 @@ export default function PegawaiPage() {
             Kelola data seluruh pegawai, ustadz, dan tenaga pendidik pesantren.
           </p>
         </div>
-        <button
-          onClick={openAdd}
-          className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-600/20 transition-all duration-200 active:scale-95"
-        >
-          <Plus className="h-4 w-4" /> Tambah Pegawai
-        </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+          <button
+            onClick={() => setIsImportOpen(true)}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:border-emerald-500/60 dark:hover:border-emerald-500/60 text-slate-700 dark:text-zinc-200 rounded-xl font-bold text-sm transition-all duration-200"
+          >
+            <Upload className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Import Dapodik
+          </button>
+          <button
+            onClick={openAdd}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-600/20 transition-all duration-200 active:scale-95"
+          >
+            <Plus className="h-4 w-4" /> Tambah Pegawai
+          </button>
+        </div>
       </div>
 
       {/* ── Stats Row ── */}
@@ -651,6 +727,11 @@ export default function PegawaiPage() {
                       </div>
                     </div>
                   </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">NIK</label>
+                    <input type="text" placeholder="Nomor Induk Kependudukan" value={formData.nik || ''} onChange={e => setField('nik', e.target.value)}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none transition-all font-mono" />
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">Tempat Lahir</label>
@@ -713,6 +794,14 @@ export default function PegawaiPage() {
                     <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">Tanggal Bergabung</label>
                     <input type="date" value={formData.tanggal_bergabung || ''} onChange={e => setField('tanggal_bergabung', e.target.value)}
                       className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none transition-all" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-600 dark:text-zinc-400">Satminkal (Lembaga Pendidikan)</label>
+                    <select value={formData.id_sekolah || ''} onChange={e => setField('id_sekolah', e.target.value || '')}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl px-3.5 py-2.5 text-sm text-slate-800 dark:text-zinc-100 focus:outline-none transition-all">
+                      <option value="">-- Tanpa Afiliasi Lembaga --</option>
+                      {sekolahList.map(s => <option key={s.id} value={s.id}>{s.nama_sekolah}</option>)}
+                    </select>
                   </div>
                 </fieldset>
 
@@ -874,6 +963,13 @@ export default function PegawaiPage() {
           </div>
         );
       })()}
+
+      {/* ── Import Dapodik Modal ── */}
+      <ImportPegawaiModal
+        isOpen={isImportOpen}
+        onClose={() => setIsImportOpen(false)}
+        onSuccess={fetchData}
+      />
 
     </>
   );

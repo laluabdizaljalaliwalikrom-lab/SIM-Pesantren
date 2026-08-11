@@ -158,6 +158,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     '/ppdb': 'PPDB',
     '/santri': 'Santri',
     '/pegawai': 'Kepegawaian',
+    '/absen-pegawai': 'Kepegawaian',
     '/keuangan': 'Keuangan',
     '/pembayaran': 'Keuangan',
     '/laporan': 'Keuangan',

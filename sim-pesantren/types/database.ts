@@ -180,13 +180,44 @@ export type JabatanPegawai =
   | 'Administrasi'
   | 'Tenaga Kebersihan'
   | 'Keamanan'
-  | 'Lainnya';
+  | 'Lainnya'
+  | 'Guru Kelas'
+  | 'Guru Mapel'
+  | 'Guru BK'
+  | 'Guru Inklusi'
+  | 'Guru Pendamping'
+  | 'Guru Magang'
+  | 'Guru TIK'
+  | 'Guru Kehormatan'
+  | 'Kepala Sekolah'
+  | 'Wakil Kepala Sekolah'
+  | 'Kepala TU'
+  | 'Tenaga Administrasi Sekolah'
+  | 'Pustakawan'
+  | 'Kepala Perpustakaan'
+  | 'Laboran'
+  | 'Kepala Laboratorium'
+  | 'Koordinator Laboratorium'
+  | 'Teknisi'
+  | 'Penjaga Sekolah'
+  | 'Pesuruh'
+  | 'Tukang Kebun'
+  | 'Petugas Keamanan'
+  | 'Perawat'
+  | 'Pengemudi'
+  | 'Supervisor'
+  | 'Operator Sekolah'
+  | 'Ketua Jurusan'
+  | 'Bendahara'
+  | 'Pembantu Bendahara';
 
 export type StatusPegawai = 'Aktif' | 'Tidak Aktif' | 'Cuti';
 
 export interface Pegawai {
   id: string;
   nip?: string | null;
+  nik?: string | null;
+  nuptk?: string | null;
   nama_lengkap: string;
   gelar_depan?: string | null;
   gelar_belakang?: string | null;
@@ -202,6 +233,32 @@ export interface Pegawai {
   spesialisasi?: string | null;
   tanggal_bergabung?: string | null;
   status: StatusPegawai;
+  qr_code_url?: string | null;
+  id_sekolah?: string | null;
+  sekolah?: Sekolah | null;
+  created_at: string;
+}
+
+export type StatusAbsensiPegawai = 'Hadir' | 'Terlambat' | 'Izin' | 'Sakit' | 'Alpha';
+
+export interface AbsensiPegawai {
+  id: string;
+  id_pegawai: string;
+  tanggal: string;
+  jam_masuk: string;
+  jam_keluar?: string | null;
+  status: StatusAbsensiPegawai;
+  keterangan?: string | null;
+  lokasi_lat?: number | null;
+  lokasi_lng?: number | null;
+  created_at: string;
+  pegawai?: Pegawai | null;
+}
+
+export interface TanggalLibur {
+  id: string;
+  tanggal: string;
+  keterangan?: string | null;
   created_at: string;
 }
 
@@ -395,13 +452,25 @@ export interface Pembayaran {
 export interface PesantrenProfile {
   id: string;
   nama_pesantren: string;
+  npsn?: string | null;
+  nspp?: string | null;
   alamat?: string | null;
+  telepon?: string | null;
   telp?: string | null;
   email?: string | null;
   website?: string | null;
   logo_url?: string | null;
   foto_pimpinan_url?: string | null;
   nama_pimpinan?: string | null;
+  visi?: string | null;
+  misi?: string | null;
+  kartu_belakang_teks?: string | null;
+  jam_batas_masuk?: string | null;
+  jam_batas_pulang?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  radius_meter?: number | null;
+  hari_kerja?: number[] | null;
   created_at: string;
 }
 
