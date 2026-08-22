@@ -4,6 +4,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 const PROTECTED_PREFIXES = [
   '/admin',
   '/santri',
+  '/absen-santri',
   '/pegawai',
   '/absen-pegawai',
   '/akademik',

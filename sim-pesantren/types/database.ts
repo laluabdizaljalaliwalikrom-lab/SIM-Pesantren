@@ -106,6 +106,7 @@ export interface Santri {
   no_rekening?: string | null;
   layak_pip?: boolean | null;
   alasan_layak_pip?: string | null;
+  qr_code_url?: string | null;
   // Joins
   kamar?: Kamar | null;
   wali?: Profile | null;
@@ -255,6 +256,22 @@ export interface AbsensiPegawai {
   lokasi_lng?: number | null;
   created_at: string;
   pegawai?: Pegawai | null;
+}
+
+export type StatusAbsensiSantri = 'Hadir' | 'Terlambat' | 'Izin' | 'Sakit' | 'Alpha';
+
+export interface AbsensiSantri {
+  id: string;
+  id_santri: string;
+  tanggal: string;
+  jam_masuk: string;
+  jam_keluar?: string | null;
+  status: StatusAbsensiSantri;
+  keterangan?: string | null;
+  lokasi_lat?: number | null;
+  lokasi_lng?: number | null;
+  created_at: string;
+  santri?: Santri | null;
 }
 
 export interface TanggalLibur {
@@ -469,6 +486,8 @@ export interface PesantrenProfile {
   kartu_belakang_teks?: string | null;
   jam_batas_masuk?: string | null;
   jam_batas_pulang?: string | null;
+  jam_batas_masuk_santri?: string | null;
+  jam_batas_pulang_santri?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   radius_meter?: number | null;

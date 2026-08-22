@@ -68,6 +68,16 @@ const MENU_ITEMS: MenuItem[] = [
       { name: 'Rekap Bulanan', href: '/absen-pegawai/rekap' },
     ],
   },
+  {
+    name: 'Absensi Santri', icon: GraduationCap,
+    submenu: [
+      { name: 'Riwayat Harian', href: '/absen-santri' },
+      { name: 'Scan QR', href: '/absen-santri/scan' },
+      { name: 'Kartu Santri', href: '/absen-santri/kartu' },
+      { name: 'Atur Absensi', href: '/absen-santri/atur' },
+      { name: 'Rekap Bulanan', href: '/absen-santri/rekap' },
+    ],
+  },
   { name: 'PPDB', href: '/ppdb', icon: ClipboardList, badge: 'New' },
   { name: 'Asrama', href: '/asrama', icon: Home },
   { heading: 'Akademik & Tahfidz' },
@@ -134,6 +144,7 @@ export function Sidebar({
     if (href.startsWith('/settings')) return isSuperAdmin;
     const pathModuleMap: Record<string, string> = {
       '/santri': 'Santri',
+      '/absen-santri': 'Santri',
       '/pegawai': 'Kepegawaian',
       '/absen-pegawai': 'Kepegawaian',
       '/keuangan': 'Keuangan',

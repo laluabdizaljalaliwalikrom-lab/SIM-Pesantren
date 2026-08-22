@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -15,7 +15,7 @@ import {
   Loader2, 
   Info,
   ShieldAlert,
-  Image,
+  ImageIcon,
   Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -77,7 +77,9 @@ export default function PengaturanPage() {
 
   const [absensiForm, setAbsensiForm] = useState({
     jam_batas_masuk: '07:30',
-    jam_batas_pulang: '12:00',
+    jam_batas_pulang: '16:00',
+    jam_batas_masuk_santri: '07:00',
+    jam_batas_pulang_santri: '14:00',
     latitude: '' as string,
     longitude: '' as string,
     radius_meter: 500,
@@ -85,10 +87,8 @@ export default function PengaturanPage() {
   });
   const [detectingLocation, setDetectingLocation] = useState<boolean>(false);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = async () => {
     try {
-      setLoading(true);
-      
       // 1. Fetch user role
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -129,7 +129,9 @@ export default function PengaturanPage() {
 
         setAbsensiForm({
           jam_batas_masuk: data.jam_batas_masuk || '07:30',
-          jam_batas_pulang: data.jam_batas_pulang || '12:00',
+          jam_batas_pulang: data.jam_batas_pulang || '16:00',
+          jam_batas_masuk_santri: data.jam_batas_masuk_santri || '07:00',
+          jam_batas_pulang_santri: data.jam_batas_pulang_santri || '14:00',
           latitude: data.latitude != null ? String(data.latitude) : '',
           longitude: data.longitude != null ? String(data.longitude) : '',
           radius_meter: data.radius_meter || 500,
@@ -153,17 +155,103 @@ export default function PengaturanPage() {
           medsos_youtube: landingData.medsos_youtube || ''
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
       toast.error('Gagal mengambil data profil pesantren.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    let isMounted = true;
+    const loadInitialData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!isMounted) return;
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+          if (isMounted) {
+            const role = profile?.role || 'Wali Santri';
+            setIsAdmin(role === 'Super Admin');
+          }
+        }
+
+        const { data, error } = await supabase
+          .from('pesantren_profile')
+          .select('*')
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!isMounted) return;
+
+        if (data) {
+          setProfileId(data.id);
+          setForm({
+            nama_pesantren: data.nama_pesantren || '',
+            npsn: data.npsn || '',
+            nspp: data.nspp || '',
+            nama_pimpinan: data.nama_pimpinan || '',
+            alamat: data.alamat || '',
+            telepon: data.telepon || '',
+            email: data.email || '',
+            website: data.website || '',
+            visi: data.visi || '',
+            misi: data.misi || '',
+            logo_url: data.logo_url || '',
+            foto_pimpinan_url: data.foto_pimpinan_url || '',
+            kartu_belakang_teks: data.kartu_belakang_teks || ''
+          });
+
+          setAbsensiForm({
+            jam_batas_masuk: data.jam_batas_masuk || '07:30',
+            jam_batas_pulang: data.jam_batas_pulang || '16:00',
+            jam_batas_masuk_santri: data.jam_batas_masuk_santri || '07:00',
+            jam_batas_pulang_santri: data.jam_batas_pulang_santri || '14:00',
+            latitude: data.latitude != null ? String(data.latitude) : '',
+            longitude: data.longitude != null ? String(data.longitude) : '',
+            radius_meter: data.radius_meter || 500,
+            hari_kerja: data.hari_kerja && data.hari_kerja.length > 0 ? data.hari_kerja : DEFAULT_HARI_KERJA,
+          });
+        }
+
+        const { data: landingData } = await supabase
+          .from('landing_page_settings')
+          .select('*')
+          .maybeSingle();
+
+        if (!isMounted) return;
+
+        if (landingData) {
+          setLandingForm({
+            tagline_title: landingData.tagline_title || '',
+            tagline_description: landingData.tagline_description || '',
+            status_pendaftaran: landingData.status_pendaftaran !== undefined ? landingData.status_pendaftaran : true,
+            medsos_facebook: landingData.medsos_facebook || '',
+            medsos_instagram: landingData.medsos_instagram || '',
+            medsos_youtube: landingData.medsos_youtube || ''
+          });
+        }
+      } catch (err: unknown) {
+        console.error(err);
+        toast.error('Gagal mengambil data profil pesantren.');
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -184,9 +272,10 @@ export default function PengaturanPage() {
           const extension = logoFile.name.split('.').pop() || 'png';
           const uniqueFileName = `logo_${Date.now()}.${extension}`;
           uploadedLogoUrl = await uploadLogoPesantren(logoFile, uniqueFileName);
-        } catch (uploadErr: any) {
+        } catch (uploadErr: unknown) {
           console.error('Gagal mengunggah logo:', uploadErr);
-          toast.error('Gagal mengunggah logo pesantren: ' + uploadErr.message);
+          const uploadMsg = uploadErr instanceof Error ? uploadErr.message : 'Gagal upload logo';
+          toast.error('Gagal mengunggah logo pesantren: ' + uploadMsg);
           setUploadingLogo(false);
           setSaving(false);
           return;
@@ -201,9 +290,10 @@ export default function PengaturanPage() {
           const extension = fotoPimpinanFile.name.split('.').pop() || 'png';
           const uniqueFileName = `pimpinan_${Date.now()}.${extension}`;
           uploadedFotoPimpinanUrl = await uploadFotoPimpinan(fotoPimpinanFile, uniqueFileName);
-        } catch (uploadErr: any) {
+        } catch (uploadErr: unknown) {
           console.error('Gagal mengunggah foto pimpinan:', uploadErr);
-          toast.error('Gagal mengunggah foto pimpinan: ' + uploadErr.message);
+          const uploadMsg = uploadErr instanceof Error ? uploadErr.message : 'Gagal upload foto pimpinan';
+          toast.error('Gagal mengunggah foto pimpinan: ' + uploadMsg);
           setUploadingFotoPimpinan(false);
           setSaving(false);
           return;
@@ -218,6 +308,8 @@ export default function PengaturanPage() {
         foto_pimpinan_url: uploadedFotoPimpinanUrl,
         jam_batas_masuk: absensiForm.jam_batas_masuk || null,
         jam_batas_pulang: absensiForm.jam_batas_pulang || null,
+        jam_batas_masuk_santri: absensiForm.jam_batas_masuk_santri || null,
+        jam_batas_pulang_santri: absensiForm.jam_batas_pulang_santri || null,
         latitude: absensiForm.latitude ? Number(absensiForm.latitude) : null,
         longitude: absensiForm.longitude ? Number(absensiForm.longitude) : null,
         radius_meter: absensiForm.radius_meter || null,
@@ -256,9 +348,10 @@ export default function PengaturanPage() {
       setLogoFile(null); // Reset selection
       setFotoPimpinanFile(null); // Reset selection
       await fetchData();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      toast.error(err.message || 'Gagal menyimpan profil pesantren.');
+      const msg = err instanceof Error ? err.message : 'Gagal menyimpan profil pesantren.';
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -515,15 +608,16 @@ export default function PengaturanPage() {
 
         {activeTab === 'absensi' && (
           <div className="space-y-6">
+            {/* Bagian 1: Pengaturan Absensi Pegawai */}
             <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
               <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
                 <Clock className="h-4 w-4 text-emerald-500" />
-                Pengaturan Absensi Pegawai
+                Pengaturan Absensi Pegawai & Asatidz
               </h3>
               <div className="space-y-5">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Hari Kerja Mingguan</label>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Hari yang tidak dipilih dianggap libur mingguan dan tidak dihitung sebagai Alpha. Contoh: nonaktifkan Ahad jika hari Ahad libur.</p>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Hari Kerja Mingguan Pegawai</label>
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Hari yang tidak dipilih dianggap libur mingguan dan tidak dihitung sebagai Alpha.</p>
                   <div className="flex flex-wrap gap-2">
                     {HARI_KERJA_OPTIONS.map((day) => {
                       const isActive = absensiForm.hari_kerja.includes(day.value);
@@ -554,28 +648,72 @@ export default function PengaturanPage() {
                     })}
                   </div>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Jam Batas Masuk Pegawai</label>
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Pegawai yang scan sebelum jam ini berstatus Hadir, setelahnya Terlambat.</p>
+                    <input
+                      type="time"
+                      value={absensiForm.jam_batas_masuk}
+                      onChange={(e) => setAbsensiForm(prev => ({ ...prev, jam_batas_masuk: e.target.value }))}
+                      disabled={!isAdmin}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Jam Minimal Absen Pulang Pegawai</label>
+                    <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Scan absen pulang pegawai sebelum jam ini akan ditolak.</p>
+                    <input
+                      type="time"
+                      value={absensiForm.jam_batas_pulang}
+                      onChange={(e) => setAbsensiForm(prev => ({ ...prev, jam_batas_pulang: e.target.value }))}
+                      disabled={!isAdmin}
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bagian 2: Pengaturan Absensi Santri */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
+                <Clock className="h-4 w-4 text-sky-500" />
+                Pengaturan Absensi Santri
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Jam Batas Masuk</label>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Pegawai yang scan sebelum jam ini dikategorikan Hadir. Scan setelah jam ini dikategorikan Terlambat.</p>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Jam Batas Masuk Santri</label>
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Santri yang scan sebelum jam ini berstatus Hadir, setelahnya Terlambat.</p>
                   <input
                     type="time"
-                    value={absensiForm.jam_batas_masuk}
-                    onChange={(e) => setAbsensiForm(prev => ({ ...prev, jam_batas_masuk: e.target.value }))}
+                    value={absensiForm.jam_batas_masuk_santri}
+                    onChange={(e) => setAbsensiForm(prev => ({ ...prev, jam_batas_masuk_santri: e.target.value }))}
                     disabled={!isAdmin}
-                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-sky-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Jam Minimal Absen Pulang</label>
-                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Scan absen pulang sebelum jam ini akan ditolak. Gunakan untuk mencegah scan ganda/salah scan.</p>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Jam Minimal Absen Pulang Santri</label>
+                  <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Scan kepulangan/checkout santri sebelum jam ini akan ditolak.</p>
                   <input
                     type="time"
-                    value={absensiForm.jam_batas_pulang}
-                    onChange={(e) => setAbsensiForm(prev => ({ ...prev, jam_batas_pulang: e.target.value }))}
+                    value={absensiForm.jam_batas_pulang_santri}
+                    onChange={(e) => setAbsensiForm(prev => ({ ...prev, jam_batas_pulang_santri: e.target.value }))}
                     disabled={!isAdmin}
-                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-sky-500 disabled:opacity-70 disabled:bg-slate-100 dark:disabled:bg-zinc-900 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 focus:outline-none transition-all text-sm"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Bagian 3: Lokasi & Geofencing GPS */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
+              <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
+                <MapPin className="h-4 w-4 text-amber-500" />
+                Lokasi Pusat & Radius Geofencing (GPS)
+              </h3>
+              <div className="space-y-5">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">Radius Geofencing (meter)</label>
                   <p className="text-xs text-slate-400 dark:text-zinc-500 mb-2">Jarak maksimal dari titik pusat yang diizinkan untuk absen. Di luar radius = scan ditolak.</p>
@@ -672,7 +810,7 @@ export default function PengaturanPage() {
                   <input type="checkbox" id="status_pendaftaran" checked={landingForm.status_pendaftaran} onChange={(e) => setLandingForm(prev => ({ ...prev, status_pendaftaran: e.target.checked }))} disabled={!isAdmin}
                     className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 focus:outline-none accent-emerald-600" />
                   <label htmlFor="status_pendaftaran" className="block text-xs font-bold text-slate-700 dark:text-zinc-300 cursor-pointer select-none">
-                    Status Pendaftaran Online Aktif (Menampilkan tombol 'Daftar Sekarang' di Landing Page & Banner CTA)
+                    Status Pendaftaran Online Aktif (Menampilkan tombol &apos;Daftar Sekarang&apos; di Landing Page &amp; Banner CTA)
                   </label>
                 </div>
               </div>
@@ -680,7 +818,7 @@ export default function PengaturanPage() {
 
             <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
               <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-zinc-800 pb-3 flex items-center gap-2">
-                <Image className="h-4 w-4 text-amber-500" />
+                <ImageIcon className="h-4 w-4 text-amber-500" />
                 Slideshow Hero Banner
               </h3>
               <HeroSlidesManager isAdmin={isAdmin} />
