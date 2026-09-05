@@ -21,6 +21,11 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
+  Trash2,
+  AlertTriangle,
+  CheckSquare,
+  Square,
+  ShieldCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageUpload from '@/components/ImageUpload';
@@ -28,6 +33,12 @@ import HeroSlidesManager from '@/components/HeroSlidesManager';
 import { uploadLogoPesantren, uploadFotoPimpinan } from '@/services/storage-actions';
 import { checkWhatsAppConnection } from '@/services/whatsapp-actions';
 import { checkEmailConnection } from '@/services/email-actions';
+import { 
+  getResetModuleCounts, 
+  executeDataReset, 
+  RESET_MODULE_DEFINITIONS, 
+  ResetModuleCounts 
+} from '@/services/reset-actions';
 
 const LeafletMap = dynamic(() => import('@/components/LeafletMap'), { ssr: false, loading: () => <div className="h-[350px] bg-slate-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div> });
 
@@ -47,7 +58,7 @@ export default function PengaturanPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'umum' | 'kontak' | 'visimisi' | 'landing' | 'absensi' | 'gateway'>('umum');
+  const [activeTab, setActiveTab] = useState<'umum' | 'kontak' | 'visimisi' | 'landing' | 'absensi' | 'gateway' | 'reset'>('umum');
   
   const [profileId, setProfileId] = useState<string>('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -158,6 +169,77 @@ export default function PengaturanPage() {
       toast.error('Gagal menguji koneksi Email.');
     } finally {
       setTestingEmail(false);
+    }
+  };
+
+  // Reset Data States
+  const [selectedResetModules, setSelectedResetModules] = useState<string[]>([]);
+  const [resetCounts, setResetCounts] = useState<ResetModuleCounts | null>(null);
+  const [loadingCounts, setLoadingCounts] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmationPhraseInput, setConfirmationPhraseInput] = useState('');
+  const CONFIRMATION_PHRASE = 'HAPUS DATA PERMANEN';
+
+  const loadResetCounts = async () => {
+    setLoadingCounts(true);
+    try {
+      const res = await getResetModuleCounts();
+      if (res.success && res.counts) {
+        setResetCounts(res.counts);
+      } else {
+        // Fallback jika database function belum dieksekusi di Supabase
+        console.warn('Gagal membaca count:', res.message);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingCounts(false);
+    }
+  };
+
+  const toggleSelectResetModule = (modId: string) => {
+    setSelectedResetModules((prev) =>
+      prev.includes(modId) ? prev.filter((m) => m !== modId) : [...prev, modId]
+    );
+  };
+
+  const handleSelectAllResetModules = () => {
+    if (selectedResetModules.length === RESET_MODULE_DEFINITIONS.length) {
+      setSelectedResetModules([]);
+    } else {
+      setSelectedResetModules(RESET_MODULE_DEFINITIONS.map((m) => m.id));
+    }
+  };
+
+  const handleExecuteReset = async () => {
+    if (confirmationPhraseInput !== CONFIRMATION_PHRASE) {
+      toast.error(`Ketik frasa "${CONFIRMATION_PHRASE}" dengan tepat untuk konfirmasi.`);
+      return;
+    }
+
+    if (selectedResetModules.length === 0) {
+      toast.error('Pilih minimal satu modul data yang akan di-reset.');
+      return;
+    }
+
+    setResetting(true);
+    try {
+      const res = await executeDataReset(selectedResetModules);
+      if (res.success) {
+        toast.success(res.message || 'Data berhasil di-reset!');
+        setShowConfirmModal(false);
+        setConfirmationPhraseInput('');
+        setSelectedResetModules([]);
+        await loadResetCounts();
+      } else {
+        toast.error('Gagal melakukan reset data: ' + (res.message || 'Terjadi kesalahan'));
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error('Gagal mengeksekusi reset: ' + msg);
+    } finally {
+      setResetting(false);
     }
   };
 
@@ -533,14 +615,19 @@ export default function PengaturanPage() {
     );
   }
 
-  const tabs = [
+  const tabs: {
+    id: 'umum' | 'kontak' | 'visimisi' | 'landing' | 'absensi' | 'gateway' | 'reset';
+    label: string;
+    icon: typeof Building2;
+  }[] = [
     { id: 'umum', label: 'Informasi Umum', icon: Building2 },
     { id: 'kontak', label: 'Kontak & Media', icon: Phone },
     { id: 'visimisi', label: 'Visi & Misi', icon: FileText },
     { id: 'absensi', label: 'Absensi', icon: Clock },
     { id: 'gateway', label: 'Gateway WA & Email', icon: MessageSquare },
     { id: 'landing', label: 'Landing Page', icon: Globe },
-  ] as const;
+    ...(isAdmin ? [{ id: 'reset' as const, label: 'Reset Data', icon: Trash2 }] : []),
+  ];
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
@@ -571,21 +658,31 @@ export default function PengaturanPage() {
         {tabs.map((tab) => {
           const TabIcon = tab.icon;
           const isActive = activeTab === tab.id;
+          const isResetTab = tab.id === 'reset';
           return (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                isActive
-                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                  : 'text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800'
-              }`}
-            >
-              <TabIcon className="h-4 w-4" />
-              {tab.label}
-            </button>
-          );
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  if (tab.id === 'reset') {
+                    loadResetCounts();
+                  }
+                }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                  isActive
+                    ? isResetTab
+                      ? 'bg-rose-600 text-white shadow-md shadow-rose-600/20'
+                      : 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                    : isResetTab
+                    ? 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40'
+                    : 'text-slate-500 dark:text-zinc-400 hover:text-slate-700 dark:hover:text-zinc-200 hover:bg-slate-100 dark:hover:bg-zinc-800'
+                }`}
+              >
+                <TabIcon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            );
         })}
       </div>
 
@@ -1233,8 +1330,155 @@ export default function PengaturanPage() {
           </div>
         )}
 
-        {/* Save Button */}
-        {isAdmin && (
+        {/* TAB: Reset Data (Super Admin Only) */}
+        {activeTab === 'reset' && (
+          <div className="space-y-6">
+            {/* Warning Banner */}
+            <div className="bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 rounded-2xl p-5 shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="p-2.5 bg-rose-100 dark:bg-rose-900/50 rounded-xl text-rose-600 dark:text-rose-400 shrink-0 mt-0.5">
+                  <AlertTriangle className="h-6 w-6" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="font-bold text-base text-rose-900 dark:text-rose-200">
+                    Zona Bahaya: Pembersihan &amp; Reset Data Terpilih
+                  </h3>
+                  <p className="text-xs sm:text-sm text-rose-700 dark:text-rose-300/90 leading-relaxed">
+                    Fitur ini digunakan untuk mengosongkan data secara permanen per modul sistem (misal awal tahun ajaran baru atau pembersihan data simulasi).
+                    Data yang sudah dihapus <strong>tidak dapat dikembalikan</strong>. Harap pastikan Anda telah mencadangkan data penting terlebih dahulu.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Selection Header & Select All */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <Trash2 className="h-4 w-4 text-rose-500" />
+                  Pilih Modul yang Ingin Dikosongkan
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1">
+                  Centang modul yang hendak di-reset. Modul lain yang tidak dicentang akan tetap aman dan tidak tersentuh.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={loadResetCounts}
+                  disabled={loadingCounts}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded-xl text-xs font-bold transition-all"
+                  title="Refresh jumlah data"
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 ${loadingCounts ? 'animate-spin' : ''}`} />
+                  Refresh Jumlah
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSelectAllResetModules}
+                  className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-200 rounded-xl text-xs font-bold transition-all"
+                >
+                  {selectedResetModules.length === RESET_MODULE_DEFINITIONS.length ? (
+                    <>
+                      <Square className="h-3.5 w-3.5 text-slate-500" />
+                      Batal Pilih Semua
+                    </>
+                  ) : (
+                    <>
+                      <CheckSquare className="h-3.5 w-3.5 text-rose-600" />
+                      Pilih Semua
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Grid Modul Reset */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {RESET_MODULE_DEFINITIONS.map((item) => {
+                const isSelected = selectedResetModules.includes(item.id);
+                const count = resetCounts ? resetCounts[item.id] : null;
+
+                return (
+                  <div
+                    key={item.id}
+                    onClick={() => toggleSelectResetModule(item.id)}
+                    className={`relative p-5 rounded-2xl border transition-all cursor-pointer select-none flex flex-col justify-between ${
+                      isSelected
+                        ? 'bg-rose-50/70 dark:bg-rose-950/20 border-rose-500 ring-2 ring-rose-500/20 shadow-sm'
+                        : 'bg-white dark:bg-zinc-900 border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1 rounded-lg ${isSelected ? 'text-rose-600' : 'text-slate-400 dark:text-zinc-600'}`}>
+                            {isSelected ? <CheckSquare className="h-5 w-5" /> : <Square className="h-5 w-5" />}
+                          </div>
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                            item.impactLevel === 'critical'
+                              ? 'bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300'
+                              : item.impactLevel === 'high'
+                              ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300'
+                              : 'bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400'
+                          }`}>
+                            {item.badge}
+                          </span>
+                        </div>
+
+                        {/* Live Record Count Badge */}
+                        <div className="text-right">
+                          <span className="text-xs font-bold px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300">
+                            {count !== null && count !== undefined ? `${count.toLocaleString('id-ID')} Data` : '...'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-1">
+                        {item.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed mb-3">
+                        {item.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/80 text-[11px] text-amber-600 dark:text-amber-400/90 flex items-start gap-1.5">
+                      <ShieldAlert className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      <span>{item.warningText}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Action Bar Tab Reset */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-0.5">
+                <div className="text-xs font-bold text-slate-800 dark:text-zinc-200 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                  <span>{selectedResetModules.length} Modul Terpilih untuk Di-reset</span>
+                </div>
+                <p className="text-[11px] text-slate-400 dark:text-zinc-500">
+                  Operasi akan diverifikasi dengan modal pengaman sebelum dieksekusi ke database.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(true)}
+                disabled={selectedResetModules.length === 0}
+                className="flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white font-bold px-5 py-2.5 rounded-xl shadow-lg shadow-rose-600/20 transition-all text-sm disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
+              >
+                <Trash2 className="h-4 w-4" />
+                Lanjutkan Reset Terpilih ({selectedResetModules.length})
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Save Button (Hanya untuk tab non-reset) */}
+        {isAdmin && activeTab !== 'reset' && (
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm flex items-center justify-between gap-4 sticky bottom-4">
             <div className="text-[10px] text-slate-400 flex items-center gap-1.5">
               <Info className="h-3 w-3" />
@@ -1249,6 +1493,98 @@ export default function PengaturanPage() {
         )}
 
       </form>
+
+      {/* Modal Konfirmasi Ganda (Double-Step Safety Modal) */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-rose-100 dark:bg-rose-900/50 rounded-2xl text-rose-600 dark:text-rose-400 shrink-0">
+                <AlertTriangle className="h-7 w-7" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Konfirmasi Hapus Data Permanen
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 leading-relaxed">
+                  Tindakan ini akan menghapus seluruh data pada modul terpilih secara atomik dari basis data.
+                </p>
+              </div>
+            </div>
+
+            {/* List Modul yang Dihapus */}
+            <div className="bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl p-3.5 space-y-2">
+              <div className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+                Modul yang akan dikosongkan ({selectedResetModules.length}):
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {selectedResetModules.map((id) => {
+                  const def = RESET_MODULE_DEFINITIONS.find((m) => m.id === id);
+                  return (
+                    <span
+                      key={id}
+                      className="px-2.5 py-1 rounded-lg bg-rose-100/70 dark:bg-rose-950 text-rose-700 dark:text-rose-300 font-bold text-xs border border-rose-200 dark:border-rose-900/50"
+                    >
+                      {def?.title || id}
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Verification Input Frasa */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
+                Untuk mencegah ketidaksengajaan, ketik frasa berikut:
+              </label>
+              <div className="select-all px-3 py-2 bg-slate-100 dark:bg-zinc-800 rounded-xl text-xs font-mono font-bold text-rose-600 dark:text-rose-400 text-center tracking-widest border border-slate-200 dark:border-zinc-700">
+                {CONFIRMATION_PHRASE}
+              </div>
+              <input
+                type="text"
+                value={confirmationPhraseInput}
+                onChange={(e) => setConfirmationPhraseInput(e.target.value)}
+                placeholder={`Ketik "${CONFIRMATION_PHRASE}" di sini...`}
+                className="w-full px-4 py-2.5 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-sm font-semibold text-slate-800 dark:text-zinc-100 placeholder-slate-400 focus:outline-none focus:border-rose-500"
+              />
+            </div>
+
+            {/* Modal Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConfirmModal(false);
+                  setConfirmationPhraseInput('');
+                }}
+                disabled={resetting}
+                className="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800 rounded-xl transition-all"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteReset}
+                disabled={confirmationPhraseInput !== CONFIRMATION_PHRASE || resetting}
+                className="flex items-center gap-2 px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-rose-600/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {resetting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sedang Mereset Data...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    Saya Mengerti, Hapus Sekarang
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

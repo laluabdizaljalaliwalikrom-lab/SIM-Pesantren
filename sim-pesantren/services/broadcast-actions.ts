@@ -206,7 +206,9 @@ export async function executeBroadcast({
               statusEmail = 'sent';
             } else if (emailRes.skipped) {
               statusEmail = 'skipped';
-              errorEmail = emailRes.error || 'Provider email belum dikonfigurasi';
+              errorEmail = typeof emailRes.error === 'string' 
+                ? emailRes.error 
+                : (emailRes.error ? JSON.stringify(emailRes.error) : 'Provider email belum dikonfigurasi');
             } else {
               statusEmail = 'failed';
               errorEmail = typeof emailRes.error === 'object' ? JSON.stringify(emailRes.error) : String(emailRes.error);
