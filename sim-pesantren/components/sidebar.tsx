@@ -21,6 +21,7 @@ import {
   ClipboardList,
   CalendarCheck,
   FileSearch,
+  Megaphone,
 } from 'lucide-react';
 import { ThemeToggle } from './ui/theme-toggle';
 
@@ -81,6 +82,7 @@ const MENU_ITEMS: MenuItem[] = [
     ],
   },
   { name: 'PPDB', href: '/ppdb', icon: ClipboardList, badge: 'New' },
+  { name: 'Siaran', href: '/siaran', icon: Megaphone },
   { name: 'Asrama', href: '/asrama', icon: Home },
   { heading: 'Akademik & Tahfidz' },
   { name: 'Tahfidz Tracker', href: '/tahfidz', icon: GraduationCap },
@@ -157,6 +159,7 @@ export function Sidebar({
       '/akademik': 'Akademik',
       '/lembaga': 'Lembaga',
       '/asrama': 'Asrama',
+      '/siaran': 'Siaran',
       '/perizinan': 'Perizinan',
       '/pelanggaran': 'Pelanggaran',
       '/tahfidz': 'Tahfidz',

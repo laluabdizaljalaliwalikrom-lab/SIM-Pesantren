@@ -17,11 +17,17 @@ import {
   ShieldAlert,
   ImageIcon,
   Clock,
+  MessageSquare,
+  CheckCircle2,
+  XCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import ImageUpload from '@/components/ImageUpload';
 import HeroSlidesManager from '@/components/HeroSlidesManager';
 import { uploadLogoPesantren, uploadFotoPimpinan } from '@/services/storage-actions';
+import { checkWhatsAppConnection } from '@/services/whatsapp-actions';
+import { checkEmailConnection } from '@/services/email-actions';
 
 const LeafletMap = dynamic(() => import('@/components/LeafletMap'), { ssr: false, loading: () => <div className="h-[350px] bg-slate-100 dark:bg-zinc-800 rounded-xl flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div> });
 
@@ -41,7 +47,7 @@ export default function PengaturanPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [saving, setSaving] = useState<boolean>(false);
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'umum' | 'kontak' | 'visimisi' | 'landing' | 'absensi'>('umum');
+  const [activeTab, setActiveTab] = useState<'umum' | 'kontak' | 'visimisi' | 'landing' | 'absensi' | 'gateway'>('umum');
   
   const [profileId, setProfileId] = useState<string>('');
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -86,6 +92,74 @@ export default function PengaturanPage() {
     hari_kerja: DEFAULT_HARI_KERJA as number[],
   });
   const [detectingLocation, setDetectingLocation] = useState<boolean>(false);
+
+  // Gateway Settings State (WhatsApp & Email)
+  const [gatewayForm, setGatewayForm] = useState({
+    wa_provider: 'fonnte',
+    wa_token: '',
+    wa_sender_number: '',
+    wa_is_active: true,
+    email_provider: 'resend',
+    resend_api_key: '',
+    email_from_address: 'Pesantren <onboarding@resend.dev>',
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_user: '',
+    smtp_password: '',
+    smtp_secure: false,
+    email_is_active: true,
+  });
+
+  // Gateway Status Check State
+  const [testingWa, setTestingWa] = useState(false);
+  const [waCheckResult, setWaCheckResult] = useState<{ checked: boolean; connected?: boolean; message?: string } | null>(null);
+
+  const [testingEmail, setTestingEmail] = useState(false);
+  const [emailCheckResult, setEmailCheckResult] = useState<{ checked: boolean; connected?: boolean; message?: string } | null>(null);
+
+  const handleTestWaConnection = async () => {
+    setTestingWa(true);
+    try {
+      const res = await checkWhatsAppConnection(gatewayForm.wa_token);
+      setWaCheckResult({
+        checked: true,
+        connected: res.connected,
+        message: res.message,
+      });
+      if (res.connected) {
+        toast.success('Koneksi WhatsApp Berhasil: ' + (res.message || 'Terhubung'));
+      } else {
+        toast.error('Koneksi WhatsApp Gagal: ' + (res.message || 'Tidak terhubung'));
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      toast.error('Gagal menguji koneksi WhatsApp.');
+    } finally {
+      setTestingWa(false);
+    }
+  };
+
+  const handleTestEmailConnection = async () => {
+    setTestingEmail(true);
+    try {
+      const res = await checkEmailConnection(gatewayForm.resend_api_key);
+      setEmailCheckResult({
+        checked: true,
+        connected: res.connected,
+        message: res.message,
+      });
+      if (res.connected) {
+        toast.success('Koneksi Email Berhasil: ' + (res.message || 'Valid'));
+      } else {
+        toast.error('Koneksi Email Gagal: ' + (res.message || 'Tidak valid'));
+      }
+    } catch (err: unknown) {
+      console.error(err);
+      toast.error('Gagal menguji koneksi Email.');
+    } finally {
+      setTestingEmail(false);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -153,6 +227,31 @@ export default function PengaturanPage() {
           medsos_facebook: landingData.medsos_facebook || '',
           medsos_instagram: landingData.medsos_instagram || '',
           medsos_youtube: landingData.medsos_youtube || ''
+        });
+      }
+
+      // 4. Fetch gateway settings (WhatsApp & Email)
+      const { data: gatewayData } = await supabase
+        .from('gateway_settings')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+
+      if (gatewayData) {
+        setGatewayForm({
+          wa_provider: gatewayData.wa_provider || 'fonnte',
+          wa_token: gatewayData.wa_token || '',
+          wa_sender_number: gatewayData.wa_sender_number || '',
+          wa_is_active: gatewayData.wa_is_active !== undefined ? gatewayData.wa_is_active : true,
+          email_provider: gatewayData.email_provider || 'resend',
+          resend_api_key: gatewayData.resend_api_key || '',
+          email_from_address: gatewayData.email_from_address || 'Pesantren <onboarding@resend.dev>',
+          smtp_host: gatewayData.smtp_host || '',
+          smtp_port: gatewayData.smtp_port || 587,
+          smtp_user: gatewayData.smtp_user || '',
+          smtp_password: gatewayData.smtp_password || '',
+          smtp_secure: gatewayData.smtp_secure || false,
+          email_is_active: gatewayData.email_is_active !== undefined ? gatewayData.email_is_active : true,
         });
       }
     } catch (err: unknown) {
@@ -234,6 +333,32 @@ export default function PengaturanPage() {
             medsos_facebook: landingData.medsos_facebook || '',
             medsos_instagram: landingData.medsos_instagram || '',
             medsos_youtube: landingData.medsos_youtube || ''
+          });
+        }
+
+        const { data: gatewayData } = await supabase
+          .from('gateway_settings')
+          .select('*')
+          .eq('id', 1)
+          .maybeSingle();
+
+        if (!isMounted) return;
+
+        if (gatewayData) {
+          setGatewayForm({
+            wa_provider: gatewayData.wa_provider || 'fonnte',
+            wa_token: gatewayData.wa_token || '',
+            wa_sender_number: gatewayData.wa_sender_number || '',
+            wa_is_active: gatewayData.wa_is_active !== undefined ? gatewayData.wa_is_active : true,
+            email_provider: gatewayData.email_provider || 'resend',
+            resend_api_key: gatewayData.resend_api_key || '',
+            email_from_address: gatewayData.email_from_address || 'Pesantren <onboarding@resend.dev>',
+            smtp_host: gatewayData.smtp_host || '',
+            smtp_port: gatewayData.smtp_port || 587,
+            smtp_user: gatewayData.smtp_user || '',
+            smtp_password: gatewayData.smtp_password || '',
+            smtp_secure: gatewayData.smtp_secure || false,
+            email_is_active: gatewayData.email_is_active !== undefined ? gatewayData.email_is_active : true,
           });
         }
       } catch (err: unknown) {
@@ -344,7 +469,18 @@ export default function PengaturanPage() {
 
       if (landingErr) throw landingErr;
 
-      toast.success('Profil pesantren & Landing Page berhasil disimpan!');
+      // Update/Upsert gateway settings (WhatsApp & Email)
+      const { error: gatewayErr } = await supabase
+        .from('gateway_settings')
+        .upsert({
+          id: 1,
+          ...gatewayForm,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (gatewayErr) throw gatewayErr;
+
+      toast.success('Pengaturan profil & gateway berhasil disimpan!');
       setLogoFile(null); // Reset selection
       setFotoPimpinanFile(null); // Reset selection
       await fetchData();
@@ -402,6 +538,7 @@ export default function PengaturanPage() {
     { id: 'kontak', label: 'Kontak & Media', icon: Phone },
     { id: 'visimisi', label: 'Visi & Misi', icon: FileText },
     { id: 'absensi', label: 'Absensi', icon: Clock },
+    { id: 'gateway', label: 'Gateway WA & Email', icon: MessageSquare },
     { id: 'landing', label: 'Landing Page', icon: Globe },
   ] as const;
 
@@ -781,6 +918,276 @@ export default function PengaturanPage() {
                       }}
                     />
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB: Gateway WhatsApp & Email SMTP */}
+        {activeTab === 'gateway' && (
+          <div className="space-y-6">
+            {/* 1. WhatsApp Gateway Card */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-emerald-500" />
+                  Konfigurasi WhatsApp Gateway (Fonnte)
+                </h3>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={gatewayForm.wa_is_active}
+                    onChange={(e) => setGatewayForm((prev) => ({ ...prev, wa_is_active: e.target.checked }))}
+                    disabled={!isAdmin}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
+                  />
+                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                    {gatewayForm.wa_is_active ? 'Status: Aktif' : 'Status: Non-Aktif'}
+                  </span>
+                </label>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+                    Provider WhatsApp
+                  </label>
+                  <select
+                    value={gatewayForm.wa_provider}
+                    onChange={(e) => setGatewayForm((prev) => ({ ...prev, wa_provider: e.target.value }))}
+                    disabled={!isAdmin}
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 text-sm focus:outline-none"
+                  >
+                    <option value="fonnte">Fonnte WhatsApp Gateway (https://fonnte.com)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+                      Fonnte API Token
+                    </label>
+                    <a
+                      href="https://fonnte.com"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold hover:underline"
+                    >
+                      Buka Dashboard Fonnte &rarr;
+                    </a>
+                  </div>
+                  <input
+                    type="password"
+                    value={gatewayForm.wa_token}
+                    onChange={(e) => setGatewayForm((prev) => ({ ...prev, wa_token: e.target.value }))}
+                    disabled={!isAdmin}
+                    placeholder="Masukkan API Token Fonnte..."
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none"
+                  />
+                  <p className="text-[11px] text-slate-400 dark:text-zinc-500 mt-1.5 leading-relaxed">
+                    Digunakan untuk pengiriman notifikasi kasir pembayaran, kredensial akun baru, dan siaran massal. Jika kosong, sistem menggunakan token default di file .env.local.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+                    Nomor WhatsApp Pengirim / Device ID (Opsional)
+                  </label>
+                  <input
+                    type="text"
+                    value={gatewayForm.wa_sender_number}
+                    onChange={(e) => setGatewayForm((prev) => ({ ...prev, wa_sender_number: e.target.value }))}
+                    disabled={!isAdmin}
+                    placeholder="Contoh: 6281234567890"
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 text-sm focus:outline-none"
+                  />
+                </div>
+
+                {/* Tombol Uji Koneksi WhatsApp */}
+                <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    {waCheckResult && (
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
+                        waCheckResult.connected
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
+                          : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20'
+                      }`}>
+                        {waCheckResult.connected ? (
+                          <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                        )}
+                        <span>{waCheckResult.message}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleTestWaConnection}
+                    disabled={testingWa}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-200 text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${testingWa ? 'animate-spin text-emerald-600' : ''}`} />
+                    <span>{testingWa ? 'Memeriksa Device...' : 'Cek Status Koneksi WhatsApp'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* 2. Email SMTP & Resend Card */}
+            <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl p-6 shadow-sm space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 dark:border-zinc-800 pb-3">
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-blue-500" />
+                  Konfigurasi Pengiriman Email (Resend / SMTP)
+                </h3>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={gatewayForm.email_is_active}
+                    onChange={(e) => setGatewayForm((prev) => ({ ...prev, email_is_active: e.target.checked }))}
+                    disabled={!isAdmin}
+                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 accent-emerald-600"
+                  />
+                  <span className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+                    {gatewayForm.email_is_active ? 'Status: Aktif' : 'Status: Non-Aktif'}
+                  </span>
+                </label>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+                    Metode Layanan Email
+                  </label>
+                  <select
+                    value={gatewayForm.email_provider}
+                    onChange={(e) => setGatewayForm((prev) => ({ ...prev, email_provider: e.target.value }))}
+                    disabled={!isAdmin}
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 text-sm focus:outline-none"
+                  >
+                    <option value="resend">Resend API (Direkomendasikan - Cloud HTTP API)</option>
+                    <option value="smtp">Custom SMTP Server (Gmail / Webmail Pesantren)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
+                    Alamat Pengirim (From Header)
+                  </label>
+                  <input
+                    type="text"
+                    value={gatewayForm.email_from_address}
+                    onChange={(e) => setGatewayForm((prev) => ({ ...prev, email_from_address: e.target.value }))}
+                    disabled={!isAdmin}
+                    placeholder="Contoh: Pesantren Al-Hikmah <info@pesantren.sch.id>"
+                    className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 text-sm focus:outline-none"
+                  />
+                </div>
+
+                {gatewayForm.email_provider === 'resend' ? (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-xs font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider">
+                        Resend API Key
+                      </label>
+                      <a
+                        href="https://resend.com"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-blue-600 dark:text-blue-400 font-semibold hover:underline"
+                      >
+                        Dapatkan API Key di Resend.com &rarr;
+                      </a>
+                    </div>
+                    <input
+                      type="password"
+                      value={gatewayForm.resend_api_key}
+                      onChange={(e) => setGatewayForm((prev) => ({ ...prev, resend_api_key: e.target.value }))}
+                      disabled={!isAdmin}
+                      placeholder="re_xxxxxxxxxxxxxxxxxxxxx"
+                      className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 disabled:opacity-70 rounded-xl px-4 py-2.5 text-slate-800 dark:text-zinc-100 font-mono text-xs focus:outline-none"
+                    />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-slate-200/70 dark:border-zinc-800">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">SMTP Host</label>
+                      <input
+                        type="text"
+                        value={gatewayForm.smtp_host}
+                        onChange={(e) => setGatewayForm((prev) => ({ ...prev, smtp_host: e.target.value }))}
+                        disabled={!isAdmin}
+                        placeholder="smtp.gmail.com"
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">SMTP Port</label>
+                      <input
+                        type="number"
+                        value={gatewayForm.smtp_port}
+                        onChange={(e) => setGatewayForm((prev) => ({ ...prev, smtp_port: Number(e.target.value) }))}
+                        disabled={!isAdmin}
+                        placeholder="587"
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">SMTP Username / Email</label>
+                      <input
+                        type="text"
+                        value={gatewayForm.smtp_user}
+                        onChange={(e) => setGatewayForm((prev) => ({ ...prev, smtp_user: e.target.value }))}
+                        disabled={!isAdmin}
+                        placeholder="admin@pesantren.sch.id"
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">SMTP Password</label>
+                      <input
+                        type="password"
+                        value={gatewayForm.smtp_password}
+                        onChange={(e) => setGatewayForm((prev) => ({ ...prev, smtp_password: e.target.value }))}
+                        disabled={!isAdmin}
+                        placeholder="••••••••••••"
+                        className="w-full bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-lg px-3 py-2 text-xs"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Tombol Uji Koneksi Email */}
+                <div className="pt-3 border-t border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    {emailCheckResult && (
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold ${
+                        emailCheckResult.connected
+                          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20'
+                          : 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20'
+                      }`}>
+                        {emailCheckResult.connected ? (
+                          <CheckCircle2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                        ) : (
+                          <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+                        )}
+                        <span>{emailCheckResult.message}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleTestEmailConnection}
+                    disabled={testingEmail}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-200 text-xs font-bold rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${testingEmail ? 'animate-spin text-blue-600' : ''}`} />
+                    <span>{testingEmail ? 'Memeriksa API...' : 'Cek Status Koneksi Email'}</span>
+                  </button>
                 </div>
               </div>
             </div>

@@ -722,3 +722,59 @@ export interface AuditLog {
   user?: Profile | null;
 }
 
+export type BroadcastChannel = 'whatsapp' | 'email' | 'both';
+export type BroadcastAudience = 'wali_santri' | 'santri' | 'pegawai' | 'custom';
+export type BroadcastStatus = 'draft' | 'processing' | 'completed' | 'failed';
+export type DeliveryStatus = 'none' | 'sent' | 'failed' | 'skipped';
+
+export interface BroadcastMessage {
+  id: string;
+  created_at: string;
+  sender_id?: string | null;
+  sender_name?: string | null;
+  judul: string;
+  isi_pesan: string;
+  saluran: BroadcastChannel;
+  target_audience: BroadcastAudience;
+  target_filter?: Record<string, any> | null;
+  total_target: number;
+  total_sent: number;
+  total_failed: number;
+  total_skipped: number;
+  status: BroadcastStatus;
+}
+
+export interface BroadcastRecipient {
+  id: string;
+  id_broadcast: string;
+  nama_penerima: string;
+  tipe_penerima: 'Santri' | 'Wali Santri' | 'Pegawai';
+  nomor_wa?: string | null;
+  email?: string | null;
+  status_wa: DeliveryStatus;
+  status_email: DeliveryStatus;
+  error_wa?: string | null;
+  error_email?: string | null;
+  created_at: string;
+}
+
+export interface GatewaySettings {
+  id: number;
+  wa_provider: 'fonnte' | string;
+  wa_token?: string | null;
+  wa_sender_number?: string | null;
+  wa_is_active: boolean;
+
+  email_provider: 'resend' | 'smtp' | string;
+  resend_api_key?: string | null;
+  email_from_address?: string | null;
+  smtp_host?: string | null;
+  smtp_port?: number | null;
+  smtp_user?: string | null;
+  smtp_password?: string | null;
+  smtp_secure?: boolean;
+  email_is_active: boolean;
+
+  updated_at: string;
+}
+
