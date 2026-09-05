@@ -266,6 +266,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         <i className="far fa-user w-5 mr-2 text-gray-400 dark:text-zinc-500" />
                         Profile
                       </Link>
+
+                      <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-zinc-300">
+                        <span className="flex items-center gap-2">
+                          <i className="far fa-moon w-5 text-gray-400 dark:text-zinc-500" />
+                          Tema Gelap
+                        </span>
+                        <ThemeToggle />
+                      </div>
                     </div>
                     <div className="border-t border-gray-200 dark:border-zinc-800 py-1">
                       <button

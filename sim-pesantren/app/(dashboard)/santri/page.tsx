@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImportSantriModal } from '@/components/import-santri-modal';
+import { logActivity } from '@/services/audit-actions';
 import FormTambahSantri from '@/components/FormTambahSantri';
 
 const toTitleCase = (str: string) => {
@@ -264,13 +265,34 @@ export default function SantriDashboardPage() {
           .eq('id', selectedSantri.id);
 
         if (updateErr) throw updateErr;
+        
+        await logActivity({
+          action: 'UPDATE',
+          module: 'Santri',
+          description: `Memperbarui data santri: ${formData.nama_lengkap} (NIS: ${formData.nis})`,
+          recordId: selectedSantri.id,
+          oldData: selectedSantri,
+          newData: { ...selectedSantri, ...payload }
+        });
+
         toast.success(`Data santri "${formData.nama_lengkap}" berhasil diperbarui!`);
       } else {
-        const { error: insertErr } = await supabase
+        const { data: insertedSantri, error: insertErr } = await supabase
           .from('santri')
-          .insert([payload]);
+          .insert([payload])
+          .select()
+          .single();
 
         if (insertErr) throw insertErr;
+
+        await logActivity({
+          action: 'CREATE',
+          module: 'Santri',
+          description: `Menambahkan santri baru: ${formData.nama_lengkap} (NIS: ${formData.nis})`,
+          recordId: insertedSantri?.id,
+          newData: insertedSantri || payload
+        });
+
         toast.success(`Santri "${formData.nama_lengkap}" berhasil ditambahkan!`);
       }
 
@@ -288,12 +310,23 @@ export default function SantriDashboardPage() {
     if (!confirm(`Apakah Anda yakin ingin menghapus data santri "${name}"?`)) return;
 
     try {
+      const targetSantri = santriList.find(s => s.id === id);
+
       const { error: deleteErr } = await supabase
         .from('santri')
         .delete()
         .eq('id', id);
 
       if (deleteErr) throw deleteErr;
+
+      await logActivity({
+        action: 'DELETE',
+        module: 'Santri',
+        description: `Menghapus santri: ${name} (NIS: ${targetSantri?.nis || '-'})`,
+        recordId: id,
+        oldData: targetSantri
+      });
+
       toast.success(`Data santri "${name}" berhasil dihapus.`);
       await fetchData();
     } catch (err: any) {

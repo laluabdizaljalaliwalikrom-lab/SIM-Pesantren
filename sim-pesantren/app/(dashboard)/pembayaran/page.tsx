@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import Image from 'next/image';
 import * as XLSX from 'xlsx';
 import EmptyState from '@/components/empty-state';
+import { logActivity } from '@/services/audit-actions';
 
 export default function CashierPaymentPage() {
   // Tab navigation state
@@ -362,6 +363,22 @@ export default function CashierPaymentPage() {
       const nomorKuitansi = paymentGroup.nomor_kuitansi;
 
       toast.success('Pembayaran berhasil diproses!');
+
+      // Catat ke Audit Trail
+      await logActivity({
+        action: 'PAYMENT',
+        module: 'Pembayaran',
+        description: `Menerima pembayaran tagihan santri ${selectedSantri?.nama_lengkap} senilai Rp${totalBayar.toLocaleString('id-ID')} (Kuitansi: ${nomorKuitansi})`,
+        recordId: groupId,
+        newData: {
+          nomorKuitansi,
+          santri: selectedSantri?.nama_lengkap,
+          totalBayar,
+          totalTagihan,
+          uangDiterima: cashReceived,
+          kembalian,
+        },
+      });
 
       // Kirim notifikasi WhatsApp ke kontak santri
       try {

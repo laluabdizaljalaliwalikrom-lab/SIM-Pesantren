@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -248,20 +248,15 @@ export default function AbsensiKBMPage() {
 
   return (
     <>
-      
-      {/* Header */}
-      <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+      {/* Header (Sesuai Standar GEMINI.md) */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
         <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200/50 mb-3">
-            <Sparkles className="h-3 w-3" />
-            Kehadiran Kelas Harian
-          </span>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <CalendarCheck className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <CalendarCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
             Absensi KBM Santri
           </h1>
-          <p className="text-slate-500 dark:text-zinc-400 text-xs sm:text-sm mt-1">
-            Portal Guru / Pencatatan dan Pemantauan Kehadiran Santri pada KBM Harian
+          <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">
+            Pencatatan dan pemantauan kehadiran santri pada Kegiatan Belajar Mengajar (KBM) harian.
           </p>
         </div>
       </div>
@@ -272,7 +267,7 @@ export default function AbsensiKBMPage() {
         // -------------------------------------------------------------
         // MODE 1: LIST JADWAL HARI INI
         // -------------------------------------------------------------
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="space-y-6">
           
           {/* Filters Bar */}
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -408,7 +403,7 @@ export default function AbsensiKBMPage() {
         // -------------------------------------------------------------
         // MODE 2: INPUT ABSENSI SANTRI
         // -------------------------------------------------------------
-        <div className="max-w-5xl mx-auto space-y-6">
+        <div className="space-y-6">
           
           {/* Back Trigger & Info Bar */}
           <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

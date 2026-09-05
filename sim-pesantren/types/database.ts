@@ -701,3 +701,24 @@ export interface PengumumanPpdb {
   // Joins
   gelombang?: GelombangPendaftaran | null;
 }
+
+export type AuditActionType = 'CREATE' | 'UPDATE' | 'DELETE' | 'LOGIN' | 'LOGOUT' | 'IMPORT' | 'EXPORT' | 'PAYMENT';
+
+export interface AuditLog {
+  id: string;
+  created_at: string;
+  user_id: string | null;
+  user_name: string | null;
+  user_role: string | null;
+  action: AuditActionType | string;
+  module: string;
+  record_id?: string | null;
+  description: string;
+  old_data?: Record<string, any> | null;
+  new_data?: Record<string, any> | null;
+  ip_address?: string | null;
+  user_agent?: string | null;
+  // Joins
+  user?: Profile | null;
+}
+

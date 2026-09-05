@@ -1,59 +1,71 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useSyncExternalStore } from 'react';
 import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
 
-export function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+const emptySubscribe = () => () => {};
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+export function ThemeToggle({ className = '' }: { className?: string }) {
+  const { setTheme, resolvedTheme } = useTheme();
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   if (!mounted) {
-    return <div className="w-14 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 animate-pulse" />;
+    return <div className={`h-9.5 w-9.5 rounded-xl bg-slate-100 dark:bg-zinc-850 animate-pulse shrink-0 ${className}`} />;
   }
 
-  const isDark = theme === 'dark';
+  const isDark = resolvedTheme === 'dark';
 
   return (
     <button
+      type="button"
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
-      className="relative flex items-center w-14 h-7 rounded-full border border-slate-200 dark:border-zinc-700 bg-slate-100 dark:bg-zinc-800 transition-colors duration-300 focus:outline-none shrink-0"
+      className={`group relative flex h-9.5 w-9.5 items-center justify-center rounded-xl border transition-all duration-300 active:scale-90 focus:outline-none shrink-0 cursor-pointer overflow-hidden ${
+        isDark
+          ? 'bg-zinc-900/80 border-zinc-800 text-amber-400 hover:border-amber-400/30 hover:bg-zinc-800/90 shadow-sm shadow-black/20'
+          : 'bg-white/90 border-slate-200/90 text-slate-700 hover:text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50/40 shadow-sm shadow-slate-200/50'
+      } backdrop-blur-md ${className}`}
       role="switch"
       aria-checked={isDark}
-      title={isDark ? 'Aktifkan Mode Terang' : 'Aktifkan Mode Gelap'}
+      title={isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'}
+      aria-label={isDark ? 'Beralih ke Mode Terang' : 'Beralih ke Mode Gelap'}
     >
-      <span className="absolute inset-0 rounded-full overflow-hidden">
-        <span
-          className={`absolute inset-0 rounded-full transition-opacity duration-500 ${
+      {/* Dynamic ambient halo background on hover */}
+      <div
+        className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none ${
+          isDark
+            ? 'bg-gradient-to-tr from-amber-500/10 via-amber-400/5 to-transparent'
+            : 'bg-gradient-to-tr from-emerald-500/10 via-teal-400/5 to-transparent'
+        }`}
+      />
+
+      {/* Sun Icon: Renders when dark or light, morphing with 3D rotation & scale */}
+      <div className="relative flex items-center justify-center">
+        <Sun
+          className={`h-4.5 w-4.5 transition-all duration-500 transform ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
             isDark
-              ? 'opacity-100 bg-gradient-to-r from-zinc-800 to-zinc-900'
-              : 'opacity-0'
+              ? 'rotate-90 scale-0 opacity-0 absolute'
+              : 'rotate-0 scale-100 opacity-100 text-amber-500 group-hover:rotate-45'
           }`}
+          strokeWidth={2.2}
         />
-      </span>
-      <Sun
-        className={`absolute left-1.5 h-3.5 w-3.5 z-10 pointer-events-none transition-all duration-500 ${
-          isDark
-            ? 'text-zinc-500 opacity-40 scale-75'
-            : 'text-amber-500 opacity-100 scale-100'
-        }`}
-      />
-      <Moon
-        className={`absolute right-1.5 h-3.5 w-3.5 z-10 pointer-events-none transition-all duration-500 ${
-          isDark
-            ? 'text-blue-300 opacity-100 scale-100'
-            : 'text-zinc-400 opacity-40 scale-75'
-        }`}
-      />
-      <span
-        className={`absolute top-0.5 h-6 w-6 rounded-full bg-white dark:bg-zinc-950 shadow-md border border-slate-200 dark:border-zinc-600 transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
-          isDark ? 'translate-x-7' : 'translate-x-0.5'
-        }`}
-      />
+
+        {/* Moon Icon */}
+        <Moon
+          className={`h-4.5 w-4.5 transition-all duration-500 transform ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
+            isDark
+              ? 'rotate-0 scale-100 opacity-100 text-amber-300 group-hover:-rotate-12'
+              : '-rotate-90 scale-0 opacity-0 absolute text-slate-400'
+          }`}
+          strokeWidth={2.2}
+        />
+      </div>
     </button>
   );
 }
+
+

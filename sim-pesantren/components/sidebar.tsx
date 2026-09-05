@@ -20,7 +20,9 @@ import {
   ChevronRight,
   ClipboardList,
   CalendarCheck,
+  FileSearch,
 } from 'lucide-react';
+import { ThemeToggle } from './ui/theme-toggle';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -99,6 +101,7 @@ const MENU_ITEMS: MenuItem[] = [
   { name: 'Laporan Keuangan', href: '/laporan', icon: BarChart4 },
   { heading: 'Pengaturan' },
   { name: 'Hak Akses', href: '/settings/users', icon: ShieldCheck },
+  { name: 'Audit Trail', href: '/settings/audit-logs', icon: FileSearch },
   { name: 'Pengaturan', href: '/pengaturan', icon: Settings },
 ];
 
@@ -323,12 +326,17 @@ export function Sidebar({
             })}
           </nav>
 
-          {/* Sidebar Footer / User */}
-          <div className="sidebar-footer p-4 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
+          {/* Sidebar Footer / User & Theme Toggle */}
+          <div className="sidebar-footer p-3 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-2">
+            <div className="sidebar-footer-text flex items-center justify-between px-2 py-1 bg-slate-50 dark:bg-zinc-800/60 rounded-xl border border-slate-200/60 dark:border-zinc-750">
+              <span className="text-[11px] font-semibold text-slate-600 dark:text-zinc-300">Tema Tampilan</span>
+              <ThemeToggle />
+            </div>
+
             <Link
               href="/profile"
               onClick={() => onClose()}
-              className="flex items-center gap-3 px-1 transition-all duration-200 hover:opacity-85"
+              className="flex items-center gap-3 px-1 py-1 transition-all duration-200 hover:opacity-85"
               title="Profil Saya"
             >
               {userFotoUrl ? (
