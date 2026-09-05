@@ -401,8 +401,8 @@ export default function UserRoleSettingsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <ShieldCheck className="h-6 w-6 text-emerald-600" /> Manajemen User & Custom Role
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <ShieldCheck className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" /> Manajemen User & Custom Role
           </h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
             Kelola pengguna portal admin, undang pengguna baru, dan atur kustomisasi hak akses matrix fitur.

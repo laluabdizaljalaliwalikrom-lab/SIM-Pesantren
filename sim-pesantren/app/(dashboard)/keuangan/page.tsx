@@ -25,6 +25,7 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { toast } from 'sonner';
+import EmptyState from '@/components/empty-state';
 
 type ActiveTabType = 'ringkasan' | 'template' | 'generate';
 
@@ -374,11 +375,11 @@ export default function KeuanganDashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Settings className="h-6 w-6 text-emerald-600" /> Manajemen & Pengaturan Keuangan
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Settings className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" /> Manajemen Keuangan
           </h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
-            Pantau arus pendapatan, piutang, kelola master biaya, dan generate tagihan kolektif.
+            Pantau arus kas, kelola master biaya, dan generate tagihan kolektif.
           </p>
         </div>
       </div>
@@ -429,7 +430,7 @@ export default function KeuanganDashboardPage() {
                 <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm flex items-center justify-between">
                   <div className="space-y-2">
                     <p className="text-xs uppercase font-bold text-slate-450 dark:text-zinc-500 tracking-wider">Total Piutang (Belum Tertagih)</p>
-                    <p className="text-2xl font-black text-rose-600 dark:text-rose-450">{formatRupiah(stats.totalPiutang)}</p>
+                    <p className="text-2xl font-bold text-rose-600 dark:text-rose-450">{formatRupiah(stats.totalPiutang)}</p>
                     <p className="text-[10px] text-slate-400">Akumulasi total tagihan berstatus 'Belum Lunas'</p>
                   </div>
                   <div className="h-14 w-14 bg-rose-50 dark:bg-rose-500/5 border border-rose-100 dark:border-rose-950/20 text-rose-600 dark:text-rose-400 rounded-2xl flex items-center justify-center flex-shrink-0">
@@ -441,7 +442,7 @@ export default function KeuanganDashboardPage() {
                 <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm flex items-center justify-between">
                   <div className="space-y-2">
                     <p className="text-xs uppercase font-bold text-slate-450 dark:text-zinc-500 tracking-wider">Pendapatan Bulan Ini</p>
-                    <p className="text-2xl font-black text-emerald-600 dark:text-emerald-450">{formatRupiah(stats.totalPendapatanBulanIni)}</p>
+                    <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-450">{formatRupiah(stats.totalPendapatanBulanIni)}</p>
                     <p className="text-[10px] text-slate-400">Total pembayaran lunas untuk periode {getBulanName(new Date().getMonth() + 1)}</p>
                   </div>
                   <div className="h-14 w-14 bg-emerald-50 dark:bg-emerald-500/5 border border-emerald-100 dark:border-emerald-500/10 text-emerald-600 dark:text-emerald-450 rounded-2xl flex items-center justify-center flex-shrink-0">
@@ -564,10 +565,16 @@ export default function KeuanganDashboardPage() {
 
               <div className="overflow-x-auto">
                 {masterBiayaList.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center p-10 text-center text-slate-400 py-20">
-                    <Layers className="h-10 w-10 text-slate-350 dark:text-zinc-700 mb-3" />
-                    <h4 className="font-bold text-xs text-slate-600">Template Kosong</h4>
-                    <p className="text-[10px] text-slate-450 mt-0.5">Silakan klik Tambah Template untuk membuat master biaya pertama.</p>
+                  <div className="py-12">
+                    <EmptyState
+                      icon={Layers}
+                      title="Template Biaya Kosong"
+                      description="Silakan tambahkan template untuk membuat master biaya pertama."
+                      action={{
+                        label: '+ Tambah Template',
+                        onClick: handleOpenAdd,
+                      }}
+                    />
                   </div>
                 ) : (
                   <table className="w-full text-left border-collapse">

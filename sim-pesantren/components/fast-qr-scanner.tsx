@@ -124,8 +124,10 @@ export default function FastQrScanner({ onScan, onError, active, className = '' 
 
   const lastScannedTextRef = useRef<string>('');
   const lastScannedTimeRef = useRef<number>(0);
+  const lastFrameTimeRef = useRef<number>(0);
+  const isProcessingRef = useRef<boolean>(false);
 
-  // Main high-frequency scan loop
+  // Main lightweight throttled scan loop (target ~10-12 scans/sec for ultra-low CPU)
   const scanLoop = useCallback(() => {
     const video = videoRef.current;
     const canvas = canvasRef.current;
@@ -142,94 +144,82 @@ export default function FastQrScanner({ onScan, onError, active, className = '' 
       return;
     }
 
+    const now = performance.now();
+    // Throttle frame processing to every 90ms (~11 FPS) to keep low-end CPUs cool and responsive
+    if (now - lastFrameTimeRef.current < 90 || isProcessingRef.current) {
+      animFrameRef.current = requestAnimationFrame(scanLoop);
+      return;
+    }
+
+    lastFrameTimeRef.current = now;
+    isProcessingRef.current = true;
+
     const runDetection = async () => {
-      let detectedCode: string | null = null;
+      try {
+        let detectedCode: string | null = null;
 
-      // --- PASS 1: Native BarcodeDetector (Direct Video Stream) ---
-      if (barcodeDetectorRef.current) {
-        try {
-          const barcodes = await barcodeDetectorRef.current.detect(video);
-          if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-            detectedCode = barcodes[0].rawValue;
-          }
-        } catch {}
-      }
-
-      // --- PASS 2: jsQR on Direct Video Frame ---
-      if (!detectedCode && canvas) {
-        if (canvas.width !== vw || canvas.height !== vh) {
-          canvas.width = vw;
-          canvas.height = vh;
+        // --- PASS 1: Native BarcodeDetector (Zero CPU overhead, uses GPU/NPU) ---
+        if (barcodeDetectorRef.current) {
+          try {
+            const barcodes = await barcodeDetectorRef.current.detect(video);
+            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+              detectedCode = barcodes[0].rawValue;
+            }
+          } catch {}
         }
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (ctx) {
-          ctx.drawImage(video, 0, 0, vw, vh);
-          const imageData = ctx.getImageData(0, 0, vw, vh);
-          
-          const code = jsQR(imageData.data, vw, vh, { inversionAttempts: 'dontInvert' });
-          if (code && code.data) {
-            detectedCode = code.data;
+
+        // --- PASS 2: jsQR with Downscaled Canvas (Max 480px width) ---
+        if (!detectedCode && canvas) {
+          // Downscale to max 480px width to reduce pixel processing by up to 75%
+          const scale = Math.min(1, 480 / vw);
+          const targetW = Math.round(vw * scale);
+          const targetH = Math.round(vh * scale);
+
+          if (canvas.width !== targetW || canvas.height !== targetH) {
+            canvas.width = targetW;
+            canvas.height = targetH;
           }
-        }
-      }
 
-      // --- PASS 3: Low-Quality Camera Boost (Center Zoom ROI + Dynamic Contrast Enhancement) ---
-      if (!detectedCode && boostMode && canvas) {
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (ctx) {
-          // Crop center 60% region for higher effective pixel density
-          const cropW = Math.floor(vw * 0.6);
-          const cropH = Math.floor(vh * 0.6);
-          const cropX = Math.floor((vw - cropW) / 2);
-          const cropY = Math.floor((vh - cropH) / 2);
+          const ctx = canvas.getContext('2d', { willReadFrequently: true });
+          if (ctx) {
+            ctx.drawImage(video, 0, 0, targetW, targetH);
+            const imageData = ctx.getImageData(0, 0, targetW, targetH);
 
-          ctx.drawImage(video, cropX, cropY, cropW, cropH, 0, 0, vw, vh);
-          const croppedImgData = ctx.getImageData(0, 0, vw, vh);
-          
-          // Apply contrast boost & binarization filter
-          const enhancedImgData = processImageContrast(croppedImgData, 1.8, 20);
-          ctx.putImageData(enhancedImgData, 0, 0);
-
-          // Native detector on enhanced canvas
-          if (barcodeDetectorRef.current) {
-            try {
-              const barcodes = await barcodeDetectorRef.current.detect(canvas);
-              if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-                detectedCode = barcodes[0].rawValue;
+            const code = jsQR(imageData.data, targetW, targetH, { inversionAttempts: 'dontInvert' });
+            if (code && code.data) {
+              detectedCode = code.data;
+            } else if (boostMode) {
+              // Quick single pass contrast on the already tiny 480px image data
+              const enhancedImgData = processImageContrast(imageData, 1.5, 15);
+              const codeEnhanced = jsQR(enhancedImgData.data, targetW, targetH, { inversionAttempts: 'dontInvert' });
+              if (codeEnhanced && codeEnhanced.data) {
+                detectedCode = codeEnhanced.data;
               }
-            } catch {}
-          }
-
-          // jsQR fallback on enhanced canvas with inversion check
-          if (!detectedCode) {
-            const codeEnhanced = jsQR(enhancedImgData.data, vw, vh, { inversionAttempts: 'attemptBoth' });
-            if (codeEnhanced && codeEnhanced.data) {
-              detectedCode = codeEnhanced.data;
             }
           }
         }
-      }
 
-      if (detectedCode) {
-        const now = Date.now();
-        const isSameCode = detectedCode === lastScannedTextRef.current;
-        const isRecent = now - lastScannedTimeRef.current < 2500; // 2.5 seconds cooldown
+        if (detectedCode) {
+          const currentTime = Date.now();
+          const isSameCode = detectedCode === lastScannedTextRef.current;
+          const isRecent = currentTime - lastScannedTimeRef.current < 2500;
 
-        if (!isSameCode || !isRecent) {
-          lastScannedTextRef.current = detectedCode;
-          lastScannedTimeRef.current = now;
-          handleDetected(detectedCode);
+          if (!isSameCode || !isRecent) {
+            lastScannedTextRef.current = detectedCode;
+            lastScannedTimeRef.current = currentTime;
+            handleDetected(detectedCode);
+          }
         }
+      } finally {
+        isProcessingRef.current = false;
+        animFrameRef.current = requestAnimationFrame(scanLoop);
       }
-
-      // Always continue scan loop for continuous multi-QR scanning
-      animFrameRef.current = requestAnimationFrame(scanLoop);
     };
 
     runDetection();
   }, [boostMode, handleDetected]);
 
-  // Start Camera Stream with optimal high resolution constraints
+  // Start Camera Stream with light, mobile-friendly resolution constraints
   const startCamera = useCallback(async () => {
     stopStream();
     setIsInitializing(true);
@@ -239,9 +229,9 @@ export default function FastQrScanner({ onScan, onError, active, className = '' 
         audio: false,
         video: {
           facingMode: { ideal: facingMode },
-          width: { ideal: 1920, max: 2560 },
-          height: { ideal: 1080, max: 1440 },
-          frameRate: { ideal: 30, min: 15 },
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 },
+          frameRate: { ideal: 24, max: 30 },
         },
       };
 
@@ -254,11 +244,7 @@ export default function FastQrScanner({ onScan, onError, active, className = '' 
       // Apply continuous auto-focus if supported
       try {
         const capabilities: any = track.getCapabilities?.() || {};
-        if (capabilities.torch) {
-          setHasTorch(true);
-        } else {
-          setHasTorch(false);
-        }
+        setHasTorch(Boolean(capabilities.torch));
         if (capabilities.focusMode && capabilities.focusMode.includes('continuous')) {
           await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] as any });
         }
@@ -266,7 +252,14 @@ export default function FastQrScanner({ onScan, onError, active, className = '' 
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        await videoRef.current.play();
+        try {
+          await videoRef.current.play();
+        } catch (playErr: any) {
+          // Ignore AbortError / interrupted playback if component unmounted or stream stopped
+          if (playErr?.name !== 'AbortError') {
+            console.warn('Video play warning:', playErr);
+          }
+        }
       }
 
       setIsInitializing(false);
@@ -324,7 +317,7 @@ export default function FastQrScanner({ onScan, onError, active, className = '' 
       {/* Scanning Target Finder UI */}
       {active && !isInitializing && (
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-          <div className="relative w-64 h-64 border-2 border-emerald-400/70 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden">
+          <div className="relative w-64 h-64 border-2 border-emerald-400/80 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.5)] flex items-center justify-center overflow-hidden">
             {/* Animated Laser Bar */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_15px_#10b981] animate-laser" />
             
@@ -337,55 +330,34 @@ export default function FastQrScanner({ onScan, onError, active, className = '' 
         </div>
       )}
 
-      {/* Top Status Badge */}
-      <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-20 pointer-events-auto">
-        <div className="flex items-center gap-1.5 bg-black/70 backdrop-blur-md text-white text-xs px-3 py-1.5 rounded-full border border-white/10">
-          <Zap className="h-3.5 w-3.5 text-amber-400 animate-pulse" />
-          <span className="font-medium text-[11px] tracking-wide">{engineName}</span>
-        </div>
+      {/* Top Controls */}
+      <div className="absolute top-3 right-3 flex items-center gap-2 z-20 pointer-events-auto">
+        {hasTorch && (
+          <button
+            onClick={toggleTorch}
+            className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
+              torchOn
+                ? 'bg-amber-500 text-white shadow-lg ring-2 ring-amber-300'
+                : 'bg-black/50 text-white hover:bg-black/70'
+            }`}
+            title="Senter"
+          >
+            <Flashlight className="h-4 w-4" />
+          </button>
+        )}
 
-        {/* Low Camera Boost Badge Toggle */}
         <button
-          onClick={() => setBoostMode(!boostMode)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all ${
-            boostMode
-              ? 'bg-emerald-600/90 text-white shadow-md shadow-emerald-600/30 border border-emerald-400/50'
-              : 'bg-black/60 text-slate-300 border border-white/10'
-          }`}
-          title="Super Boost untuk Kamera Low Quality / Redup"
+          onClick={switchCamera}
+          className="p-2.5 rounded-full bg-black/50 hover:bg-black/70 text-white backdrop-blur-md transition-all"
+          title="Ganti Kamera"
         >
-          <Sliders className="h-3.5 w-3.5" />
-          <span>{boostMode ? 'Boost Low-Cam ON' : 'Boost Normal'}</span>
+          <RefreshCw className="h-4 w-4" />
         </button>
       </div>
 
-      {/* Bottom Camera Controls (Torch & Switch) */}
-      <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center z-20 pointer-events-auto">
-        <div className="flex gap-2">
-          {hasTorch && (
-            <button
-              onClick={toggleTorch}
-              className={`p-2.5 rounded-full backdrop-blur-md transition-all ${
-                torchOn
-                  ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/40 ring-2 ring-amber-300'
-                  : 'bg-black/60 text-white hover:bg-black/80'
-              }`}
-              title="Flashlight / Senter"
-            >
-              <Flashlight className="h-5 w-5" />
-            </button>
-          )}
-
-          <button
-            onClick={switchCamera}
-            className="p-2.5 rounded-full bg-black/60 hover:bg-black/80 text-white backdrop-blur-md transition-all"
-            title="Ganti Kamera Front/Back"
-          >
-            <RefreshCw className="h-5 w-5" />
-          </button>
-        </div>
-
-        <div className="text-[11px] text-white/80 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full font-medium">
+      {/* Bottom Hint */}
+      <div className="absolute bottom-3 left-0 right-0 flex justify-center z-20 pointer-events-none">
+        <div className="text-[11px] text-white/90 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-full font-medium shadow-sm">
           Arahkan QR ke dalam kotak
         </div>
       </div>

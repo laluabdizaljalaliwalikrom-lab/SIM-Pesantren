@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import FormSetoranTahfidz from '@/components/FormSetoranTahfidz';
 import * as XLSX from 'xlsx';
+import EmptyState from '@/components/empty-state';
 
 type ActiveTab = 'quran' | 'hadits' | 'matan' | 'tahsin' | 'ujian' | 'pengaturan';
 
@@ -314,9 +315,15 @@ export default function TahfidzTracker() {
   return (
     <>
       
-      {/* Top Mobile Bar Style Mockup matching screenshot */}
-      <div className="bg-emerald-800 dark:bg-emerald-950 text-white rounded-2xl p-4 shadow-md text-center font-extrabold text-base tracking-wide mb-6">
-        Monitoring Hafalan Santri
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <BookMarked className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            Tahfidz Tracker
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-zinc-400 mt-1">Monitoring dan rekap setoran hafalan harian santri.</p>
+        </div>
       </div>
 
       {/* Sub Tabs Navigation matching screenshot */}
@@ -600,9 +607,13 @@ export default function TahfidzTracker() {
                     Memuat riwayat setoran...
                   </div>
                 ) : filteredSetorans.length === 0 ? (
-                  <p className="text-center py-12 text-xs text-slate-400 dark:text-zinc-650 font-medium">
-                    Belum ada data. Mulai input data baru.
-                  </p>
+                  <div className="py-12 px-4">
+                    <EmptyState
+                      icon={BookOpen}
+                      title="Belum Ada Riwayat Setoran"
+                      description="Data setoran tahfidz belum ada atau tidak sesuai filter. Masukkan setoran baru di panel samping."
+                    />
+                  </div>
                 ) : (
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>

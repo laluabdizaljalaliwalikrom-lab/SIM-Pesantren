@@ -89,7 +89,7 @@ export default function SeleksiPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Seleksi</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Seleksi</h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Input jadwal & nilai tes calon santri</p>
         </div>
       </div>

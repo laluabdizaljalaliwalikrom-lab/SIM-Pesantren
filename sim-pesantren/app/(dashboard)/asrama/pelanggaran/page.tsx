@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -371,7 +371,7 @@ export default function PelanggaranPage() {
             <ShieldAlert className="h-3 w-3" />
             Kedisiplinan & Poin Asrama
           </span>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             Pelanggaran & Poin Santri
           </h1>
           <p className="text-slate-550 dark:text-zinc-400 text-xs sm:text-sm mt-1">

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { getAllGelombang, createGelombang, updateGelombang, deleteGelombang } from '@/services/ppdb-actions';
@@ -89,7 +89,7 @@ export default function GelombangPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Gelombang Pendaftaran</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Gelombang Pendaftaran</h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Atur gelombang penerimaan santri baru</p>
         </div>
         <button onClick={openCreate} className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-4 py-2.5 rounded-xl shadow-lg shadow-emerald-600/10 transition-all duration-300 hover:-translate-y-0.5 active:translate-y-0 text-sm">

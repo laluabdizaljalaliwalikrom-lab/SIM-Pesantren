@@ -46,10 +46,10 @@ function Clock() {
     <>
       <i className="far fa-calendar-alt" />
       <span>{dateTime.date}</span>
-      <span className="text-gray-300 dark:text-gray-600">|</span>
+      <span className="text-gray-300 dark:text-zinc-600">|</span>
       <i className="far fa-clock" />
       <span>{dateTime.time}</span>
-      <span className="text-gray-300 dark:text-gray-600 mx-1">•</span>
+      <span className="text-gray-300 dark:text-zinc-600 mx-1">•</span>
       <i className="far fa-moon text-emerald-500" />
       <span className="text-emerald-600 dark:text-emerald-400 font-medium">{dateTime.hijri}</span>
     </>
@@ -247,13 +247,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     onClick={() => setProfileDropdownOpen(false)}
                   />
                   <div
-                    className="absolute top-full right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-[#1a1a2e] ring-1 ring-black ring-opacity-5 z-50 origin-top-right border border-gray-200 dark:border-gray-700"
+                    className="absolute top-full right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-zinc-900 ring-1 ring-black ring-opacity-5 z-50 origin-top-right border border-gray-200 dark:border-zinc-800"
                   >
-                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                      <div className="font-medium text-base text-gray-800 dark:text-gray-200">
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-zinc-800">
+                      <div className="font-medium text-base text-gray-800 dark:text-zinc-200">
                         {userDisplayName}
                       </div>
-                      <div className="font-medium text-sm text-gray-500 dark:text-gray-400">
+                      <div className="font-medium text-sm text-gray-500 dark:text-zinc-400">
                         {userEmail}
                       </div>
                     </div>
@@ -261,13 +261,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       <Link
                         href="/profile"
                         onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition duration-150 ease-in-out"
+                        className="flex items-center block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition duration-150 ease-in-out"
                       >
-                        <i className="far fa-user w-5 mr-2 text-gray-400 dark:text-gray-500" />
+                        <i className="far fa-user w-5 mr-2 text-gray-400 dark:text-zinc-500" />
                         Profile
                       </Link>
                     </div>
-                    <div className="border-t border-gray-200 dark:border-gray-700 py-1">
+                    <div className="border-t border-gray-200 dark:border-zinc-800 py-1">
                       <button
                         onClick={() => {
                           setProfileDropdownOpen(false);
@@ -316,9 +316,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             )}
           </main>
 
-          <footer className="content-footer border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-[#0f0f1a] py-4 px-6">
+          <footer className="content-footer border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-4 px-6">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-              <div className="inline-flex items-center gap-3 bg-white dark:bg-[#1a1a2e] border border-gray-200 dark:border-gray-700 px-5 py-2 rounded-full shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-700 transition-all duration-300">
+              <div className="inline-flex items-center gap-3 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 px-5 py-2 rounded-full shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-300">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-50 dark:ring-emerald-900/40" />
                 <span className="text-gray-600 dark:text-gray-400 font-medium text-xs">
                   &copy; 2025 &ndash; 2026 SIM Pesantren

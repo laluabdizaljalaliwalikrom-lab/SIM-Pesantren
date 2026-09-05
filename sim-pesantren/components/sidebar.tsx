@@ -324,7 +324,7 @@ export function Sidebar({
           </nav>
 
           {/* Sidebar Footer / User */}
-          <div className="sidebar-footer p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-[#1a1a2e]">
+          <div className="sidebar-footer p-4 border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-900">
             <Link
               href="/profile"
               onClick={() => onClose()}

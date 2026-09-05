@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { getBiayaByGelombang, upsertBiayaPpdb, getAllGelombang } from '@/services/ppdb-actions';
@@ -79,7 +79,7 @@ export default function BiayaPpdbPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Biaya PPDB</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Biaya PPDB</h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Atur nominal biaya per gelombang & jalur pendaftaran</p>
         </div>
       </div>

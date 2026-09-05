@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -327,7 +327,7 @@ export default function LaporanTahfidzPage() {
             <Award className="h-3.5 w-3.5" />
             Akademik / Tahfidz
           </span>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
             Progres Tahfidz Bulanan
           </h1>
           <p className="text-slate-550 dark:text-zinc-400 text-xs sm:text-sm mt-1">

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -99,7 +99,7 @@ export default function RekapAbsenSantriPage() {
       ]);
 
       if (santriResult.success) {
-        setSantriList(santriResult.data || []);
+        setSantriList((santriResult.data as unknown as Santri[]) || []);
       }
       if (kelasResult.data) {
         setKelasList(kelasResult.data);
@@ -232,7 +232,7 @@ export default function RekapAbsenSantriPage() {
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-indigo-950 p-6 text-white shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
               <CalendarRange className="w-6 h-6 text-emerald-400" /> Rekapitulasi Absensi Bulanan Santri
             </h1>
             <p className="text-emerald-100/80 text-sm">

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -256,7 +256,7 @@ export default function AbsensiKBMPage() {
             <Sparkles className="h-3 w-3" />
             Kehadiran Kelas Harian
           </span>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <CalendarCheck className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             Absensi KBM Santri
           </h1>

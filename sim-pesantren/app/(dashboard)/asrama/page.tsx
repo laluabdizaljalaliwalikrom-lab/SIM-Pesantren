@@ -23,6 +23,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { toast } from 'sonner';
+import EmptyState from '@/components/empty-state';
 import { moveSantriToKamar } from '@/services/kamar-actions';
 import { LogPerpindahanKamar } from '@/types/database';
 
@@ -472,7 +473,8 @@ export default function AsramaDashboardPage() {
       <div className="flex flex-col gap-6 mb-8">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+              <Home className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
               Status Hunian Asrama
             </h1>
             <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
@@ -521,7 +523,7 @@ export default function AsramaDashboardPage() {
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">Total Kamar</p>
-              <h3 className="text-xl font-extrabold text-slate-850 dark:text-white mt-0.5">{totalKamarCount} Kamar</h3>
+              <h3 className="text-xl font-bold text-slate-850 dark:text-white mt-0.5">{totalKamarCount} Kamar</h3>
             </div>
           </div>
 
@@ -531,7 +533,7 @@ export default function AsramaDashboardPage() {
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">Santri Di Asrama</p>
-              <h3 className="text-xl font-extrabold text-slate-850 dark:text-white mt-0.5">{totalOccupants} / {totalCapacity} Santri</h3>
+              <h3 className="text-xl font-bold text-slate-850 dark:text-white mt-0.5">{totalOccupants} / {totalCapacity} Santri</h3>
             </div>
           </div>
 
@@ -541,7 +543,7 @@ export default function AsramaDashboardPage() {
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">Sisa Slot Tersedia</p>
-              <h3 className="text-xl font-extrabold text-slate-850 dark:text-white mt-0.5">{totalCapacity - totalOccupants} Slot</h3>
+              <h3 className="text-xl font-bold text-slate-850 dark:text-white mt-0.5">{totalCapacity - totalOccupants} Slot</h3>
             </div>
           </div>
         </div>
@@ -633,14 +635,12 @@ export default function AsramaDashboardPage() {
             ))}
           </div>
         ) : filteredKamarList.length === 0 ? (
-          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl py-16 px-4 text-center shadow-sm">
-            <div className="h-16 w-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/10 flex items-center justify-center shadow-inner mx-auto mb-4">
-              <Home className="h-8 w-8" />
-            </div>
-            <h3 className="font-bold text-base text-slate-800 dark:text-white">Tidak Ada Kamar Cocok</h3>
-            <p className="text-slate-400 dark:text-zinc-500 text-xs mt-1 max-w-xs mx-auto">
-              Tidak ada kamar yang memenuhi kriteria filter saat ini.
-            </p>
+          <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl py-12 px-4 shadow-sm">
+            <EmptyState
+              icon={Home}
+              title="Tidak Ada Kamar Cocok"
+              description="Tidak ada kamar yang memenuhi kriteria filter saat ini."
+            />
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

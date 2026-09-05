@@ -410,7 +410,7 @@ function CardPreview({ santri, profile, isFlipped, onFlip }: CardFlipProps) {
               <div>
                 <p className="text-slate-400 font-bold uppercase text-[7px]">Pimpinan Pesantren</p>
                 <p className="text-slate-900 dark:text-white font-extrabold mt-3 text-[8.5px] border-b border-slate-400 pb-0.5 inline-block">
-                  {profile?.nama_pengasuh || 'Pimpinan Pesantren'}
+                  {profile?.nama_pimpinan || 'Pimpinan Pesantren'}
                 </p>
               </div>
               <div className="text-right">
@@ -449,7 +449,7 @@ export default function KartuSantriPage() {
       ]);
 
       if (santriRes.success) {
-        setSantriList(santriRes.data || []);
+        setSantriList((santriRes.data as unknown as Santri[]) || []);
       } else {
         toast.error(santriRes.error || 'Gagal memuat data santri');
       }
@@ -660,7 +660,7 @@ export default function KartuSantriPage() {
           <div>
             <div style="font-size:7px;font-weight:700;color:#94a3b8;text-transform:uppercase;">Pimpinan Pesantren</div>
             <div style="font-size:8.5px;font-weight:800;color:#0f172a;margin-top:12px;border-bottom:1px solid #94a3b8;padding-bottom:2px;display:inline-block;">
-              ${profile?.nama_pengasuh || 'Pimpinan Pesantren'}
+              ${profile?.nama_pimpinan || 'Pimpinan Pesantren'}
             </div>
           </div>
           <div style="text-align:right;">

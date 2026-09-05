@@ -55,7 +55,7 @@ function parseTimeToMinutes(timeStr: string): number {
 }
 
 export async function scanAbsensiPegawai(
-  id_pegawai: string,
+  inputCode: string,
   lokasi?: { lat: number; lng: number }
 ) {
   const auth = await requirePermission('Kepegawaian', 'create');
@@ -63,6 +63,33 @@ export async function scanAbsensiPegawai(
 
   try {
     const supabase = await getServerSupabase();
+
+    let cleanCode = inputCode.trim();
+    try {
+      if (cleanCode.startsWith('http://') || cleanCode.startsWith('https://')) {
+        const parsedUrl = new URL(cleanCode);
+        cleanCode = parsedUrl.searchParams.get('id') || cleanCode;
+      }
+    } catch {}
+
+    if (!cleanCode) {
+      return { success: false, error: 'Kode QR / NIP tidak valid' };
+    }
+
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanCode);
+    let id_pegawai = cleanCode;
+
+    if (!isUuid) {
+      const { data: pData } = await supabase
+        .from('pegawai')
+        .select('id')
+        .eq('nip', cleanCode)
+        .maybeSingle();
+      if (!pData) {
+        return { success: false, error: `Pegawai dengan NIP/ID "${cleanCode}" tidak ditemukan.` };
+      }
+      id_pegawai = pData.id;
+    }
 
     const { data: profile } = await supabase
       .from('pesantren_profile')
@@ -117,10 +144,18 @@ export async function scanAbsensiPegawai(
 
       if (error) return { success: false, error: error.message };
 
-      revalidatePath('/absen-pegawai');
-      revalidatePath('/absen-pegawai/atur');
-      revalidatePath('/absen-pegawai/rekap');
-      return { success: true, action: 'keluar', message: 'Absen keluar berhasil' };
+      const { data: pegawaiKeluar } = await supabase
+        .from('pegawai')
+        .select('nama_lengkap')
+        .eq('id', id_pegawai)
+        .maybeSingle();
+
+      return {
+        success: true,
+        action: 'keluar',
+        nama_pegawai: pegawaiKeluar?.nama_lengkap,
+        message: `Absen keluar berhasil (${pegawaiKeluar?.nama_lengkap || 'Pegawai'})`,
+      };
     }
 
     if (existing && existing.jam_keluar) {

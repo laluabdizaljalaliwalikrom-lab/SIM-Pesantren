@@ -21,6 +21,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import EmptyState from '@/components/empty-state';
 
 const STATUS_CONFIG = {
   Hadir: { color: 'bg-emerald-500', badge: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20', icon: CheckCircle },
@@ -157,7 +158,7 @@ export default function AbsenPegawaiPage() {
         ].map((s) => (
           <div
             key={s.label}
-            className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-4 flex items-center gap-3"
+            className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-4 shadow-sm flex items-center gap-3"
           >
             <div className={`${s.color}`}>
               <s.icon className="h-5 w-5" />
@@ -222,19 +223,21 @@ export default function AbsenPegawaiPage() {
           <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 p-12 text-center">
-          <UserCheck className="h-12 w-12 mx-auto text-slate-300 dark:text-zinc-600 mb-3" />
-          <p className="text-slate-500 dark:text-zinc-400 font-medium">Belum ada data absensi</p>
-          <p className="text-sm text-slate-400 dark:text-zinc-500 mt-1">
-            Mulai scan QR pegawai untuk mencatat kehadiran
-          </p>
-          <Link
-            href="/absen-pegawai/scan"
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
-          >
-            <QrCode className="h-4 w-4" />
-            Buka Scanner
-          </Link>
+        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-slate-200 dark:border-zinc-800 p-8 shadow-sm">
+          <EmptyState
+            icon={UserCheck}
+            title="Belum ada data absensi"
+            description="Mulai scan QR pegawai untuk mencatat kehadiran hari ini."
+          />
+          <div className="flex justify-center mt-3">
+            <Link
+              href="/absen-pegawai/scan"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm"
+            >
+              <QrCode className="h-4 w-4" />
+              Buka Scanner
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="bg-white dark:bg-zinc-900 rounded-xl border border-slate-200 dark:border-zinc-800 overflow-hidden">

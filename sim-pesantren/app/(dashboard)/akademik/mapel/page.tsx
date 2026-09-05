@@ -17,6 +17,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { toast } from 'sonner';
+import EmptyState from '@/components/empty-state';
 
 type KategoriMapel = 'Diniyah/Pesantren' | 'Umum' | 'Kitab Kuning' | 'Bahasa';
 
@@ -195,7 +196,7 @@ export default function MasterMapelPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <BookMarked className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             Master Mata Pelajaran
           </h1>
@@ -217,7 +218,7 @@ export default function MasterMapelPage() {
         
         {/* Search */}
         <div className="relative w-full md:max-w-sm">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
             <Search className="h-4 w-4" />
           </span>
           <input
@@ -225,7 +226,7 @@ export default function MasterMapelPage() {
             placeholder="Cari berdasarkan nama atau kode..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl pl-9 pr-4 py-2 text-slate-805 dark:text-zinc-100 placeholder-slate-450 dark:placeholder-zinc-650 focus:outline-none transition-all duration-200 text-xs sm:text-sm"
+            className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl pl-10 pr-4 py-2 text-slate-805 dark:text-zinc-100 placeholder-slate-450 dark:placeholder-zinc-650 focus:outline-none transition-all duration-200 text-xs sm:text-sm"
           />
         </div>
 
@@ -258,28 +259,24 @@ export default function MasterMapelPage() {
             <p className="text-slate-400 text-sm">Memuat kurikulum pelajaran...</p>
           </div>
         ) : mapelList.length === 0 ? (
-          // Empty State with Insert Option
-          <div className="py-16 px-4 text-center">
-            <div className="h-16 w-16 rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-500/10 flex items-center justify-center mx-auto mb-4">
-              <BookOpen className="h-8 w-8" />
-            </div>
-            <h3 className="font-bold text-base text-slate-800 dark:text-white">Belum Ada Pelajaran</h3>
-            <p className="text-slate-400 dark:text-zinc-550 text-xs mt-1 max-w-xs mx-auto">
-              Daftar mata pelajaran masih kosong. Klik di bawah ini untuk membuat data pelajaran pesantren percontohan secara otomatis.
-            </p>
-            <button
-              onClick={handleInsertInitialData}
-              disabled={isSubmitting}
-              className="mt-4 inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition-all"
-            >
-              {isSubmitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              Isi Data Contoh
-            </button>
+          <div className="py-12 px-4">
+            <EmptyState
+              icon={BookOpen}
+              title="Belum Ada Pelajaran"
+              description="Daftar mata pelajaran masih kosong. Klik tombol di bawah untuk membuat data percontohan secara otomatis."
+              action={{
+                label: isSubmitting ? 'Memproses...' : 'Isi Data Contoh',
+                onClick: handleInsertInitialData,
+              }}
+            />
           </div>
         ) : filteredMapel.length === 0 ? (
-          // Search Empty
-          <div className="py-10 text-center text-slate-400 text-sm italic">
-            Tidak ditemukan mata pelajaran yang cocok.
+          <div className="py-12 px-4">
+            <EmptyState
+              icon={Search}
+              title="Tidak Ditemukan"
+              description="Tidak ditemukan mata pelajaran yang cocok dengan pencarian atau filter saat ini."
+            />
           </div>
         ) : (
           // Grid View

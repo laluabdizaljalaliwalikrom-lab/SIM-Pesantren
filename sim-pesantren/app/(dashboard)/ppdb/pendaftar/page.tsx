@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState, useMemo } from 'react';
 import { getAllCalonSantri, updateStatusCalonSantri } from '@/services/ppdb-actions';
@@ -86,7 +86,7 @@ export default function PendaftarPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Pendaftar</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Pendaftar</h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Daftar calon santri</p>
         </div>
         <select value={filter} onChange={(e) => setFilter(e.target.value)}

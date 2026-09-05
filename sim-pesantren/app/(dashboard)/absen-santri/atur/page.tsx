@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
@@ -193,7 +193,7 @@ export default function AturAbsensiSantriPage() {
             <Settings className="w-8 h-8 text-emerald-400" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
               <GraduationCap className="w-6 h-6 text-emerald-400" /> Atur Absensi Santri Manual
             </h1>
             <p className="text-emerald-100/80 text-sm mt-0.5">

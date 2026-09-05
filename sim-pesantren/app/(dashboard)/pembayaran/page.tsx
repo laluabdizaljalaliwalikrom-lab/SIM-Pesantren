@@ -25,6 +25,7 @@ import {
 import { toast } from 'sonner';
 import Image from 'next/image';
 import * as XLSX from 'xlsx';
+import EmptyState from '@/components/empty-state';
 
 export default function CashierPaymentPage() {
   // Tab navigation state
@@ -786,8 +787,8 @@ Wassalamu'alaikum Wr. Wb.
       {/* Page Title & Tabs */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <CreditCard className="h-6 w-6 text-emerald-600" /> Terminal Kasir Pembayaran
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <CreditCard className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" /> Kasir Pembayaran
           </h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
             Kasir Penerimaan Pembayaran dan Tagihan Santri Aktif Pesantren.
@@ -925,14 +926,12 @@ Wassalamu'alaikum Wr. Wb.
                 </button>
               </div>
             ) : (
-              <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-8 text-center rounded-2xl shadow-sm flex flex-col items-center justify-center">
-                <div className="h-12 w-12 bg-slate-50 dark:bg-zinc-850 rounded-xl flex items-center justify-center text-slate-400 dark:text-zinc-650 border border-slate-100 dark:border-zinc-800 mb-3 shadow-inner">
-                  <User className="h-6 w-6" />
-                </div>
-                <h4 className="font-bold text-xs text-slate-600 dark:text-zinc-300">Belum Ada Santri Terpilih</h4>
-                <p className="text-[10px] text-slate-455 dark:text-zinc-500 mt-1 max-w-[200px]">
-                  Silakan cari dan pilih santri di kotak pencarian diatas untuk memulai kasir pembayaran.
-                </p>
+              <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-6 rounded-2xl shadow-sm">
+                <EmptyState
+                  icon={User}
+                  title="Belum Ada Santri Terpilih"
+                  description="Cari dan pilih santri di kotak pencarian di atas untuk memulai kasir pembayaran."
+                />
               </div>
             )}
           </div>
@@ -969,22 +968,25 @@ Wassalamu'alaikum Wr. Wb.
               {/* Bills Data Grid */}
               <div className="flex-1 overflow-x-auto">
                 {!selectedSantri ? (
-                  <div className="h-full flex flex-col items-center justify-center p-10 text-center text-slate-400 py-24">
-                    <AlertCircle className="h-10 w-10 stroke-[1.5] text-slate-300 dark:text-zinc-700 mb-3" />
-                    <h4 className="font-bold text-xs text-slate-600 dark:text-zinc-400">Menunggu Pilihan Santri</h4>
-                    <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5">Rincian tagihan akan tampil setelah memilih salah satu santri aktif.</p>
+                  <div className="h-full flex items-center justify-center p-8 py-20">
+                    <EmptyState
+                      icon={AlertCircle}
+                      title="Menunggu Pilihan Santri"
+                      description="Rincian tagihan akan tampil setelah memilih salah satu santri aktif."
+                    />
                   </div>
                 ) : loadingBills ? (
                   <div className="h-full flex items-center justify-center p-10 py-24">
                     <Loader2 className="h-7 w-7 animate-spin text-emerald-600" />
                   </div>
                 ) : bills.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center p-10 text-center text-slate-400 py-24">
-                    <div className="h-10 w-10 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center border border-emerald-100 dark:border-emerald-500/10 mb-3">
-                      <Check className="h-5 w-5" />
-                    </div>
-                    <h4 className="font-bold text-xs text-slate-700 dark:text-zinc-300">Semua Tagihan Lunas</h4>
-                    <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5">Santri ini tidak memiliki tunggakan tagihan aktif.</p>
+                  <div className="h-full flex items-center justify-center p-8 py-20">
+                    <EmptyState
+                      icon={Check}
+                      title="Semua Tagihan Lunas"
+                      description="Santri ini tidak memiliki tunggakan tagihan aktif saat ini."
+                      iconClassName="h-7 w-7 text-emerald-600 dark:text-emerald-400"
+                    />
                   </div>
                 ) : (
                   <table className="w-full text-left border-collapse">
@@ -1191,10 +1193,12 @@ Wassalamu'alaikum Wr. Wb.
                 <Loader2 className="h-7 w-7 animate-spin text-emerald-600" />
               </div>
             ) : paymentHistory.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center p-10 text-center text-slate-400 py-24">
-                <AlertCircle className="h-10 w-10 stroke-[1.5] text-slate-350 dark:text-zinc-650 mb-3" />
-                <h4 className="font-bold text-xs text-slate-600 dark:text-zinc-400">Belum Ada Transaksi</h4>
-                <p className="text-[10px] text-slate-400 dark:text-zinc-500 mt-0.5">Seluruh riwayat pembayaran kasir akan tercantum di sini.</p>
+              <div className="h-full flex items-center justify-center p-8 py-20">
+                <EmptyState
+                  icon={History}
+                  title="Belum Ada Transaksi"
+                  description="Seluruh riwayat pembayaran kasir yang terekam akan tercantum di sini."
+                />
               </div>
             ) : (
               <table className="w-full text-left border-collapse">

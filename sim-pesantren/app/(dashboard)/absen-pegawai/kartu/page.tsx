@@ -58,6 +58,13 @@ const formatNama = (p: Pegawai) => {
   return res;
 };
 
+const getNamaFontSize = (namaLength: number) => {
+  if (namaLength > 36) return '8.5px';
+  if (namaLength > 28) return '9.5px';
+  if (namaLength > 22) return '10px';
+  return '11px';
+};
+
 const formatNamaPesantren = (name?: string | null) => {
   if (!name) return 'SIM Pesantren';
   const words = name.trim().split(/\s+/);
@@ -171,8 +178,11 @@ function CardPreview({ pegawai, profile, isFlipped, onFlip }: CardFlipProps) {
             </div>
 
             {/* Employee Info */}
-            <div className="flex flex-col items-center mt-1 text-center justify-start w-full">
-              <p className="text-[11px] font-extrabold text-white tracking-wide leading-tight line-clamp-2 max-w-[185px]">
+            <div className="flex flex-col items-center mt-1 text-center justify-start w-full px-1">
+              <p 
+                className="font-extrabold text-white tracking-tight leading-tight line-clamp-2 max-w-[200px] break-words"
+                style={{ fontSize: getNamaFontSize(formatNama(pegawai).length) }}
+              >
                 {formatNama(pegawai)}
               </p>
 
@@ -503,8 +513,8 @@ export default function KartuPegawaiPage() {
           </div>
 
           <!-- Employee Info -->
-          <div style="display:flex;flex-direction:column;align-items:center;margin-top:4px;text-align:center;width:100%;">
-            <p style="font-size:11px;font-weight:800;color:#ffffff;letter-spacing:0.3px;line-height:1.2;margin:0 0 3px 0;max-width:185px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          <div style="display:flex;flex-direction:column;align-items:center;margin-top:4px;text-align:center;width:100%;padding:0 4px;box-sizing:border-box;">
+            <p style="font-size:${getNamaFontSize(nama.length)};font-weight:800;color:#ffffff;letter-spacing:0.2px;line-height:1.2;margin:0 0 3px 0;max-width:196px;word-break:break-word;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
               ${nama}
             </p>
 

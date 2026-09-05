@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { getPengumumanByGelombang, createPengumuman, deletePengumuman, getAllGelombang } from '@/services/ppdb-actions';
@@ -64,7 +64,7 @@ export default function PengumumanAdminPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">Pengumuman PPDB</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Pengumuman PPDB</h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">Kelola pengumuman hasil seleksi</p>
         </div>
         <button onClick={() => setShowModal(true)}

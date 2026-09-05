@@ -167,9 +167,9 @@ function statusBadge(status: string): string {
     diajukan: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/40',
     disetujui: 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/40',
     ditolak: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/40',
-    kembali: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700',
+    kembali: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700',
   };
-  return map[status] || 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+  return map[status] || 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700';
 }
 
 function Skeleton({ count = 3 }: { count?: number }) {
@@ -178,10 +178,10 @@ function Skeleton({ count = 3 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="p-2.5 animate-pulse space-y-1.5">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0" />
+            <div className="w-7 h-7 rounded-full bg-slate-200 dark:bg-zinc-800 shrink-0" />
             <div className="flex-1 space-y-1">
-              <div className="h-3 w-28 bg-slate-200 dark:bg-slate-800 rounded" />
-              <div className="h-2 w-36 bg-slate-200/60 dark:bg-slate-800/60 rounded" />
+              <div className="h-3 w-28 bg-slate-200 dark:bg-zinc-800 rounded" />
+              <div className="h-2 w-36 bg-slate-200/60 dark:bg-zinc-800/60 rounded" />
             </div>
           </div>
         </div>
@@ -221,26 +221,26 @@ function LiveFeedCard({
   };
 
   return (
-    <div className={`rounded-xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm flex flex-col overflow-hidden ${isFullscreen ? 'h-full flex-1 min-h-0' : ''}`}>
-      <div className="flex items-center justify-between px-3.5 py-2 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/60 shrink-0">
+    <div className={`rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/90 dark:border-zinc-800 shadow-sm flex flex-col overflow-hidden ${isFullscreen ? 'h-full flex-1 min-h-0' : ''}`}>
+      <div className="flex items-center justify-between px-3.5 py-2 border-b border-slate-100 dark:border-zinc-800/80 bg-slate-50/70 dark:bg-zinc-900/60 shrink-0">
         <div className="flex items-center gap-2">
           <div className={`w-6 h-6 rounded-lg ${colorMap[accent]} border flex items-center justify-center shrink-0`}>
             <Icon className="h-3.5 w-3.5" />
           </div>
           <div>
-            <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-800 dark:text-slate-100 leading-tight">{title}</h2>
-            {subtitle && <p className="text-[9px] text-slate-400 dark:text-slate-500 leading-tight">{subtitle}</p>}
+            <h2 className="text-[11px] font-bold uppercase tracking-wider text-slate-800 dark:text-zinc-100 leading-tight">{title}</h2>
+            {subtitle && <p className="text-[9px] text-slate-400 dark:text-zinc-500 leading-tight">{subtitle}</p>}
           </div>
         </div>
         <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${colorMap[accent]} tabular-nums`}>
           {count}
         </span>
       </div>
-      <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-slate-100 dark:divide-slate-800/50" style={{ maxHeight: isFullscreen ? 'none' : '360px' }}>
+      <div className="flex-1 overflow-y-auto min-h-0 divide-y divide-slate-100 dark:divide-zinc-800/50" style={{ maxHeight: isFullscreen ? 'none' : '360px' }}>
         {loading ? (
           <Skeleton />
         ) : isEmpty ? (
-          <div className="flex flex-col items-center justify-center py-6 text-slate-400 dark:text-slate-600">
+          <div className="flex flex-col items-center justify-center py-6 text-slate-400 dark:text-zinc-600">
             <Icon className="h-6 w-6 mb-1.5 opacity-30" />
             <p className="text-[11px] font-medium">Belum ada aktivitas hari ini</p>
           </div>
@@ -546,17 +546,17 @@ export default function ExecutiveDashboard() {
   return (
     <div
       ref={dashboardRef}
-      className={`bg-slate-50/90 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased selection:bg-emerald-500 selection:text-white ${
+      className={`bg-slate-50/90 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 font-sans antialiased selection:bg-emerald-500 selection:text-white ${
         isFullscreen
-          ? 'fixed inset-0 z-[99999] overflow-hidden w-screen h-screen p-3 md:p-4 flex flex-col justify-between gap-3 bg-slate-50 dark:bg-slate-950'
+          ? 'fixed inset-0 z-[99999] overflow-hidden w-screen h-screen p-3 md:p-4 flex flex-col justify-between gap-3 bg-slate-50 dark:bg-zinc-950'
           : 'min-h-screen p-4 md:p-6 space-y-5'
       }`}
     >
       {/* ─── Top Header & Command Center Bar ─── */}
-      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm dark:shadow-xl backdrop-blur-md shrink-0 ${isFullscreen ? 'p-3 px-4' : 'p-4 md:p-5'}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white dark:bg-zinc-900/90 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm dark:shadow-xl backdrop-blur-md shrink-0 ${isFullscreen ? 'p-3 px-4' : 'p-4 md:p-5'}`}>
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 p-0.5 shadow-md shadow-emerald-500/10 dark:shadow-emerald-900/30 flex items-center justify-center shrink-0">
-            <div className="w-full h-full bg-white dark:bg-slate-950 rounded-[10px] flex items-center justify-center">
+            <div className="w-full h-full bg-white dark:bg-zinc-950 rounded-[10px] flex items-center justify-center">
               <Activity className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400 animate-pulse" />
             </div>
           </div>
@@ -567,7 +567,7 @@ export default function ExecutiveDashboard() {
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" /> LIVE
               </span>
             </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Monitoring Real-Time Operasional & Disiplin Pesantren</p>
+            <p className="text-[11px] text-slate-500 dark:text-zinc-400 mt-0.5">Monitoring Real-Time Operasional & Disiplin Pesantren</p>
           </div>
         </div>
 
@@ -576,7 +576,7 @@ export default function ExecutiveDashboard() {
           {isFullscreen && (
             <>
               {/* Tanggal Masehi & Hijriah */}
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm text-xs font-bold text-slate-700 dark:text-slate-200">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 shadow-sm text-xs font-bold text-slate-700 dark:text-zinc-200">
                 <Calendar className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                 <span>{fullDate}</span>
                 {hijriDate && (
@@ -589,17 +589,17 @@ export default function ExecutiveDashboard() {
               </div>
 
               {/* Jam WITA */}
-              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-emerald-500/30 shadow-inner">
+              <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-950 border border-emerald-500/30 shadow-inner">
                 <Clock className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span className="text-sm font-bold tabular-nums tracking-widest text-emerald-700 dark:text-emerald-300">
-                  {clock} <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">WITA</span>
+                  {clock} <span className="text-[10px] font-semibold text-slate-400 dark:text-zinc-500">WITA</span>
                 </span>
               </div>
             </>
           )}
 
           {/* Auto Refresh indicator */}
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 font-medium">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-xs text-slate-600 dark:text-zinc-400 font-medium">
             <RefreshCw className={`h-3 w-3 text-emerald-600 dark:text-emerald-400 ${loading ? 'animate-spin' : ''}`} />
             <span>{REFRESH_INTERVAL_MS / 1000}s</span>
           </div>
@@ -609,7 +609,7 @@ export default function ExecutiveDashboard() {
             type="button"
             onClick={toggleFullscreen}
             title={isFullscreen ? 'Keluar dari Layar Penuh (Esc)' : 'Tampilan Layar Penuh / Fullscreen TV'}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/40 transition-all duration-200 shadow-sm"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-xs font-semibold text-slate-700 dark:text-zinc-300 hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-500/40 transition-all duration-200 shadow-sm"
           >
             {isFullscreen ? (
               <>
@@ -636,9 +636,9 @@ export default function ExecutiveDashboard() {
       {/* ─── Executive KPI Scorecards ─── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 shrink-0">
         {/* KPI 1: Kehadiran Pegawai */}
-        <div className={`rounded-xl bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-emerald-500/40 transition-all duration-300 ${isFullscreen ? 'p-3' : 'p-4'}`}>
+        <div className={`rounded-xl bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-zinc-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-emerald-500/40 transition-all duration-300 ${isFullscreen ? 'p-3' : 'p-4'}`}>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
               <Briefcase className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
               Presensi Pegawai
             </span>
@@ -648,13 +648,13 @@ export default function ExecutiveDashboard() {
           </div>
           <div className="flex items-baseline gap-1.5 mb-1.5">
             <span className="text-xl font-black text-slate-900 dark:text-white tabular-nums leading-none">{pegPresensiTotal}</span>
-            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">/ {pegawaiStats.total} Pegawai</span>
+            <span className="text-[11px] font-semibold text-slate-400 dark:text-zinc-500">/ {pegawaiStats.total} Pegawai</span>
           </div>
           {/* Progress Bar */}
-          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2">
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-2">
             <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${Math.min(pegRate, 100)}%` }} />
           </div>
-          <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 dark:text-zinc-400 pt-1.5 border-t border-slate-100 dark:border-zinc-800/80">
             <span className="text-emerald-600 dark:text-emerald-400 font-bold">{pegawaiStats.hadir} Hadir</span>
             <span className="text-amber-600 dark:text-amber-400 font-bold">{pegawaiStats.terlambat} Telat</span>
             <span className="text-blue-600 dark:text-blue-400">{pegawaiStats.izin} Izin</span>
@@ -663,9 +663,9 @@ export default function ExecutiveDashboard() {
         </div>
 
         {/* KPI 2: Kehadiran Santri */}
-        <div className={`rounded-xl bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-sky-500/40 transition-all duration-300 ${isFullscreen ? 'p-3' : 'p-4'}`}>
+        <div className={`rounded-xl bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-zinc-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-sky-500/40 transition-all duration-300 ${isFullscreen ? 'p-3' : 'p-4'}`}>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
               <GraduationCap className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
               Presensi Santri
             </span>
@@ -675,13 +675,13 @@ export default function ExecutiveDashboard() {
           </div>
           <div className="flex items-baseline gap-1.5 mb-1.5">
             <span className="text-xl font-black text-slate-900 dark:text-white tabular-nums leading-none">{sanPresensiTotal}</span>
-            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">/ {santriStats.total} Santri</span>
+            <span className="text-[11px] font-semibold text-slate-400 dark:text-zinc-500">/ {santriStats.total} Santri</span>
           </div>
           {/* Progress Bar */}
-          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2">
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-2">
             <div className="h-full bg-sky-500 transition-all duration-500" style={{ width: `${Math.min(sanRate, 100)}%` }} />
           </div>
-          <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center justify-between text-[10px] font-semibold text-slate-500 dark:text-zinc-400 pt-1.5 border-t border-slate-100 dark:border-zinc-800/80">
             <span className="text-sky-600 dark:text-sky-400 font-bold">{santriStats.hadir} Hadir</span>
             <span className="text-amber-600 dark:text-amber-400 font-bold">{santriStats.terlambat} Telat</span>
             <span className="text-blue-600 dark:text-blue-400">{santriStats.izin} Izin</span>
@@ -690,9 +690,9 @@ export default function ExecutiveDashboard() {
         </div>
 
         {/* KPI 3: Keuangan Pemasukan */}
-        <div className={`rounded-xl bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition-all duration-300 ${isFullscreen ? 'p-3' : 'p-4'}`}>
+        <div className={`rounded-xl bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-zinc-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-amber-500/40 transition-all duration-300 ${isFullscreen ? 'p-3' : 'p-4'}`}>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
               <Wallet className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
               Penerimaan Hari Ini
             </span>
@@ -705,10 +705,10 @@ export default function ExecutiveDashboard() {
               {formatRp(totalBayarHariIni)}
             </span>
           </div>
-          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2">
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-2">
             <div className="h-full bg-amber-500 w-full" />
           </div>
-          <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 pt-1.5 border-t border-slate-100 dark:border-zinc-800/80">
             <span>SPP & Tagihan</span>
             <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-0.5">
               <TrendingUp className="h-3 w-3" /> Kasir Aktif
@@ -717,9 +717,9 @@ export default function ExecutiveDashboard() {
         </div>
 
         {/* KPI 4: Izin Santri Aktif */}
-        <div className={`rounded-xl bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-purple-500/40 transition-all duration-300 ${isFullscreen ? 'p-3' : 'p-4'}`}>
+        <div className={`rounded-xl bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-slate-950 border border-slate-200 dark:border-zinc-800 shadow-sm dark:shadow-lg relative overflow-hidden group hover:border-purple-500/40 transition-all duration-300 ${isFullscreen ? 'p-3' : 'p-4'}`}>
           <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-slate-500 dark:text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
               <DoorOpen className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
               Perizinan Santri
             </span>
@@ -729,12 +729,12 @@ export default function ExecutiveDashboard() {
           </div>
           <div className="flex items-baseline gap-1.5 mb-1.5">
             <span className="text-xl font-black text-slate-900 dark:text-white tabular-nums leading-none">{permits.length}</span>
-            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500">Santri di Luar</span>
+            <span className="text-[11px] font-semibold text-slate-400 dark:text-zinc-500">Santri di Luar</span>
           </div>
-          <div className="w-full h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden mb-2">
+          <div className="w-full h-1.5 bg-slate-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-2">
             <div className="h-full bg-purple-500 w-3/4" />
           </div>
-          <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center justify-between text-[10px] text-slate-500 dark:text-zinc-400 pt-1.5 border-t border-slate-100 dark:border-zinc-800/80">
             <span className="text-amber-600 dark:text-amber-400 font-semibold">{permits.filter((p) => p.status === 'diajukan').length} Menunggu</span>
             <span className="text-emerald-600 dark:text-emerald-400 font-semibold">{permits.filter((p) => p.status === 'disetujui').length} Disetujui</span>
           </div>
@@ -762,7 +762,7 @@ export default function ExecutiveDashboard() {
               return (
                 <div key={absen.id} className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-2.5">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center shrink-0">
                       {p?.foto_url ? (
                         <Image src={p.foto_url} alt={namaFormatted} width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       ) : (
@@ -771,7 +771,7 @@ export default function ExecutiveDashboard() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{namaFormatted}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{p?.jabatan || 'Pegawai'}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate">{p?.jabatan || 'Pegawai'}</p>
                     </div>
                   </div>
 
@@ -781,7 +781,7 @@ export default function ExecutiveDashboard() {
                         {formatTimeOnly(absen.jam_masuk)}
                       </div>
                       {absen.jam_keluar && (
-                        <div className="text-[9px] font-mono text-slate-400 dark:text-slate-500">
+                        <div className="text-[9px] font-mono text-slate-400 dark:text-zinc-500">
                           {formatTimeOnly(absen.jam_keluar)}
                         </div>
                       )}
@@ -815,7 +815,7 @@ export default function ExecutiveDashboard() {
               return (
                 <div key={absen.id} className="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors flex items-center justify-between gap-2.5">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-100 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 flex items-center justify-center shrink-0">
                       {s?.foto_url ? (
                         <Image src={s.foto_url} alt={namaSantri} width={32} height={32} className="w-full h-full object-cover" unoptimized />
                       ) : (
@@ -824,7 +824,7 @@ export default function ExecutiveDashboard() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{namaSantri}</p>
-                      <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{rombel}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate">{rombel}</p>
                     </div>
                   </div>
 
@@ -834,7 +834,7 @@ export default function ExecutiveDashboard() {
                         {formatTimeOnly(absen.jam_masuk)}
                       </div>
                       {absen.jam_keluar && (
-                        <div className="text-[9px] font-mono text-slate-400 dark:text-slate-500">
+                        <div className="text-[9px] font-mono text-slate-400 dark:text-zinc-500">
                           {formatTimeOnly(absen.jam_keluar)}
                         </div>
                       )}
@@ -977,14 +977,14 @@ export default function ExecutiveDashboard() {
       </div>
 
       {/* ─── KBM Status & Monitoring Summary Bar ─── */}
-      <div className={`rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 ${isFullscreen ? 'p-2.5 px-3.5' : 'p-4 md:p-5'}`}>
+      <div className={`rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 shadow-sm dark:shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0 ${isFullscreen ? 'p-2.5 px-3.5' : 'p-4 md:p-5'}`}>
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 flex items-center justify-center shrink-0">
             <School className="h-4 w-4" />
           </div>
           <div className="min-w-0">
             <h3 className="text-xs font-bold text-slate-900 dark:text-white leading-tight">Monitoring KBM Hari Ini</h3>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+            <p className="text-[10px] text-slate-500 dark:text-zinc-400 truncate">
               {kbm.length === 0
                 ? 'Semua santri tercatat hadir pada jam pelajaran aktif.'
                 : `${kbm.length} santri berhalangan hadir pada sesi KBM.`}
@@ -995,7 +995,7 @@ export default function ExecutiveDashboard() {
         {kbm.length > 0 && (
           <div className="flex items-center gap-1.5 overflow-x-auto py-0.5 shrink-0">
             {kbm.slice(0, 4).map((item) => (
-              <div key={item.id} className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[10px] shrink-0 flex items-center gap-1.5">
+              <div key={item.id} className="px-2 py-1 rounded-lg bg-slate-100 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 text-[10px] shrink-0 flex items-center gap-1.5">
                 <span className="font-bold text-slate-800 dark:text-white truncate max-w-[90px]">{item.santri?.nama_lengkap || 'Santri'}</span>
                 <span className={`text-[8px] font-extrabold px-1 py-0.2 rounded border ${statusBadge(item.status)}`}>
                   {item.status}
@@ -1011,11 +1011,11 @@ export default function ExecutiveDashboard() {
 
       {/* ─── Footer ─── */}
       {!isFullscreen && (
-        <div className="flex items-center justify-between text-xs text-slate-400 dark:text-slate-500 border-t border-slate-200 dark:border-slate-800/80 pt-4 shrink-0">
+        <div className="flex items-center justify-between text-xs text-slate-400 dark:text-zinc-500 border-t border-slate-200 dark:border-zinc-800/80 pt-4 shrink-0">
           <span>SIM Pesantren &copy; {new Date().getFullYear()} &middot; Auto-refresh real-time {REFRESH_INTERVAL_MS / 1000}s</span>
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-            <span className="font-semibold text-slate-600 dark:text-slate-400">Server Connected</span>
+            <span className="font-semibold text-slate-600 dark:text-zinc-400">Server Connected</span>
           </div>
         </div>
       )}

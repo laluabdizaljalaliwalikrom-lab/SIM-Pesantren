@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -334,7 +334,7 @@ export default function NilaiAkademikPage() {
       {/* Header Halaman */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <BookMarked className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
             Input Nilai Akademik
           </h1>

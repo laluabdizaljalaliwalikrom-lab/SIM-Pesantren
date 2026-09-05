@@ -410,8 +410,8 @@ export default function PengaturanPage() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            <Building2 className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Building2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
             Profil & Pengaturan Pesantren
           </h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">

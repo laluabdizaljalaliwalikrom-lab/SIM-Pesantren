@@ -314,11 +314,12 @@ export default function SantriDashboardPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Users className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
             Data Santri
           </h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
-            Grup Dashboard / Pengelolaan Administrasi Santri
+            Kelola data induk seluruh santri aktif pesantren.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row gap-2.5">
@@ -346,7 +347,7 @@ export default function SantriDashboardPage() {
       {/* Search Bar */}
       <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 p-4 rounded-2xl shadow-sm flex items-center gap-3 mb-8">
         <div className="relative flex-1">
-          <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
             <Search className="h-4 w-4" />
           </span>
           <input
@@ -354,7 +355,7 @@ export default function SantriDashboardPage() {
             placeholder="Cari berdasarkan nama atau NIS..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl pl-9 pr-4 py-2 text-slate-800 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none transition-all duration-200 text-xs sm:text-sm"
+            className="w-full bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 focus:border-emerald-500 rounded-xl pl-10 pr-4 py-2 text-slate-800 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none transition-all duration-200 text-xs sm:text-sm"
           />
         </div>
       </div>

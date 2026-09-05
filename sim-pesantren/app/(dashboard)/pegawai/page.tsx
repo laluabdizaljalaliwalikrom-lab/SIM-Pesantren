@@ -382,7 +382,8 @@ export default function PegawaiPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white flex items-center gap-2.5">
+            <Briefcase className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0" />
             Data Kepegawaian
           </h1>
           <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">
@@ -430,7 +431,7 @@ export default function PegawaiPage() {
             </div>
             <div>
               <p className="text-[10px] uppercase font-bold text-slate-400 dark:text-zinc-500 tracking-wider">{stat.label}</p>
-              <p className="text-xl font-extrabold text-slate-900 dark:text-white mt-0.5">{loading ? '—' : stat.value}</p>
+              <p className="text-xl font-bold text-slate-900 dark:text-white mt-0.5">{loading ? '—' : stat.value}</p>
             </div>
           </div>
         ))}

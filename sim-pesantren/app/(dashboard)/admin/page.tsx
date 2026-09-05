@@ -170,7 +170,7 @@ export default function AdminDashboardHome() {
                   </Link>
                 )}
 
-                <div className="bg-white dark:bg-[#1a1a2e] border border-slate-200 dark:border-slate-700 rounded-xl px-5 py-3 flex items-center gap-4 shadow-sm">
+                <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl px-5 py-3 flex items-center gap-4 shadow-sm">
                   <div>
                     <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Total Santri</p>
                     <p className="text-slate-800 dark:text-slate-200 font-bold text-lg">
@@ -188,7 +188,7 @@ export default function AdminDashboardHome() {
           <div className="stat-card fade-up delay-1 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Santri Izin</p>
-              <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{loading ? '...' : stats.santriIzin}</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{loading ? '...' : stats.santriIzin}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <Users className="h-5 w-5" />
@@ -197,7 +197,7 @@ export default function AdminDashboardHome() {
           <div className="stat-card fade-up delay-2 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Tahfidz Hari Ini</p>
-              <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{loading ? '...' : stats.tahfidzHariIni}</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">{loading ? '...' : stats.tahfidzHariIni}</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-teal-50 dark:bg-teal-900/30 text-teal-600 dark:text-teal-400 flex items-center justify-center">
               <BookOpen className="h-5 w-5" />
@@ -206,7 +206,7 @@ export default function AdminDashboardHome() {
           <div className="stat-card fade-up delay-3 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Saldo Kas</p>
-              <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">
                 {loading ? '...' : `Rp${stats.saldoKas.toLocaleString('id-ID')}`}
               </p>
             </div>
@@ -217,7 +217,7 @@ export default function AdminDashboardHome() {
           <div className="stat-card fade-up delay-4 flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500">Aplikasi</p>
-              <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">v0.1</p>
+              <p className="text-2xl font-bold text-slate-900 dark:text-white mt-1">v0.1</p>
             </div>
             <div className="w-12 h-12 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <BarChart4 className="h-5 w-5" />
@@ -261,7 +261,7 @@ export default function AdminDashboardHome() {
             {isSuperAdmin && (
               <div>
                 <div className="section-label">Pengaturan</div>
-                <div className="bg-white dark:bg-[#1a1a2e] border border-slate-200 dark:border-slate-700 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-slate-800">
+                <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm divide-y divide-slate-100 dark:divide-zinc-800">
                   <Link href="/pengaturan" className="flex items-center gap-3 px-4 py-3.5 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
                     <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 group-hover:bg-slate-600 dark:group-hover:bg-slate-700 group-hover:text-white transition-colors flex items-center justify-center text-sm">
                       <Cog className="h-4 w-4" />
@@ -282,7 +282,7 @@ export default function AdminDashboardHome() {
 
             <div>
               <div className="section-label">Info Sistem</div>
-              <div className="bg-white dark:bg-[#1a1a2e] border border-slate-200 dark:border-slate-700 rounded-2xl shadow-sm p-4 space-y-3">
+              <div className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-2xl shadow-sm p-4 space-y-3">
                 <div className="flex gap-3 p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800/30">
                   <Info className="h-4 w-4 text-emerald-500 dark:text-emerald-400 mt-0.5 shrink-0" />
                   <div>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -197,7 +197,7 @@ export default function ProfilePage() {
         
         <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-xl md:text-2xl font-extrabold tracking-tight">Pengaturan Profil</h1>
+            <h1 className="text-xl md:text-2xl font-bold tracking-tight">Pengaturan Profil</h1>
             <p className="text-xs md:text-sm text-emerald-50/90 mt-1 max-w-lg leading-relaxed">
               Kelola informasi pribadi, kontak, alamat email, serta kata sandi akun Anda di sini.
             </p>
