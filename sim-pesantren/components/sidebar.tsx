@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -17,22 +17,17 @@ import {
   ShieldCheck,
   BarChart4,
   ChevronDown,
-  ChevronRight,
   ClipboardList,
   CalendarCheck,
   FileSearch,
   Megaphone,
-  X,
-  Sparkles,
+  MoreHorizontal,
 } from 'lucide-react';
-import { ThemeToggle } from './ui/theme-toggle';
-import Badge from './ui/badge';
+import { useSidebar } from '@/context/SidebarContext';
+import SidebarWidget from '@/components/layout/SidebarWidget';
+import { cn } from '@/lib/utils';
 
 interface SidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
-  isCollapsed: boolean;
-  onToggleCollapse: () => void;
   userRoleRaw?: string;
   permissions?: any[];
   pesantrenLogo?: string;
@@ -46,6 +41,7 @@ interface SidebarProps {
 interface SubMenuItem {
   name: string;
   href: string;
+  badge?: string;
 }
 
 interface MenuItem {
@@ -57,94 +53,97 @@ interface MenuItem {
   badge?: string;
 }
 
-const MENU_ITEMS: MenuItem[] = [
-  { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Dashboard Eksekutif', href: '/dashboard-eksekutif', icon: BarChart4 },
-  { heading: 'Modul Utama' },
-  { name: 'Lembaga', href: '/lembaga', icon: School },
-  { name: 'Santri', href: '/santri', icon: Users },
-  { name: 'Pegawai', href: '/pegawai', icon: Briefcase },
+const MENU_GROUPS: {
+  title: string;
+  items: MenuItem[];
+}[] = [
   {
-    name: 'Absensi Pegawai',
-    icon: CalendarCheck,
-    submenu: [
-      { name: 'Riwayat Harian', href: '/absen-pegawai' },
-      { name: 'Scan QR', href: '/absen-pegawai/scan' },
-      { name: 'Kartu Pegawai', href: '/absen-pegawai/kartu' },
-      { name: 'Atur Absensi', href: '/absen-pegawai/atur' },
-      { name: 'Rekap Bulanan', href: '/absen-pegawai/rekap' },
+    title: 'MENU UTAMA',
+    items: [
+      { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+      { name: 'Dashboard Eksekutif', href: '/dashboard-eksekutif', icon: BarChart4 },
+      { name: 'Lembaga', href: '/lembaga', icon: School },
+      { name: 'Santri & Data Induk', href: '/santri', icon: Users },
+      { name: 'Kepegawaian', href: '/pegawai', icon: Briefcase },
+      {
+        name: 'Absensi Pegawai',
+        icon: CalendarCheck,
+        submenu: [
+          { name: 'Riwayat Harian', href: '/absen-pegawai' },
+          { name: 'Scan QR', href: '/absen-pegawai/scan' },
+          { name: 'Kartu Pegawai', href: '/absen-pegawai/kartu' },
+          { name: 'Atur Absensi', href: '/absen-pegawai/atur' },
+          { name: 'Rekap Bulanan', href: '/absen-pegawai/rekap' },
+        ],
+      },
+      {
+        name: 'Absensi Santri',
+        icon: GraduationCap,
+        submenu: [
+          { name: 'Riwayat Harian', href: '/absen-santri' },
+          { name: 'Scan QR', href: '/absen-santri/scan' },
+          { name: 'Kartu Santri', href: '/absen-santri/kartu' },
+          { name: 'Atur Absensi', href: '/absen-santri/atur' },
+          { name: 'Rekap Bulanan', href: '/absen-santri/rekap' },
+        ],
+      },
+      { name: 'PPDB Online', href: '/ppdb', icon: ClipboardList, badge: 'Baru' },
+      { name: 'Siaran Pesantren', href: '/siaran', icon: Megaphone },
+      { name: 'Asrama & Kamar', href: '/asrama', icon: Home },
     ],
   },
   {
-    name: 'Absensi Santri',
-    icon: GraduationCap,
-    submenu: [
-      { name: 'Riwayat Harian', href: '/absen-santri' },
-      { name: 'Scan QR', href: '/absen-santri/scan' },
-      { name: 'Kartu Santri', href: '/absen-santri/kartu' },
-      { name: 'Atur Absensi', href: '/absen-santri/atur' },
-      { name: 'Rekap Bulanan', href: '/absen-santri/rekap' },
+    title: 'AKADEMIK & TAHFIDZ',
+    items: [
+      { name: 'Tahfidz Tracker', href: '/tahfidz', icon: GraduationCap },
+      {
+        name: 'Akademik KBM',
+        icon: BookOpen,
+        submenu: [
+          { name: 'Absensi KBM', href: '/akademik/absensi' },
+          { name: 'Jadwal Pelajaran', href: '/akademik/jadwal' },
+          { name: 'Mata Pelajaran', href: '/akademik/mapel' },
+          { name: 'Input Nilai Rapor', href: '/akademik/nilai' },
+          { name: 'Laporan Tahfidz', href: '/akademik/tahfidz/laporan' },
+        ],
+      },
     ],
   },
-  { name: 'PPDB', href: '/ppdb', icon: ClipboardList, badge: 'New' },
-  { name: 'Siaran', href: '/siaran', icon: Megaphone },
-  { name: 'Asrama', href: '/asrama', icon: Home },
-  { heading: 'Akademik & Tahfidz' },
-  { name: 'Tahfidz Tracker', href: '/tahfidz', icon: GraduationCap },
   {
-    name: 'Akademik',
-    icon: BookOpen,
-    submenu: [
-      { name: 'Absensi', href: '/akademik/absensi' },
-      { name: 'Jadwal', href: '/akademik/jadwal' },
-      { name: 'Mapel', href: '/akademik/mapel' },
-      { name: 'Nilai', href: '/akademik/nilai' },
-      { name: 'Tahfidz', href: '/akademik/tahfidz' },
-      { name: 'Laporan Tahfidz', href: '/akademik/tahfidz/laporan' },
+    title: 'KEUANGAN & KASIR',
+    items: [
+      { name: 'Kasir Pembayaran', href: '/pembayaran', icon: CreditCard },
+      { name: 'Atur Pos Keuangan', href: '/keuangan', icon: Coins },
+      { name: 'Laporan Arus Kas', href: '/laporan', icon: BarChart4 },
     ],
   },
-  { heading: 'Keuangan' },
-  { name: 'Kasir Pembayaran', href: '/pembayaran', icon: CreditCard },
-  { name: 'Atur Keuangan', href: '/keuangan', icon: Coins },
-  { name: 'Laporan Keuangan', href: '/laporan', icon: BarChart4 },
-  { heading: 'Pengaturan' },
-  { name: 'Hak Akses', href: '/settings/users', icon: ShieldCheck },
-  { name: 'Audit Trail', href: '/settings/audit-logs', icon: FileSearch },
-  { name: 'Pengaturan', href: '/pengaturan', icon: Settings },
+  {
+    title: 'PENGATURAN',
+    items: [
+      { name: 'Hak Akses Pengguna', href: '/settings/users', icon: ShieldCheck },
+      { name: 'Audit Trail Mutasi', href: '/settings/audit-logs', icon: FileSearch },
+      { name: 'Pengaturan Lembaga', href: '/pengaturan', icon: Settings },
+    ],
+  },
 ];
 
 export function Sidebar({
-  isOpen,
-  onClose,
-  isCollapsed,
   userRoleRaw,
   permissions,
   pesantrenLogo,
   pesantrenName = 'SIM Pesantren',
-  userDisplayName = 'User',
-  userEmail = '',
-  userFotoUrl,
-  userInitial = 'U',
 }: SidebarProps) {
   const pathname = usePathname();
-  const sidebarRef = useRef<HTMLDivElement>(null);
-  const [isHovered, setIsHovered] = useState(false);
+  const {
+    isExpanded,
+    isMobileOpen,
+    isHovered,
+    setIsHovered,
+    toggleMobileSidebar,
+  } = useSidebar();
+
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({});
 
-  useEffect(() => {
-    const el = sidebarRef.current;
-    if (!el) return;
-    const handleMouseEnter = () => setIsHovered(true);
-    const handleMouseLeave = () => setIsHovered(false);
-    el.addEventListener('mouseenter', handleMouseEnter);
-    el.addEventListener('mouseleave', handleMouseLeave);
-    return () => {
-      el.removeEventListener('mouseenter', handleMouseEnter);
-      el.removeEventListener('mouseleave', handleMouseLeave);
-    };
-  }, []);
-
-  const isDesktopHovered = isHovered;
   const isSuperAdmin = userRoleRaw === 'Super Admin';
 
   const canAccess = (href: string): boolean => {
@@ -179,262 +178,251 @@ export function Sidebar({
     return true;
   };
 
-  const toggleSubmenu = (name: string) => {
-    setOpenSubmenus((prev) => ({ ...prev, [name]: !prev[name] }));
-  };
-
   const isActive = (href?: string) => {
     if (!href) return false;
     if (href === '/admin') return pathname === '/admin';
     return pathname.startsWith(href);
   };
 
+  // Automatically expand active submenu on pathname change
+  useEffect(() => {
+    MENU_GROUPS.forEach((group) => {
+      group.items.forEach((item) => {
+        if (item.submenu) {
+          const hasActiveChild = item.submenu.some((sub) => isActive(sub.href));
+          if (hasActiveChild) {
+            setOpenSubmenus((prev) => ({ ...prev, [item.name!]: true }));
+          }
+        }
+      });
+    });
+  }, [pathname]);
+
+  const toggleSubmenu = (name: string) => {
+    setOpenSubmenus((prev) => ({ ...prev, [name]: !prev[name] }));
+  };
+
+  const isFullyOpen = isExpanded || isHovered || isMobileOpen;
+
   return (
-    <>
-      {/* Mobile Backdrop */}
-      {isOpen && (
-        <div
-          className="layout-overlay show fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs transition-opacity lg:hidden"
-          onClick={onClose}
-        />
+    <aside
+      className={cn(
+        'fixed top-0 left-0 z-50 flex h-full flex-col border-r border-gray-200 bg-white text-gray-900 transition-all duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-900',
+        isFullyOpen ? 'w-[290px] px-5' : 'w-[90px] px-3',
+        isMobileOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'
       )}
-
-      <aside
-        ref={sidebarRef}
-        className={`layout-sidebar custom-scrollbar border-r border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 transition-all duration-300 ${
-          isOpen ? 'toggled-mobile' : ''
-        }`}
-        data-hover={isDesktopHovered ? 'true' : 'false'}
+      onMouseEnter={() => !isExpanded && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Brand Logo Header */}
+      <div
+        className={cn(
+          'flex h-20 items-center border-b border-gray-100 dark:border-gray-800',
+          !isFullyOpen ? 'justify-center' : 'justify-start'
+        )}
       >
-        <div className="flex flex-col h-full w-full">
-          {/* Logo Container (TailAdmin Style) */}
-          <div className="logo-container h-18 border-b border-slate-100 dark:border-zinc-800/80 px-4 flex items-center justify-between">
-            <Link
-              href="/admin"
-              onClick={() => onClose()}
-              className="flex items-center gap-3 group"
-            >
-              <div className="logo-full flex items-center gap-3">
-                {pesantrenLogo ? (
-                  <img
-                    src={pesantrenLogo}
-                    alt="Logo"
-                    className="block h-10 w-auto rounded-xl object-contain drop-shadow-sm"
-                  />
-                ) : (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-bold text-sm shadow-md shadow-emerald-600/20">
-                    SP
-                  </div>
-                )}
-                <div className="flex flex-col">
-                  <span className="text-base font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
-                    {pesantrenName}
-                  </span>
-                  <span className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 dark:text-emerald-400">
-                    Sistem Terpadu
-                  </span>
-                </div>
-              </div>
-
-              <div className="logo-mini">
-                {pesantrenLogo ? (
-                  <img
-                    src={pesantrenLogo}
-                    alt="Logo"
-                    className="block h-8 w-auto rounded-lg"
-                  />
-                ) : (
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white font-bold text-xs shadow-md">
-                    SP
-                  </div>
-                )}
-              </div>
-            </Link>
-
-            {/* Mobile close button */}
-            <button
-              onClick={onClose}
-              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:text-zinc-500 dark:hover:text-zinc-300 dark:hover:bg-zinc-800"
-              aria-label="Tutup Menu"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          {/* Navigation Menu */}
-          <nav className="sidebar-menu custom-scrollbar flex-1 overflow-y-auto px-3 py-4 space-y-1">
-            {MENU_ITEMS.map((item, idx) => {
-              if (item.heading) {
-                return (
-                  <div
-                    key={`heading-${idx}`}
-                    className="sidebar-heading px-3 pt-4 pb-1 text-[10px] font-bold tracking-wider uppercase text-slate-400 dark:text-zinc-500"
-                  >
-                    {item.heading}
-                  </div>
-                );
-              }
-
-              // Single link item
-              if (item.href && item.icon) {
-                if (!canAccess(item.href)) return null;
-                const active = isActive(item.href);
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    onClick={() => onClose()}
-                    className={`sidebar-item group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                      active
-                        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 shadow-xs'
-                        : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100/80 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100'
-                    }`}
-                    aria-current={active ? 'page' : undefined}
-                    title={isCollapsed && !isDesktopHovered ? item.name : undefined}
-                  >
-                    <Icon
-                      className={`h-4.5 w-4.5 shrink-0 transition-colors ${
-                        active
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-300'
-                      }`}
-                    />
-                    <span className="flex-1 flex items-center justify-between gap-2 min-w-0">
-                      <span className="truncate">{item.name}</span>
-                      {item.badge && (
-                        <Badge variant="solid" color="primary" size="sm">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </span>
-                  </Link>
-                );
-              }
-
-              // Submenu item
-              if (item.submenu && item.icon) {
-                const hasAccessibleChildren = item.submenu.some((s) =>
-                  canAccess(s.href)
-                );
-                if (!hasAccessibleChildren) return null;
-
-                const isSubActive = item.submenu.some((s) => isActive(s.href));
-                const Icon = item.icon;
-                const subOpen = openSubmenus[item.name!] ?? isSubActive;
-
-                return (
-                  <div key={item.name} className="space-y-1">
-                    <button
-                      onClick={() => toggleSubmenu(item.name!)}
-                      className={`sidebar-item w-full group flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 ${
-                        isSubActive
-                          ? 'bg-slate-100/70 text-slate-900 dark:bg-zinc-800/80 dark:text-zinc-100'
-                          : 'text-slate-600 dark:text-zinc-400 hover:bg-slate-100/80 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-zinc-100'
-                      }`}
-                    >
-                      <Icon
-                        className={`h-4.5 w-4.5 shrink-0 transition-colors ${
-                          isSubActive
-                            ? 'text-emerald-600 dark:text-emerald-400'
-                            : 'text-slate-400 dark:text-zinc-500 group-hover:text-slate-700 dark:group-hover:text-zinc-300'
-                        }`}
-                      />
-                      <span className="flex-1 text-left truncate">{item.name}</span>
-                      <ChevronDown
-                        className={`chevron-icon h-4 w-4 shrink-0 transition-transform duration-200 ${
-                          subOpen ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : 'text-slate-400 dark:text-zinc-500'
-                        }`}
-                      />
-                    </button>
-
-                    {subOpen && (
-                      <div className="submenu-container pl-7 pr-1 py-1 space-y-1">
-                        {item.submenu.map((sub) => {
-                          if (!canAccess(sub.href)) return null;
-                          const subActive = isActive(sub.href);
-                          return (
-                            <Link
-                              key={sub.name}
-                              href={sub.href}
-                              onClick={() => onClose()}
-                              aria-current={subActive ? 'page' : undefined}
-                              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all ${
-                                subActive
-                                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400 font-bold'
-                                  : 'text-slate-500 dark:text-zinc-400 hover:bg-slate-100/70 dark:hover:bg-zinc-800/50 hover:text-slate-800 dark:hover:text-zinc-200'
-                              }`}
-                            >
-                              <span
-                                className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all ${
-                                  subActive
-                                    ? 'bg-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/60'
-                                    : 'bg-slate-300 dark:bg-zinc-600'
-                                }`}
-                              />
-                              <span className="truncate">{sub.name}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
-
-              return null;
-            })}
-          </nav>
-
-          {/* TailAdmin Sidebar Widget Card */}
-          <div className="sidebar-footer p-3 border-t border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-2">
-            <div className="sidebar-footer-text rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-zinc-800 dark:bg-zinc-950">
-              <div className="flex items-center gap-2">
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[11px] font-bold text-slate-800 dark:text-zinc-200">
-                  SIM Pesantren
-                </span>
-                <span className="ml-auto text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded">
-                  v0.1
-                </span>
-              </div>
-              <p className="mt-1 text-[11px] text-slate-400 dark:text-zinc-500 leading-snug">
-                Sistem Terpadu Manajemen Pondok Pesantren
-              </p>
-            </div>
-
-            {/* User Profile Pill in Sidebar */}
-            <Link
-              href="/profile"
-              onClick={() => onClose()}
-              className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-100/80 dark:hover:bg-zinc-800/60 transition-colors"
-              title="Profil Saya"
-            >
-              {userFotoUrl ? (
-                <img
-                  src={userFotoUrl}
-                  alt="Avatar"
-                  className="h-9 w-9 shrink-0 rounded-xl object-cover ring-2 ring-emerald-500/20"
-                />
-              ) : (
-                <div className="h-9 w-9 shrink-0 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 flex items-center justify-center font-bold text-xs uppercase shadow-xs">
-                  {userInitial}
-                </div>
+        <Link
+          href="/admin"
+          onClick={() => isMobileOpen && toggleMobileSidebar()}
+          className="flex items-center gap-3 group"
+        >
+          {pesantrenLogo ? (
+            <img
+              src={pesantrenLogo}
+              alt="Logo"
+              className={cn(
+                'rounded-xl object-contain drop-shadow-xs transition-all duration-200',
+                isFullyOpen ? 'h-10 w-auto' : 'h-9 w-auto'
               )}
-              <div className="sidebar-footer-text overflow-hidden min-w-0 flex-1">
-                <p className="text-xs font-bold text-slate-900 dark:text-zinc-100 truncate leading-tight">
-                  {userDisplayName}
-                </p>
-                <p className="text-[11px] text-slate-500 dark:text-zinc-400 truncate">
-                  {userRoleRaw || 'Admin'}
-                </p>
+            />
+          ) : (
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600 text-white font-bold text-sm shadow-theme-xs">
+              SP
+            </div>
+          )}
+
+          {isFullyOpen && (
+            <div className="flex flex-col min-w-0">
+              <span className="text-base font-bold tracking-tight text-gray-900 dark:text-white leading-tight truncate">
+                {pesantrenName}
+              </span>
+              <span className="text-[10px] font-semibold tracking-wider uppercase text-emerald-600 dark:text-emerald-400">
+                SIM Pesantren
+              </span>
+            </div>
+          )}
+        </Link>
+      </div>
+
+      {/* Navigation Menu */}
+      <div className="no-scrollbar flex flex-1 flex-col overflow-y-auto py-5 duration-300 ease-linear">
+        <nav className="space-y-6">
+          {MENU_GROUPS.map((group, gIdx) => {
+            // Check if group has any visible items
+            const visibleItems = group.items.filter((item) => {
+              if (item.href) return canAccess(item.href);
+              if (item.submenu) {
+                return item.submenu.some((sub) => canAccess(sub.href));
+              }
+              return true;
+            });
+
+            if (visibleItems.length === 0) return null;
+
+            return (
+              <div key={gIdx}>
+                <h2
+                  className={cn(
+                    'mb-3 flex text-[11px] font-bold uppercase tracking-wider text-gray-400 dark:text-gray-500',
+                    !isFullyOpen ? 'justify-center' : 'justify-start px-3'
+                  )}
+                >
+                  {isFullyOpen ? group.title : <MoreHorizontal className="h-4 w-4" />}
+                </h2>
+
+                <ul className="flex flex-col gap-1">
+                  {visibleItems.map((item) => {
+                    const Icon = item.icon || LayoutDashboard;
+
+                    // 1. Single Link Item
+                    if (item.href) {
+                      const active = isActive(item.href);
+                      return (
+                        <li key={item.name}>
+                          <Link
+                            href={item.href}
+                            onClick={() => isMobileOpen && toggleMobileSidebar()}
+                            className={cn(
+                              'group menu-item',
+                              active ? 'menu-item-active' : 'menu-item-inactive',
+                              !isFullyOpen ? 'justify-center px-0' : 'justify-start'
+                            )}
+                            title={!isFullyOpen ? item.name : undefined}
+                          >
+                            <span
+                              className={cn(
+                                active
+                                  ? 'menu-item-icon-active'
+                                  : 'menu-item-icon-inactive'
+                              )}
+                            >
+                              <Icon className="h-5 w-5 shrink-0" />
+                            </span>
+
+                            {isFullyOpen && (
+                              <span className="flex-1 truncate text-xs font-semibold">
+                                {item.name}
+                              </span>
+                            )}
+
+                            {isFullyOpen && item.badge && (
+                              <span
+                                className={cn(
+                                  'menu-dropdown-badge ms-auto',
+                                  active
+                                    ? 'menu-dropdown-badge-active'
+                                    : 'menu-dropdown-badge-inactive'
+                                )}
+                              >
+                                {item.badge}
+                              </span>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    }
+
+                    // 2. Submenu Accordion Item
+                    if (item.submenu) {
+                      const isSubActive = item.submenu.some((s) => isActive(s.href));
+                      const isOpen = openSubmenus[item.name!] ?? isSubActive;
+
+                      return (
+                        <li key={item.name}>
+                          <button
+                            type="button"
+                            onClick={() => toggleSubmenu(item.name!)}
+                            className={cn(
+                              'group menu-item w-full cursor-pointer',
+                              isSubActive ? 'menu-item-active' : 'menu-item-inactive',
+                              !isFullyOpen ? 'justify-center px-0' : 'justify-start'
+                            )}
+                            title={!isFullyOpen ? item.name : undefined}
+                          >
+                            <span
+                              className={cn(
+                                isSubActive
+                                  ? 'menu-item-icon-active'
+                                  : 'menu-item-icon-inactive'
+                              )}
+                            >
+                              <Icon className="h-5 w-5 shrink-0" />
+                            </span>
+
+                            {isFullyOpen && (
+                              <span className="flex-1 text-left truncate text-xs font-semibold">
+                                {item.name}
+                              </span>
+                            )}
+
+                            {isFullyOpen && (
+                              <ChevronDown
+                                className={cn(
+                                  'ms-auto h-4 w-4 shrink-0 transition-transform duration-200 text-gray-400',
+                                  isOpen ? 'rotate-180 text-emerald-600 dark:text-emerald-400' : ''
+                                )}
+                              />
+                            )}
+                          </button>
+
+                          {/* Submenu links */}
+                          {isFullyOpen && isOpen && (
+                            <ul className="ms-8 mt-1 space-y-1 border-l-2 border-gray-100 dark:border-gray-800 pl-2">
+                              {item.submenu.map((subItem) => {
+                                if (!canAccess(subItem.href)) return null;
+                                const subActive = isActive(subItem.href);
+                                return (
+                                  <li key={subItem.name}>
+                                    <Link
+                                      href={subItem.href}
+                                      onClick={() =>
+                                        isMobileOpen && toggleMobileSidebar()
+                                      }
+                                      className={cn(
+                                        'menu-dropdown-item text-xs',
+                                        subActive
+                                          ? 'menu-dropdown-item-active font-semibold'
+                                          : 'menu-dropdown-item-inactive'
+                                      )}
+                                    >
+                                      <span className="truncate">{subItem.name}</span>
+                                      {subItem.badge && (
+                                        <span className="menu-dropdown-badge ms-auto menu-dropdown-badge-active">
+                                          {subItem.badge}
+                                        </span>
+                                      )}
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </li>
+                      );
+                    }
+
+                    return null;
+                  })}
+                </ul>
               </div>
-              <ChevronRight className="sidebar-footer-text h-4 w-4 text-slate-300 dark:text-zinc-600 ml-auto shrink-0" />
-            </Link>
-          </div>
-        </div>
-      </aside>
-    </>
+            );
+          })}
+        </nav>
+
+        {/* Sidebar Bottom Widget Card (TailAdmin signature) */}
+        {isFullyOpen && <SidebarWidget />}
+      </div>
+    </aside>
   );
 }
 

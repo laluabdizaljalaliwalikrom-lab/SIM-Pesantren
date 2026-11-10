@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { SidebarProvider } from '@/context/SidebarContext';
 import { DashboardLayout } from '@/components/dashboard-layout';
 
 export default function DashboardGroupRoutingLayout({
@@ -8,5 +9,9 @@ export default function DashboardGroupRoutingLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <DashboardLayout>{children}</DashboardLayout>;
+  return (
+    <SidebarProvider>
+      <DashboardLayout>{children}</DashboardLayout>
+    </SidebarProvider>
+  );
 }
