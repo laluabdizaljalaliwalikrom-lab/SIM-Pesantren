@@ -1,11 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { Sidebar } from './sidebar';
 import { BottomBar } from './bottom-bar';
 import { ThemeToggle } from './ui/theme-toggle';
-import { LogOut, ShieldAlert, Loader2, User, ChevronDown, Download, X, Menu } from 'lucide-react';
+import {
+  LogOut,
+  ShieldAlert,
+  Loader2,
+  User,
+  ChevronDown,
+  Download,
+  X,
+  Menu,
+  Search,
+  Bell,
+  Sparkles,
+  ExternalLink,
+  Settings,
+  Calendar,
+  Clock as ClockIcon,
+  Moon,
+} from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -15,7 +32,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-function Clock() {
+function LiveClock() {
   const [dateTime, setDateTime] = useState({ date: '', time: '', hijri: '' });
 
   useEffect(() => {
@@ -23,18 +40,27 @@ function Clock() {
       try {
         const now = new Date();
         const optionsDate: Intl.DateTimeFormatOptions = {
-          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
         };
         const date = now.toLocaleDateString('id-ID', optionsDate);
         const time = now.toLocaleTimeString('id-ID', {
-          hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
         });
         const hijri = now.toLocaleDateString('id-ID', {
-          calendar: 'islamic-umalqura', day: 'numeric', month: 'long', year: 'numeric',
+          calendar: 'islamic-umalqura',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
         });
         setDateTime({ date, time, hijri });
       } catch {
-        // ignore
+        // fallback
       }
     }
     update();
@@ -43,16 +69,22 @@ function Clock() {
   }, []);
 
   return (
-    <>
-      <i className="far fa-calendar-alt" />
-      <span>{dateTime.date}</span>
-      <span className="text-gray-300 dark:text-zinc-600">|</span>
-      <i className="far fa-clock" />
-      <span>{dateTime.time}</span>
-      <span className="text-gray-300 dark:text-zinc-600 mx-1">•</span>
-      <i className="far fa-moon text-emerald-500" />
-      <span className="text-emerald-600 dark:text-emerald-400 font-medium">{dateTime.hijri}</span>
-    </>
+    <div className="hidden md:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-zinc-950 border border-slate-200/80 dark:border-zinc-800 text-xs text-slate-600 dark:text-zinc-300">
+      <div className="flex items-center gap-1.5 font-medium">
+        <Calendar className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
+        <span>{dateTime.date}</span>
+      </div>
+      <span className="text-slate-300 dark:text-zinc-700">|</span>
+      <div className="flex items-center gap-1.5 font-mono font-medium">
+        <ClockIcon className="h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
+        <span>{dateTime.time}</span>
+      </div>
+      <span className="text-slate-300 dark:text-zinc-700">•</span>
+      <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold">
+        <Moon className="h-3 w-3" />
+        <span>{dateTime.hijri}</span>
+      </div>
+    </div>
   );
 }
 
@@ -70,10 +102,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [permissions, setPermissions] = useState<any[]>([]);
   const [loadingPermissions, setLoadingPermissions] = useState(true);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [pesantrenLogo, setPesantrenLogo] = useState<string>('');
   const [pesantrenName, setPesantrenName] = useState<string>('SIM Pesantren');
   const [pwaDismissed, setPwaDismissed] = useState(false);
   const { isInstallable, install } = usePWAInstall();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Keyboard shortcut Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     async function loadPesantrenProfile() {
@@ -96,7 +142,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     async function loadUser() {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
         if (user) {
           const { data: profile } = await supabase
             .from('profiles')
@@ -104,7 +152,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             .eq('id', user.id)
             .single();
 
-          const name = profile?.nama_lengkap || user.email?.split('@')[0] || 'User';
+          const name =
+            profile?.nama_lengkap || user.email?.split('@')[0] || 'User';
           const roleDisplay = profile?.role || 'Wali Santri';
 
           setUserDisplayName(name);
@@ -149,6 +198,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [router]);
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    router.push(`/santri?search=${encodeURIComponent(searchQuery.trim())}`);
+  };
+
   const isSuperAdmin = userRole === 'Super Admin';
 
   let hasAccess = true;
@@ -173,10 +228,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const requiredModule = Object.keys(pathModuleMap).find(
     (p) => currentPath === p || currentPath.startsWith(p + '/')
   )
-    ? pathModuleMap[Object.keys(pathModuleMap).find((p) => currentPath === p || currentPath.startsWith(p + '/'))!]
+    ? pathModuleMap[
+        Object.keys(pathModuleMap).find(
+          (p) => currentPath === p || currentPath.startsWith(p + '/')
+        )!
+      ]
     : null;
 
-  if (currentPath.startsWith('/settings/users') || currentPath.startsWith('/settings')) {
+  if (
+    currentPath.startsWith('/settings/users') ||
+    currentPath.startsWith('/settings')
+  ) {
     if (!isSuperAdmin) hasAccess = false;
   } else if (requiredModule && !isSuperAdmin) {
     const modPerm = permissions.find(
@@ -204,40 +266,70 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         userInitial={userInitial}
       />
 
-      <div className="layout-page">
-        <header className="layout-header">
-          <div className="header-left">
+      <div className="layout-page flex flex-col min-h-screen bg-slate-50 dark:bg-zinc-950">
+        {/* TailAdmin Style Header */}
+        <header className="sticky top-0 z-30 h-18 w-full border-b border-slate-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between gap-4">
+          {/* Header Left */}
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="mobile-menu-button"
+              className="mobile-menu-button lg:hidden flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 dark:border-zinc-800 text-slate-600 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800 active:scale-95 transition-all"
+              aria-label="Toggle Sidebar"
             >
-              <i className="fas fa-bars text-xl" />
+              <Menu className="h-5 w-5" />
             </button>
+
+            {/* TailAdmin Search Input */}
+            <form onSubmit={handleSearchSubmit} className="relative hidden sm:block w-64 md:w-80 lg:w-96">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 dark:text-zinc-500 pointer-events-none" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Cari data santri, kasir, atau modul... (Ctrl+K)"
+                className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-zinc-950 border border-slate-200 dark:border-zinc-800 rounded-xl text-xs text-slate-800 dark:text-zinc-100 placeholder-slate-400 dark:placeholder-zinc-600 focus:outline-none focus:border-emerald-500 transition-colors"
+              />
+            </form>
           </div>
 
-          <div className="header-center">
-            <Clock />
+          {/* Header Center: Realtime Gregorian & Islamic Hijri Calendar */}
+          <div className="hidden lg:flex items-center">
+            <LiveClock />
           </div>
 
-          <div className="header-right">
-            <div className="mr-3">
-              <ThemeToggle />
-            </div>
+          {/* Header Right: Actions, Theme, and Profile Dropdown */}
+          <div className="flex items-center gap-2.5 sm:gap-3">
+            {/* Dark Mode Toggle */}
+            <ThemeToggle />
 
+            {/* Profile Dropdown */}
             <div className="relative">
-                <button
+              <button
                 onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                className="flex items-center justify-center w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900/50 hover:bg-emerald-200 dark:hover:bg-emerald-800/60 text-emerald-700 dark:text-emerald-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 dark:focus:ring-offset-gray-900 transition ease-in-out duration-150"
+                className="flex items-center gap-2.5 p-1 sm:px-2.5 sm:py-1.5 rounded-xl border border-transparent hover:border-slate-200 dark:hover:border-zinc-800 hover:bg-slate-100/70 dark:hover:bg-zinc-800/60 transition-all duration-200 cursor-pointer"
+                aria-expanded={profileDropdownOpen}
               >
                 {userFotoUrl ? (
                   <img
                     src={userFotoUrl}
                     alt="Avatar"
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="w-8.5 h-8.5 rounded-xl object-cover ring-2 ring-emerald-500/20"
                   />
                 ) : (
-                  <span className="text-sm font-semibold">{userInitial}</span>
+                  <div className="w-8.5 h-8.5 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                    {userInitial}
+                  </div>
                 )}
+                <div className="hidden sm:flex flex-col text-left">
+                  <span className="text-xs font-bold text-slate-800 dark:text-zinc-100 leading-tight">
+                    {userDisplayName}
+                  </span>
+                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
+                    {userRole || 'Admin'}
+                  </span>
+                </div>
+                <ChevronDown className="hidden sm:block h-3.5 w-3.5 text-slate-400 dark:text-zinc-500" />
               </button>
 
               {profileDropdownOpen && (
@@ -246,46 +338,50 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     className="fixed inset-0 z-40 cursor-default"
                     onClick={() => setProfileDropdownOpen(false)}
                   />
-                  <div
-                    className="absolute top-full right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-zinc-900 ring-1 ring-black ring-opacity-5 z-50 origin-top-right border border-gray-200 dark:border-zinc-800"
-                  >
-                    <div className="px-4 py-3 border-b border-gray-200 dark:border-zinc-800">
-                      <div className="font-medium text-base text-gray-800 dark:text-zinc-200">
+                  <div className="absolute top-full right-0 mt-2 w-56 rounded-2xl shadow-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 py-1.5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    {/* User Info Header */}
+                    <div className="px-4 py-3 border-b border-slate-100 dark:border-zinc-800">
+                      <p className="font-bold text-sm text-slate-900 dark:text-zinc-100 truncate">
                         {userDisplayName}
-                      </div>
-                      <div className="font-medium text-sm text-gray-500 dark:text-zinc-400">
-                        {userEmail}
-                      </div>
+                      </p>
+                      <p className="text-xs text-slate-400 dark:text-zinc-500 truncate mt-0.5">
+                        {userEmail || userRole}
+                      </p>
                     </div>
+
                     <div className="py-1">
                       <Link
                         href="/profile"
                         onClick={() => setProfileDropdownOpen(false)}
-                        className="flex items-center block w-full px-4 py-2 text-start text-sm leading-5 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition duration-150 ease-in-out"
+                        className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/70 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
                       >
-                        <i className="far fa-user w-5 mr-2 text-gray-400 dark:text-zinc-500" />
-                        Profile
+                        <User className="h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                        Profil Pengguna
                       </Link>
 
-                      <div className="flex items-center justify-between px-4 py-2 text-sm text-gray-700 dark:text-zinc-300">
-                        <span className="flex items-center gap-2">
-                          <i className="far fa-moon w-5 text-gray-400 dark:text-zinc-500" />
-                          Tema Gelap
-                        </span>
-                        <ThemeToggle />
-                      </div>
+                      {isSuperAdmin && (
+                        <Link
+                          href="/pengaturan"
+                          onClick={() => setProfileDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-medium text-slate-700 dark:text-zinc-300 hover:bg-slate-50 dark:hover:bg-zinc-800/70 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+                        >
+                          <Settings className="h-4 w-4 text-slate-400 dark:text-zinc-500" />
+                          Pengaturan Lembaga
+                        </Link>
+                      )}
                     </div>
-                    <div className="border-t border-gray-200 dark:border-zinc-800 py-1">
+
+                    <div className="border-t border-slate-100 dark:border-zinc-800 pt-1">
                       <button
                         onClick={() => {
                           setProfileDropdownOpen(false);
                           handleLogout();
                         }}
                         disabled={loggingOut}
-                        className="flex items-center text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 block w-full px-4 py-2 text-start text-sm leading-5 transition duration-150 ease-in-out disabled:opacity-50"
+                        className="flex items-center gap-2.5 w-full px-4 py-2.5 text-start text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors disabled:opacity-50"
                       >
-                        <i className="fas fa-sign-out-alt w-5 mr-2" />
-                        Log Out
+                        <LogOut className="h-4 w-4" />
+                        {loggingOut ? 'Memproses Keluar...' : 'Keluar (Logout)'}
                       </button>
                     </div>
                   </div>
@@ -295,26 +391,31 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
 
-        <div className="content-wrapper">
-          <main className="content-main">
+        {/* Content Wrapper */}
+        <div className="content-wrapper flex-1 flex flex-col w-full">
+          <main className="content-main flex-1 w-full px-4 sm:px-6 lg:px-8 py-6 md:py-8">
             {loadingPermissions ? (
               <div className="h-full w-full flex flex-col items-center justify-center gap-3 min-h-[60vh]">
                 <Loader2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400 animate-spin" />
-                <p className="text-xs text-gray-400 dark:text-gray-500 font-medium">Memuat Hak Akses...</p>
+                <p className="text-xs text-slate-400 dark:text-zinc-500 font-medium">
+                  Memuat Hak Akses...
+                </p>
               </div>
             ) : !hasAccess ? (
               <div className="h-full w-full flex flex-col items-center justify-center p-6 text-center min-h-[60vh]">
-                <div className="h-16 w-16 rounded-full bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-800/50 mb-4">
+                <div className="h-16 w-16 rounded-2xl bg-rose-50 dark:bg-rose-900/30 flex items-center justify-center text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-800/50 mb-4 shadow-sm">
                   <ShieldAlert className="h-8 w-8" />
                 </div>
-                <h3 className="text-base font-extrabold text-gray-800 dark:text-gray-200 mb-2">Akses Halaman Ditolak</h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400 max-w-sm leading-relaxed mb-6">
-                  Maaf, akun Anda ({userRole}) tidak memiliki izin untuk melihat halaman ini.
-                  Silakan hubungi Super Admin jika ini adalah sebuah kekeliruan.
+                <h3 className="text-base font-bold text-slate-900 dark:text-zinc-100 mb-2">
+                  Akses Halaman Dibatasi
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 max-w-sm leading-relaxed mb-6">
+                  Akun Anda ({userRole}) tidak memiliki izin untuk melihat modul
+                  ini. Silakan hubungi Super Admin jika membutuhkan akses.
                 </p>
                 <button
                   onClick={() => router.push('/admin')}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md active:scale-95 transition-all"
+                  className="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm shadow-md shadow-emerald-600/20 transition-all duration-200 active:scale-95"
                 >
                   Kembali ke Dashboard
                 </button>
@@ -324,17 +425,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             )}
           </main>
 
-          <footer className="content-footer border-t border-gray-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 py-4 px-6">
+          {/* Footer */}
+          <footer className="content-footer border-t border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 py-4 px-6 text-center">
             <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-              <div className="inline-flex items-center gap-3 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 px-5 py-2 rounded-full shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 transition-all duration-300">
+              <div className="inline-flex items-center gap-3 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 px-5 py-2 rounded-full shadow-xs">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ring-4 ring-emerald-50 dark:ring-emerald-900/40" />
-                <span className="text-gray-600 dark:text-gray-400 font-medium text-xs">
-                  &copy; 2025 &ndash; 2026 SIM Pesantren
-                  <span className="text-gray-300 mx-1.5">|</span>
-                  By{' '}
-                  <strong className="font-semibold bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-teal-600">
-                    tanpaharta007
-                  </strong>
+                <span className="text-slate-600 dark:text-zinc-400 font-medium text-xs">
+                  &copy; {new Date().getFullYear()} SIM Pesantren
+                  <span className="text-slate-300 dark:text-zinc-700 mx-1.5">|</span>
+                  Sistem Informasi Manajemen Terpadu
                 </span>
               </div>
             </div>
@@ -342,14 +441,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </div>
 
+      {/* PWA Install Notification Pill */}
       {isInstallable && !pwaDismissed && (
         <div
-          className="fixed bottom-20 lg:bottom-4 right-4 z-50 flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white pl-3 pr-2 py-2 rounded-full shadow-lg shadow-emerald-600/20 dark:shadow-emerald-900/40 text-xs font-semibold transition-all duration-200 group cursor-pointer"
+          className="fixed bottom-20 lg:bottom-5 right-5 z-50 flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white pl-3.5 pr-2 py-2 rounded-full shadow-lg shadow-emerald-600/25 text-xs font-semibold transition-all duration-200 group cursor-pointer"
           onClick={() => install()}
         >
           <Download className="h-4 w-4 shrink-0" />
-          <span className="leading-tight max-w-0 overflow-hidden group-hover:max-w-[60px] transition-all duration-200 whitespace-nowrap">
-            Pasang
+          <span className="leading-tight max-w-0 overflow-hidden group-hover:max-w-[70px] transition-all duration-200 whitespace-nowrap">
+            Pasang PWA
           </span>
           <span
             onClick={(e) => {
@@ -363,6 +463,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       )}
 
+      {/* Bottom bar for mobile */}
       <BottomBar
         userRoleRaw={userRole}
         permissions={permissions}
@@ -371,3 +472,5 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     </>
   );
 }
+
+export default DashboardLayout;
