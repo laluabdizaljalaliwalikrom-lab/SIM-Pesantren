@@ -4,24 +4,26 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Users,
+  GridIcon,
+  GroupIcon,
+  CalenderIcon,
+  DollarLineIcon,
+  TableIcon,
+  HorizontaLDots,
+} from '@/components/icons';
+import {
   BookOpen,
-  CreditCard,
   Settings,
   GraduationCap,
-  School,
-  Home,
   Briefcase,
   Coins,
   ShieldCheck,
   BarChart4,
   ChevronDown,
   ClipboardList,
-  CalendarCheck,
   FileSearch,
   Megaphone,
-  MoreHorizontal,
+  Home,
 } from 'lucide-react';
 import { useSidebar } from '@/context/SidebarContext';
 import SidebarWidget from '@/components/layout/SidebarWidget';
@@ -60,14 +62,14 @@ const MENU_GROUPS: {
   {
     title: 'MENU UTAMA',
     items: [
-      { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+      { name: 'Dashboard', href: '/admin', icon: GridIcon },
       { name: 'Dashboard Eksekutif', href: '/dashboard-eksekutif', icon: BarChart4 },
-      { name: 'Lembaga', href: '/lembaga', icon: School },
-      { name: 'Santri & Data Induk', href: '/santri', icon: Users },
+      { name: 'Lembaga', href: '/lembaga', icon: TableIcon },
+      { name: 'Santri & Data Induk', href: '/santri', icon: GroupIcon },
       { name: 'Kepegawaian', href: '/pegawai', icon: Briefcase },
       {
         name: 'Absensi Pegawai',
-        icon: CalendarCheck,
+        icon: CalenderIcon,
         submenu: [
           { name: 'Riwayat Harian', href: '/absen-pegawai' },
           { name: 'Scan QR', href: '/absen-pegawai/scan' },
@@ -112,7 +114,7 @@ const MENU_GROUPS: {
   {
     title: 'KEUANGAN & KASIR',
     items: [
-      { name: 'Kasir Pembayaran', href: '/pembayaran', icon: CreditCard },
+      { name: 'Kasir Pembayaran', href: '/pembayaran', icon: DollarLineIcon },
       { name: 'Atur Pos Keuangan', href: '/keuangan', icon: Coins },
       { name: 'Laporan Arus Kas', href: '/laporan', icon: BarChart4 },
     ],
@@ -277,12 +279,12 @@ export function Sidebar({
                     !isFullyOpen ? 'justify-center' : 'justify-start px-3'
                   )}
                 >
-                  {isFullyOpen ? group.title : <MoreHorizontal className="h-4 w-4" />}
+                  {isFullyOpen ? group.title : <HorizontaLDots className="h-4 w-4" />}
                 </h2>
 
                 <ul className="flex flex-col gap-1">
                   {visibleItems.map((item) => {
-                    const Icon = item.icon || LayoutDashboard;
+                    const Icon = item.icon || GridIcon;
 
                     // 1. Single Link Item
                     if (item.href) {

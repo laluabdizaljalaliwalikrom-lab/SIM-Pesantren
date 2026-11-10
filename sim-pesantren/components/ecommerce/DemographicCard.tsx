@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { MoreHorizontal, School, BookOpen, GraduationCap, Users } from 'lucide-react';
+import { MoreDotIcon } from '@/components/icons';
+import { School, BookOpen, GraduationCap, Users } from 'lucide-react';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
 import { DropdownItem } from '@/components/ui/dropdown/DropdownItem';
 
@@ -68,7 +69,7 @@ export default function DemographicCard({ totalSantri = 2755 }: DemographicCardP
             className="dropdown-toggle p-1 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors cursor-pointer"
             aria-label="Opsi Distribusi"
           >
-            <MoreHorizontal className="h-5 w-5" />
+            <MoreDotIcon className="size-5" />
           </button>
           <Dropdown isOpen={isOpen} onClose={closeDropdown} className="w-40 p-1.5">
             <DropdownItem onItemClick={closeDropdown}>

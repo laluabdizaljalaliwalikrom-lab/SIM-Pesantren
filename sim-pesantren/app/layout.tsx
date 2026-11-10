@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Amiri } from "next/font/google";
+import { Outfit, Geist, Geist_Mono, Amiri } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ui/theme-provider";
 import { Toaster } from "sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+});
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -52,7 +57,7 @@ export default async function RootLayout({
     <html
       lang="id"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} ${amiri.variable} h-full antialiased`}
+      className={`${outfit.variable} ${geistSans.variable} ${geistMono.variable} ${amiri.variable} h-full antialiased`}
     >
       <head>
         <link rel="icon" type="image/png" href="/api/favicon" />
@@ -66,7 +71,7 @@ export default async function RootLayout({
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossOrigin="anonymous" referrerPolicy="no-referrer" />
         <title>{title}</title>
       </head>
-      <body className="min-h-full flex flex-col">
+      <body className={`${outfit.className} font-outfit min-h-full flex flex-col`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

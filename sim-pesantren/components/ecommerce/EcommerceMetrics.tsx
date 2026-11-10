@@ -3,13 +3,12 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  Users,
-  Wallet,
-  GraduationCap,
-  CalendarCheck,
-  TrendingUp,
-  ArrowUpRight,
-} from 'lucide-react';
+  GroupIcon,
+  DollarLineIcon,
+  CalenderIcon,
+  ArrowUpIcon,
+} from '@/components/icons';
+import { GraduationCap, ArrowUpRight } from 'lucide-react';
 import Badge from '@/components/ui/badge';
 
 interface EcommerceMetricsProps {
@@ -33,10 +32,10 @@ export const EcommerceMetrics: React.FC<EcommerceMetricsProps> = ({
       <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 dark:border-gray-800 dark:bg-gray-900 shadow-theme-xs">
         <div className="flex items-center justify-between">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
-            <Users className="h-6 w-6 text-gray-800 dark:text-white/90" />
+            <GroupIcon className="size-6 text-gray-800 dark:text-white/90" />
           </div>
           <Badge color="success">
-            <TrendingUp className="h-3.5 w-3.5" />
+            <ArrowUpIcon className="size-3.5" />
             +11.01%
           </Badge>
         </div>
@@ -65,10 +64,10 @@ export const EcommerceMetrics: React.FC<EcommerceMetricsProps> = ({
       <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 dark:border-gray-800 dark:bg-gray-900 shadow-theme-xs">
         <div className="flex items-center justify-between">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
-            <Wallet className="h-6 w-6 text-gray-800 dark:text-white/90" />
+            <DollarLineIcon className="size-6 text-gray-800 dark:text-white/90" />
           </div>
           <Badge color="primary">
-            <TrendingUp className="h-3.5 w-3.5" />
+            <ArrowUpIcon className="size-3.5" />
             +8.45%
           </Badge>
         </div>
@@ -128,7 +127,7 @@ export const EcommerceMetrics: React.FC<EcommerceMetricsProps> = ({
       <div className="rounded-2xl border border-gray-200 bg-white p-5 md:p-6 dark:border-gray-800 dark:bg-gray-900 shadow-theme-xs">
         <div className="flex items-center justify-between">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 dark:bg-gray-800">
-            <CalendarCheck className="h-6 w-6 text-gray-800 dark:text-white/90" />
+            <CalenderIcon className="size-6 text-gray-800 dark:text-white/90" />
           </div>
           <Badge color="warning">
             Perizinan

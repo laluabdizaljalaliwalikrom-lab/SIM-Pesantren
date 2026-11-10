@@ -37,7 +37,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-outfit: var(--font-outfit), Outfit, sans-serif;
+  --font-sans: var(--font-outfit), Outfit, var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono);
 
   --text-title-2xl: 72px;

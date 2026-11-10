@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { ApexOptions } from 'apexcharts';
-import { MoreHorizontal, ArrowUp, ArrowDown } from 'lucide-react';
+import { MoreDotIcon, ArrowUpIcon, ArrowDownIcon } from '@/components/icons';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
 import { DropdownItem } from '@/components/ui/dropdown/DropdownItem';
 
@@ -83,7 +83,7 @@ export default function MonthlyTarget() {
               className="dropdown-toggle p-1 rounded-lg text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors cursor-pointer"
               aria-label="Opsi Target"
             >
-              <MoreHorizontal className="h-5 w-5" />
+              <MoreDotIcon className="size-5" />
             </button>
             <Dropdown isOpen={isOpen} onClose={closeDropdown} className="w-40 p-1.5">
               <DropdownItem onItemClick={closeDropdown}>
@@ -123,7 +123,7 @@ export default function MonthlyTarget() {
           </p>
           <p className="flex items-center justify-center gap-1 text-sm sm:text-base font-bold text-gray-800 dark:text-white/90">
             500 Juz
-            <ArrowDown className="h-3.5 w-3.5 text-rose-500" />
+            <ArrowDownIcon className="size-3.5 text-rose-500" />
           </p>
         </div>
 
@@ -135,7 +135,7 @@ export default function MonthlyTarget() {
           </p>
           <p className="flex items-center justify-center gap-1 text-sm sm:text-base font-bold text-gray-800 dark:text-white/90">
             428 Juz
-            <ArrowUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <ArrowUpIcon className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export default function MonthlyTarget() {
           </p>
           <p className="flex items-center justify-center gap-1 text-sm sm:text-base font-bold text-gray-800 dark:text-white/90">
             28 Juz
-            <ArrowUp className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            <ArrowUpIcon className="size-3.5 text-emerald-600 dark:text-emerald-400" />
           </p>
         </div>
       </div>

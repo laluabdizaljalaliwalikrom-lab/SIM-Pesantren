@@ -4,21 +4,22 @@ import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import {
-  Users,
+  GroupIcon,
+  DollarLineIcon,
+  TableIcon,
+  CalenderIcon,
+} from '@/components/icons';
+import {
   BookOpen,
   Wallet,
-  School,
   Home,
   GraduationCap,
   Briefcase,
-  CreditCard,
   Cog,
   ShieldCheck,
   BarChart4,
   ArrowRight,
-  Sparkles,
   ClipboardList,
-  CalendarCheck,
   Megaphone,
   Info,
   Layers,
@@ -224,7 +225,7 @@ export default function AdminDashboardHome() {
     {
       name: 'Santri & Data Induk',
       href: '/santri',
-      icon: Users,
+      icon: GroupIcon,
       desc: 'Pusat data induk santri, wali, dan biodata Dapodik santri',
       bgIcon: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
       badge: `${stats.totalSantri} Santri`,
@@ -232,7 +233,7 @@ export default function AdminDashboardHome() {
     {
       name: 'Kasir & Pembayaran',
       href: '/pembayaran',
-      icon: CreditCard,
+      icon: DollarLineIcon,
       desc: 'Loket kasir, cetak kuitansi resmi, & pelunasan tagihan SPP',
       bgIcon: 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400',
       badge: 'Kasir',
@@ -248,7 +249,7 @@ export default function AdminDashboardHome() {
     {
       name: 'Absensi Santri',
       href: '/absen-santri',
-      icon: CalendarCheck,
+      icon: CalenderIcon,
       desc: 'Scan QR presensi santri harian & rekapitulasi kehadiran',
       bgIcon: 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
       badge: 'Presensi',
@@ -280,7 +281,7 @@ export default function AdminDashboardHome() {
     {
       name: 'Lembaga & Madrasah',
       href: '/lembaga',
-      icon: School,
+      icon: TableIcon,
       desc: 'Struktur madrasah, jenjang MTs/MA & rombel kelas santri',
       bgIcon: 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400',
       badge: 'Unit',
@@ -367,7 +368,7 @@ export default function AdminDashboardHome() {
               href="/santri"
               className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-theme-xs transition-colors"
             >
-              <Users className="h-4 w-4" />
+              <GroupIcon className="size-4" />
               <span>+ Tambah Santri</span>
             </Link>
           </div>
@@ -492,7 +493,7 @@ export default function AdminDashboardHome() {
               href="/santri"
               className="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg font-semibold text-xs transition-colors shrink-0"
             >
-              <Users className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <GroupIcon className="size-3.5 text-emerald-600 dark:text-emerald-400" />
               Kelola Data Santri
             </Link>
           </div>
