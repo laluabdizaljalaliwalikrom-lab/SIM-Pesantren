@@ -12,16 +12,19 @@ import NotificationDropdown from '@/components/header/NotificationDropdown';
 import ThemeToggleButton from '@/components/common/ThemeToggleButton';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import {
-  Menu,
-  X,
-  Search,
   Calendar,
   Clock as ClockIcon,
   Moon,
   ShieldAlert,
   Loader2,
   Download,
+  X,
 } from 'lucide-react';
+import {
+  SidebarToggleIcon,
+  CloseIcon,
+  SearchIcon,
+} from '@/components/icons';
 import { cn } from '@/lib/utils';
 
 interface DashboardLayoutProps {
@@ -286,16 +289,19 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <header className="sticky top-0 z-40 flex w-full border-b border-gray-200 bg-white/95 backdrop-blur-md dark:border-gray-800 dark:bg-gray-900/95">
           <div className="flex grow items-center justify-between px-4 py-3 sm:px-6">
             <div className="flex items-center gap-3">
-              {/* Toggle Sidebar Button */}
+              {/* Toggle Sidebar Button with TailAdmin Native Icon */}
               <button
                 onClick={handleToggle}
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white transition-colors cursor-pointer"
+                className={cn(
+                  'z-50 flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white transition-colors cursor-pointer',
+                  isMobileOpen && 'bg-gray-100 dark:bg-white/5'
+                )}
                 aria-label="Toggle Sidebar"
               >
                 {isMobileOpen ? (
-                  <X className="h-5 w-5" />
+                  <CloseIcon className="h-5 w-5" />
                 ) : (
-                  <Menu className="h-5 w-5" />
+                  <SidebarToggleIcon className="h-4 w-4" />
                 )}
               </button>
 
@@ -305,7 +311,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 className="relative hidden sm:block w-64 md:w-80 lg:w-96"
               >
                 <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2">
-                  <Search className="h-4 w-4 text-gray-400 dark:text-gray-500" />
+                  <SearchIcon className="h-4 w-4 text-gray-400 dark:text-gray-500" />
                 </span>
                 <input
                   ref={searchInputRef}
@@ -313,12 +319,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari santri, kasir, modul... (Ctrl+K)"
-                  className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50/50 py-2 ps-10 pe-14 text-xs text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-emerald-500 focus:outline-none dark:border-gray-800 dark:bg-white/3 dark:text-white/90 dark:placeholder:text-gray-500 transition-colors"
+                  className="h-10 w-full rounded-lg border border-gray-200 bg-gray-50/50 py-2 ps-10 pe-14 text-xs text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-500 focus:outline-none dark:border-gray-800 dark:bg-white/3 dark:text-white/90 dark:placeholder:text-gray-500 transition-colors"
                 />
-                <div className="absolute right-2.5 top-1/2 -translate-y-1/2 inline-flex items-center gap-0.5 rounded-md border border-gray-200 bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 pointer-events-none">
+                <button
+                  type="button"
+                  onClick={() => searchInputRef.current?.focus()}
+                  className="absolute right-2 top-1/2 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-1.75 py-1 text-[11px] font-semibold tracking-[-0.2px] text-gray-500 dark:border-gray-800 dark:bg-white/3 dark:text-gray-400"
+                >
                   <span>⌘</span>
                   <span>K</span>
-                </div>
+                </button>
               </form>
             </div>
 

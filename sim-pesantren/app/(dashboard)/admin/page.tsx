@@ -328,7 +328,7 @@ export default function AdminDashboardHome() {
       <PageBreadcrumb pageTitle="Admin Dashboard" />
 
       {/* 2. TailAdmin Welcome Hero Card */}
-      <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 md:p-8 dark:border-gray-800 dark:bg-gray-900 shadow-theme-xs">
+      <div className="relative overflow-hidden rounded-2xl border border-gray-200 bg-white p-6 md:p-8 dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="max-w-2xl space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-xs font-semibold text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/20">
@@ -412,7 +412,7 @@ export default function AdminDashboardHome() {
 
         {/* Full Width Bottom: Modul Layanan SIM Pesantren (TailAdmin ComponentCard layout) */}
         <div className="col-span-12">
-          <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 dark:border-gray-800 dark:bg-gray-900 shadow-theme-xs">
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 sm:p-6 dark:border-gray-800 dark:bg-white/[0.03] shadow-theme-xs">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-6">
               <div>
                 <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90 flex items-center gap-2">

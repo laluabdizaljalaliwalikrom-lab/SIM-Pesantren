@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Bell, CheckCircle2, AlertCircle, Info, Sparkles } from 'lucide-react';
+import { CheckCircle2, Info, Sparkles } from 'lucide-react';
+import { BellIcon, CloseIcon } from '@/components/icons';
 import { Dropdown } from '@/components/ui/dropdown/Dropdown';
 
 export default function NotificationDropdown() {
@@ -49,7 +50,7 @@ export default function NotificationDropdown() {
     <div className="relative">
       <button
         onClick={toggleDropdown}
-        className="dropdown-toggle relative flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
+        className="dropdown-toggle relative flex h-10 w-10 sm:h-11 sm:w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white cursor-pointer"
         aria-label="Notifikasi"
       >
         {notifying && (
@@ -58,7 +59,7 @@ export default function NotificationDropdown() {
             <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
           </span>
         )}
-        <Bell className="h-4.5 w-4.5" />
+        <BellIcon className="size-5" />
       </button>
 
       <Dropdown

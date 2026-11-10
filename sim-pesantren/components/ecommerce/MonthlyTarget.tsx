@@ -97,12 +97,12 @@ export default function MonthlyTarget() {
         </div>
 
         <div className="relative">
-          <div className="max-h-45 overflow-hidden flex items-center justify-center">
+          <div className="max-h-45 overflow-hidden" id="chartDarkStyle">
             <ReactApexChart
               options={options}
               series={series}
               type="radialBar"
-              height={310}
+              height={330}
             />
           </div>
 

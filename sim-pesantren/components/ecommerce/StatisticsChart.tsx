@@ -37,7 +37,7 @@ export default function StatisticsChart() {
     },
     colors: ['#10b981', '#06b6d4'],
     chart: {
-      fontFamily: 'inherit',
+      fontFamily: 'Outfit, sans-serif',
       height: 310,
       type: 'area',
       toolbar: {
@@ -112,7 +112,7 @@ export default function StatisticsChart() {
   };
 
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white px-5 pt-5 pb-5 sm:px-6 sm:pt-6 dark:border-gray-800 dark:bg-gray-900 shadow-theme-xs">
+    <div className="rounded-2xl border border-gray-200 bg-white px-5 pt-5 pb-5 sm:px-6 sm:pt-6 dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">

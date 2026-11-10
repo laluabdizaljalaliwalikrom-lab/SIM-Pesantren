@@ -168,6 +168,94 @@
   scrollbar-width: none;
 }
 
+/* ============================================
+   TAILADMIN APEXCHARTS THEME & THIRD-PARTY CSS
+   ============================================ */
+.apexcharts-legend-text {
+  color: #344054 !important;
+  padding-left: 1.25rem !important;
+}
+.dark .apexcharts-legend-text {
+  color: #98a2b3 !important;
+}
+
+.apexcharts-text {
+  fill: #344054 !important;
+}
+.dark .apexcharts-text {
+  fill: #98a2b3 !important;
+}
+
+.apexcharts-tooltip.apexcharts-theme-light {
+  gap: 0.25rem;
+  border-radius: 0.5rem !important;
+  border-color: #e4e7ec !important;
+  padding: 0.75rem !important;
+  box-shadow: 0px 1px 3px 0px rgba(16, 24, 40, 0.1), 0px 1px 2px 0px rgba(16, 24, 40, 0.06) !important;
+}
+.dark .apexcharts-tooltip.apexcharts-theme-light {
+  border-color: #1f2a37 !important;
+  background-color: #111827 !important;
+}
+
+.apexcharts-tooltip-marker {
+  margin-right: 6px;
+  height: 6px;
+  width: 6px;
+}
+.apexcharts-tooltip-series-group {
+  padding: 0 !important;
+}
+.apexcharts-tooltip-y-group {
+  padding: 0 !important;
+}
+.apexcharts-tooltip-title {
+  margin-bottom: 0 !important;
+  border-bottom: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  font-size: 10px !important;
+  line-height: 1rem !important;
+  color: #1d2939 !important;
+}
+.dark .apexcharts-tooltip-title {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+.apexcharts-tooltip-text {
+  font-size: 0.75rem !important;
+  color: #344054 !important;
+}
+.dark .apexcharts-tooltip-text {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+.apexcharts-tooltip-text-y-value {
+  font-weight: 500 !important;
+}
+
+.apexcharts-gridline {
+  stroke: #f2f4f7 !important;
+}
+.dark .apexcharts-gridline {
+  stroke: #1f2a37 !important;
+}
+
+#chartTwo .apexcharts-datalabels-group,
+#chartDarkStyle .apexcharts-datalabels-group,
+.chartDarkStyle .apexcharts-datalabels-group {
+  transform: translateY(-4.5rem);
+}
+#chartTwo .apexcharts-datalabels-group .apexcharts-text,
+#chartDarkStyle .apexcharts-datalabels-group .apexcharts-text,
+.chartDarkStyle .apexcharts-datalabels-group .apexcharts-text {
+  fill: #1d2939 !important;
+  font-weight: 600 !important;
+}
+.dark #chartTwo .apexcharts-datalabels-group .apexcharts-text,
+.dark #chartDarkStyle .apexcharts-datalabels-group .apexcharts-text,
+.dark .chartDarkStyle .apexcharts-datalabels-group .apexcharts-text {
+  fill: rgba(255, 255, 255, 0.9) !important;
+}
+
 .dark {
   --background: #18181b;          /* zinc-900 */
   --foreground: #e4e4e7;          /* zinc-200 */
